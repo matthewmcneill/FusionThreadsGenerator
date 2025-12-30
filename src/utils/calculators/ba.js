@@ -137,5 +137,5 @@ export const BAStandard = {
     sortOrder: 3,
     threadForm: 8,
     classes: ['Close', 'Normal'],
-    docUrl: 'docs/BA_SPEC.md'
+    docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/BA_SPEC.md'
 };

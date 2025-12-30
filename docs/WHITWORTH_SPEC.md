@@ -1,6 +1,6 @@
 # Whitworth Thread Specification
 
-This document provides a technical reference for British Standard Whitworth (BSW) and British Standard Fine (BSF) thread forms, based on **BS 84:2007** ("Parallel screw threads of Whitworth form - Requirements").  And from the Machinery's Handbook (various editions).
+This document provides a technical reference for British Standard Whitworth (BSW) and British Standard Fine (BSF) thread forms, based on Machinery's Handbook and **BS 84:2007** ("Parallel screw threads of Whitworth form - Requirements").
 
 ## 1. Thread Form Geometry
 

@@ -193,7 +193,7 @@ function App() {
             </div>
             {standard.docUrl && (
               <a
-                href={`${import.meta.env.BASE_URL}${standard.docUrl}`}
+                href={standard.docUrl.startsWith('http') ? standard.docUrl : `${import.meta.env.BASE_URL}${standard.docUrl}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="doc-link"

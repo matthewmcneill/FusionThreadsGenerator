@@ -172,7 +172,7 @@ export const BSWStandard = {
     sortOrder: 1,
     threadForm: 7,
     classes: ['Close', 'Medium', 'Free'],
-    docUrl: 'docs/WHITWORTH_SPEC.md'
+    docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/WHITWORTH_SPEC.md'
 };
 
 /**
@@ -185,5 +185,5 @@ export const BSFStandard = {
     sortOrder: 2,
     threadForm: 7,
     classes: ['Close', 'Medium', 'Free'],
-    docUrl: 'docs/WHITWORTH_SPEC.md'
+    docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/WHITWORTH_SPEC.md'
 };
