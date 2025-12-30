@@ -84,7 +84,7 @@ export const BSF_SIZES = [
 
 
 /**
- * Calculates Whitworth thread geometry and tolerances based on BS 84:2007.
+ * Calculates Whitworth thread geometry and tolerances based on BS 84:2007 and Machinery's Handbook formulae.
  * @param {number} diameter - Nominal diameter in inches.
  * @param {number} tpi - Threads per inch.
  * @param {number|null} [lengthOfEngagement] - Length of engagement (defaults to diameter if null).
@@ -170,18 +170,7 @@ export const calculateWhitworth = (diameter, tpi, lengthOfEngagement = null) => 
     };
 };
 
-/**
- * Metadata configuration for the British Standard Whitworth (BSW) Standard.
- */
-export const BSWStandard = {
-    name: 'Whitworth (BSW)',
-    unit: 'in',
-    angle: 55,
-    sortOrder: 1,
-    threadForm: 8,
-    classes: ['Close', 'Medium', 'Free'],
-    docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/WHITWORTH_SPEC.md'
-};
+
 
 /**
  * Unified Whitworth Standard configuration.
