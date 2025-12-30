@@ -12,11 +12,14 @@ import ThreadList from './components/ThreadList';
 import {
   calculateWhitworth,
   calculateBA,
+  calculateME,
   WhitworthStandard,
   BAStandard,
+  MEStandard,
   BSW_SIZES,
   BSF_SIZES,
-  BA_SIZES
+  BA_SIZES,
+  ME_SIZES
 } from './utils/calculators';
 import { generateFusionXML } from './utils/xmlGenerator';
 
@@ -43,6 +46,8 @@ function App() {
     // 1. Run standard-specific geometry calculator
     if (isWhitworth) {
       calc = calculateWhitworth(input.size, input.tpi);
+    } else if (std.name.includes('ME')) {
+      calc = calculateME(input.size, input.tpi);
     } else {
       calc = calculateBA(input.size);
     }
@@ -53,7 +58,9 @@ function App() {
     // Standardizes the naming for Fusion 360 lookup
     const ctd = input.ctd || (isWhitworth
       ? `${input.designation.replace(' BSW', '').replace(' BSF', '')} - ${input.tpi} ${std.name.includes('BSW') ? 'BSW' : 'BSF'}`
-      : input.designation
+      : std.name.includes('ME')
+        ? `${input.designation.replace('ME ', '').replace(' BSB', '')} - ${input.tpi} ${input.tpi === 26 ? 'BSB' : 'ME'}`
+        : input.designation
     );
 
     // 3. Return combined data
@@ -71,6 +78,8 @@ function App() {
     if (newStd.name === 'Whitworth') {
       if (filters.standard) defaultSizes = [...defaultSizes, ...BSW_SIZES];
       if (filters.fine) defaultSizes = [...defaultSizes, ...BSF_SIZES];
+    } else if (newStd.name.includes('ME')) {
+      defaultSizes = ME_SIZES;
     } else {
       defaultSizes = BA_SIZES;
     }
@@ -99,6 +108,7 @@ function App() {
   const handleStandardChange = (standardName) => {
     let newStd;
     if (standardName === 'Whitworth') newStd = WhitworthStandard;
+    else if (standardName === 'ME') newStd = MEStandard;
     else newStd = BAStandard;
 
     setStandard(newStd);
@@ -202,11 +212,12 @@ function App() {
             </div>
             <div className="input-group" style={{ margin: 0 }}>
               <select
-                value={standard.name === 'Whitworth' ? 'Whitworth' : 'BA'}
+                value={standard.name === 'Whitworth' ? 'Whitworth' : (standard.name.includes('ME') ? 'ME' : 'BA')}
                 onChange={(e) => handleStandardChange(e.target.value)}
               >
                 <option value="Whitworth">Whitworth</option>
                 <option value="BA">British Association (BA)</option>
+                <option value="ME">Model Engineer (ME)</option>
               </select>
               {standard.docUrl && (
                 <a

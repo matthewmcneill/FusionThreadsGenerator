@@ -1,0 +1,134 @@
+/**
+ * @module me
+ * @description Provides calculations and data for Model Engineer (ME) thread standards.
+ * 
+ * Main functions:
+ * - calculateME (exported): Calculates geometry and tolerances for ME threads.
+ * - ME_SIZES (exported): List of standard ME size/TPI combinations.
+ * - MEStandard (exported): Configuration object for the ME standard.
+ */
+
+/**
+ * @internal
+ * Converts fraction strings (e.g. "1 1/8" or "1/16") to decimal values.
+ */
+const parseFraction = (f) => {
+    if (typeof f === 'number') return f;
+    if (!f.includes('/')) return parseFloat(f);
+    const parts = f.trim().split(/\s+/);
+    if (parts.length === 2) {
+        const [whole, frat] = parts;
+        const [num, den] = frat.split('/').map(Number);
+        return parseFloat(whole) + (num / den);
+    }
+    const [num, den] = f.split('/').map(Number);
+    return num / den;
+};
+
+/**
+ * @internal
+ * Helper to generate consistent ME preset objects.
+ */
+const createMEPreset = (sizeStr, tpi) => {
+    const isBSB = tpi === 26;
+    return {
+        designation: isBSB ? `ME ${sizeStr} x 26 BSB` : `ME ${sizeStr} x ${tpi}`,
+        size: parseFraction(sizeStr),
+        tpi,
+        ctd: `${sizeStr} - ${tpi} ${isBSB ? 'BSB' : 'ME'}`
+    };
+};
+
+/**
+ * Standard Model Engineer (ME) sizes.
+ * Reference: SMEE Standards and user-provided specifications.
+ * @type {Array<Object>}
+ */
+export const ME_SIZES = [
+    ['1/8', 40], ['5/32', 40], ['3/16', 40], ['7/32', 40],
+    ['1/4', 26], ['1/4', 32], ['1/4', 40], ['9/32', 32], ['9/32', 40],
+    ['5/16', 26], ['5/16', 32], ['5/16', 40], ['3/8', 26], ['3/8', 32], ['3/8', 40],
+    ['7/16', 26], ['7/16', 32], ['7/16', 40], ['1/2', 26], ['1/2', 32], ['1/2', 40],
+    ['5/8', 26]
+].map(([s, t]) => createMEPreset(s, t));
+
+/**
+ * Calculates ME thread geometry and tolerances.
+ * Reuses Whitworth form (55°) logic.
+ * @param {number} diameter - Nominal diameter in inches.
+ * @param {number} tpi - Threads per inch.
+ * @returns {Object} Calculated thread data.
+ */
+export const calculateME = (diameter, tpi) => {
+    const p = 1 / tpi;
+    const D = diameter;
+
+    const theta = (55 / 2) * (Math.PI / 180);
+    const H = p / (2 * Math.tan(theta));
+    const d = (2 / 3) * H;
+    const r = (H / 6) / ((1 / Math.sin(theta)) - 1);
+
+    const basicMajor = D;
+    const basicPitch = D - d;
+    const basicMinor = D - (2 * d);
+
+    // For ME threads, we use a simplified "Medium" tolerance based on Whitworth formulas
+    // as there is no formal international standard for ME tolerances.
+    // We use L = D as a default for the tolerance factor T.
+    const L = D;
+    const T = 0.002 * Math.cbrt(D) + 0.003 * Math.sqrt(L) + 0.005 * Math.sqrt(p);
+    const fmt = (n) => Number(n.toFixed(6));
+
+    const getTolerances = (multiplier) => {
+        const tEff = T * multiplier;
+        const tMajor = tEff + 0.01 * Math.sqrt(p);
+        const tMinorBolt = tEff + 0.02 * Math.sqrt(p);
+        const nutMinorTol = 0.2 * p + (tpi >= 26 ? 0.004 : 0.007);
+
+        return {
+            external: {
+                major: fmt(basicMajor),
+                pitch: fmt(basicPitch),
+                minor: fmt(basicMinor),
+                majorMin: fmt(basicMajor - tMajor),
+                pitchMin: fmt(basicPitch - tEff),
+                minorMin: fmt(basicMinor - tMinorBolt)
+            },
+            internal: {
+                major: fmt(basicMajor),
+                pitch: fmt(basicPitch),
+                minor: fmt(basicMinor),
+                minorMax: fmt(basicMinor + nutMinorTol),
+                pitchMax: fmt(basicPitch + tEff),
+                tapDrill: fmt(basicMinor)
+            }
+        };
+    };
+
+    return {
+        basic: {
+            major: fmt(basicMajor),
+            pitch: fmt(basicPitch),
+            minor: fmt(basicMinor),
+            d: fmt(d),
+            r: fmt(r),
+            p: fmt(p)
+        },
+        classes: {
+            'Medium': getTolerances(1)
+        }
+    };
+};
+
+/**
+ * Model Engineer (ME) Standard configuration.
+ */
+export const MEStandard = {
+    name: 'Model Engineer (ME)',
+    unit: 'in',
+    angle: 55,
+    sortOrder: 4,
+    threadForm: 8,
+    classes: ['Medium'],
+    docUrl: 'docs/ME_SPEC.md'
+};

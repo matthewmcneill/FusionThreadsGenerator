@@ -22,6 +22,8 @@ const ThreadForm = ({ onAdd, currentStandard }) => {
     const [tpi, setTpi] = useState('');
 
     const isWhitworth = currentStandard.includes('Whitworth');
+    const isME = currentStandard.includes('ME');
+    const usesTpi = isWhitworth || isME;
 
     /**
      * Handles form submission and validation.
@@ -33,14 +35,14 @@ const ThreadForm = ({ onAdd, currentStandard }) => {
 
         // 2. Perform validation to ensure required fields are present
         if (!designation || !size) return;
-        if (isWhitworth && !tpi) return;
+        if (usesTpi && !tpi) return;
 
         // 3. Transform input values and pass to parent callback
         // Converts strings to numbers where appropriate for the calculator
         onAdd({
             designation,
-            size: isWhitworth ? parseFloat(size) : size,
-            tpi: isWhitworth ? parseFloat(tpi) : null
+            size: usesTpi ? parseFloat(size) : size,
+            tpi: usesTpi ? parseFloat(tpi) : null
         });
 
         // 4. Reset form state to clear inputs for next entry
@@ -59,22 +61,22 @@ const ThreadForm = ({ onAdd, currentStandard }) => {
                         <label>Designation (Name)</label>
                         <input
                             type="text"
-                            placeholder={isWhitworth ? "e.g. 1/4 BSW" : "e.g. 2 BA"}
+                            placeholder={isWhitworth ? "e.g. 1/4 BSW" : (isME ? "e.g. 1/4 ME" : "e.g. 2 BA")}
                             value={designation}
                             onChange={(e) => setDesignation(e.target.value)}
                         />
                     </div>
                     <div className="input-group">
-                        <label>{isWhitworth ? 'Nominal Diameter (inches)' : 'BA Number'}</label>
+                        <label>{usesTpi ? 'Nominal Diameter (inches)' : 'BA Number'}</label>
                         <input
-                            type={isWhitworth ? "number" : "text"}
+                            type={usesTpi ? "number" : "text"}
                             step="any"
-                            placeholder={isWhitworth ? "e.g. 0.25" : "e.g. 2"}
+                            placeholder={isWhitworth || isME ? "e.g. 0.25" : "e.g. 2"}
                             value={size}
                             onChange={(e) => setSize(e.target.value)}
                         />
                     </div>
-                    {isWhitworth && (
+                    {usesTpi && (
                         <div className="input-group">
                             <label>Threads Per Inch (TPI)</label>
                             <input
