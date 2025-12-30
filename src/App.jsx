@@ -206,10 +206,10 @@ function App() {
         </div>
       </div>
 
-      {/* Form and List components */}
-      <ThreadForm onAdd={handleAddThread} currentStandard={standard.name} />
-
+      {/* List and Form components */}
       <ThreadList threads={threads} onRemove={handleRemoveThread} unit={standard.unit} />
+
+      <ThreadForm onAdd={handleAddThread} currentStandard={standard.name} />
 
       {/* Download Action */}
       {threads.length > 0 && (

@@ -44,6 +44,7 @@ export const generateFusionXML = (threadStandard, threads, selectedClasses) => {
       <Thread>
         <Gender>external</Gender>
         <Class>${className}</Class>
+        <ThreadToleranceClass>${className}</ThreadToleranceClass>
         <MajorDia>${c.external.major}</MajorDia>
         <PitchDia>${c.external.pitch}</PitchDia>
         <MinorDia>${c.external.minor}</MinorDia>
@@ -51,6 +52,7 @@ export const generateFusionXML = (threadStandard, threads, selectedClasses) => {
       <Thread>
         <Gender>internal</Gender>
         <Class>${className}</Class>
+        <ThreadToleranceClass>${className}</ThreadToleranceClass>
         <MajorDia>${c.internal.major}</MajorDia>
         <PitchDia>${c.internal.pitch}</PitchDia>
         <MinorDia>${c.internal.minor}</MinorDia>

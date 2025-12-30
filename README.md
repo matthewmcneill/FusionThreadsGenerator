@@ -1,23 +1,65 @@
 # Fusion 360 Thread Generator
 
-This web application allows users to generate custom XML definitions for Fusion 360 thread standards, specifically focusing on British BA and Whitworth imperial threads.
+This web application allows users to generate custom XML definitions for Fusion 360 thread standards, specifically focusing on British Association (BA) and Whitworth (BSW/BSF) imperial threads.
+
+## [🚀 Access the Live App](https://matthewmcneill.github.io/FusionThreadsGenerator)
 
 ## Technical Documentation
 
 - [Whitworth Thread Specification](docs/WHITWORTH_SPEC.md) - Technical details and formulas for Whitworth (BSW/BSF) thread forms.
 - [BA Thread Specification](docs/BA_SPEC.md) - Technical details and formulas for British Association (BA) thread forms.
+- [Implementation Overview](docs/implementation_overview.md) - Software architecture and developer guide.
 
-## React + Vite
+---
 
-Currently, two official plugins are available:
+## How to Use the App
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1. **Select a Thread Standard**: Choose between Whitworth (BSW), Whitworth (BSF), or British Association (BA).
+2. **Review & Customize Sizes**: The app loads standard sizes by default. You can remove existing ones from the table or add custom sizes using the form at the bottom.
+3. **Select Classes/Fits**: Check the thread classes (e.g., Close, Medium, Free, Normal) you want to include in the export.
+4. **Download XML**: Click the download button to generate and save the `.xml` file to your computer.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Installation in Fusion 360
 
-## Expanding the ESLint configuration
+To use the custom threads in Fusion 360, you must place the downloaded XML file into the correct `ThreadData` folder on your system.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Windows Installation Path
+Navigate to:
+`%localappdata%\Autodesk\webdeploy\Production\<version ID>\Fusion\Server\Fusion\Configuration\ThreadData`
+
+### macOS Installation Path
+1. Navigate to: `/Users/[Username]/Library/Application Support/Autodesk/Webdeploy/production/[Version ID]`
+2. Right-click on the **"Autodesk Fusion 360"** application icon and select **"Show Package Contents"**.
+3. Continue the path: `Contents/Libraries/Applications/Fusion/Fusion/Server/Fusion/Configuration/ThreadData`
+
+> [!IMPORTANT]
+> - **Hidden Files**: Ensure your operating system is set to show hidden files and folders.
+> - **Updates**: When Fusion 360 updates to a new version, it creates a new `<version ID>` folder. You will need to copy your custom XML files from the old version folder to the new one.
+> - **Reference**: For more details, see the official [Autodesk Support Article](https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/Custom-Threads-in-Fusion-360.html).
+
+---
+
+## Developer Guide - Build & Deploy
+
+This project is built using **React** and **Vite**.
+
+### Local Development
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+### Build & Deploy to GitHub Pages
+To build and deploy the application to your GitHub Pages site:
+```bash
+npm run deploy
+```
+
+**How it works:**
+- `npm run deploy` automatically triggers the `predeploy` script, which runs `npm run build` to generate the production bundle in the `dist/` directory.
+- It then uses the `gh-pages` package to push the contents of the `dist/` directory to the `gh-pages` branch of your repository, making the app live.

@@ -21,7 +21,7 @@ const ThreadList = ({ threads, onRemove, unit }) => {
     if (threads.length === 0) {
         return (
             <div className="glass-panel" style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-                No threads in the list. Switch standards or add custom sizes above.
+                No threads in the list. Switch standards or add custom sizes below.
             </div>
         );
     }
@@ -31,7 +31,7 @@ const ThreadList = ({ threads, onRemove, unit }) => {
     return (
         <div className="glass-panel">
             <h2 style={{ marginTop: 0, textAlign: 'left', marginBottom: '1.5rem' }}>
-                Defined Sizes ({threads.length})
+                Standard Sizes ({threads.length})
             </h2>
             <div style={{ overflowX: 'auto' }}>
                 <table>
