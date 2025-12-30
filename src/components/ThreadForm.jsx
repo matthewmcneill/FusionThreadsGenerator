@@ -1,69 +1,56 @@
+/**
+ * @module components/ThreadForm
+ * @description Provides a form for users to add custom thread sizes to the current list.
+ * 
+ * Main functions:
+ * - ThreadForm (default export): Renders the input fields and validation logic.
+ */
 
 import React, { useState } from 'react';
 
-const ThreadForm = ({ onAdd, currentStandard, onStandardChange }) => {
-    // Local state for inputs
+/**
+ * Form component for adding custom thread sizes.
+ * Dynamically adjusts fields based on whether the standard is Whitworth or BA.
+ * 
+ * @param {Object} props
+ * @param {Function} props.onAdd - Callback when a valid size is submitted.
+ * @param {string} props.currentStandard - Name of the active thread standard.
+ */
+const ThreadForm = ({ onAdd, currentStandard }) => {
     const [designation, setDesignation] = useState('');
     const [size, setSize] = useState('');
     const [tpi, setTpi] = useState('');
 
-    const isWhitworth = currentStandard === 'Whitworth';
+    const isWhitworth = currentStandard.includes('Whitworth');
 
+    /**
+     * Handles form submission and validation.
+     * @param {Event} e - Submit event.
+     */
     const handleSubmit = (e) => {
+        // 1. Prevent default reload
         e.preventDefault();
+
+        // 2. Perform basic validation
         if (!designation || !size) return;
         if (isWhitworth && !tpi) return;
 
+        // 3. Format and send data to parent
         onAdd({
             designation,
-            size: isWhitworth ? parseFloat(size) : size, // BA size is number string
+            size: isWhitworth ? parseFloat(size) : size,
             tpi: isWhitworth ? parseFloat(tpi) : null
         });
 
-        // Reset fields
+        // 4. Clear form
         setDesignation('');
         setSize('');
         setTpi('');
     };
 
-    const handlePreset = (e) => {
-        const val = e.target.value;
-        if (!val) return;
-
-        if (isWhitworth) {
-            if (val === '1/4 BSW') {
-                setDesignation('1/4 BSW');
-                setSize('0.25');
-                setTpi('20');
-            } else if (val === '1/2 BSW') {
-                setDesignation('1/2 BSW');
-                setSize('0.5');
-                setTpi('12');
-            }
-        } else {
-            // BA Presets
-            setDesignation(`${val} BA`);
-            setSize(val);
-            setTpi(''); // Not used for BA calculator as it's lookup based
-        }
-    };
-
     return (
-        <div className="glass-panel">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h2 style={{ margin: 0 }}>Add Thread Size</h2>
-                <div className="input-group" style={{ margin: 0, flexDirection: 'row', alignItems: 'center' }}>
-                    <label style={{ marginRight: '1rem' }}>Standard:</label>
-                    <select
-                        value={currentStandard}
-                        onChange={(e) => onStandardChange(e.target.value)}
-                        style={{ width: 'auto' }}
-                    >
-                        <option value="Whitworth">Whitworth</option>
-                        <option value="BA Threads">BA</option>
-                    </select>
-                </div>
-            </div>
+        <div className="glass-panel" style={{ marginBottom: '2rem' }}>
+            <h2 style={{ marginTop: 0, marginBottom: '1.5rem' }}>Add Custom Size to {currentStandard}</h2>
 
             <form onSubmit={handleSubmit}>
                 <div className="grid-form">
@@ -100,24 +87,7 @@ const ThreadForm = ({ onAdd, currentStandard, onStandardChange }) => {
                     )}
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                    <select onChange={handlePreset} style={{ width: 'auto', background: 'rgba(255,255,255,0.1)' }}>
-                        <option value="">Select Preset...</option>
-                        {isWhitworth ? (
-                            <>
-                                <option value="1/4 BSW">1/4 BSW</option>
-                                <option value="1/2 BSW">1/2 BSW</option>
-                            </>
-                        ) : (
-                            <>
-                                <option value="0">0 BA</option>
-                                <option value="2">2 BA</option>
-                                <option value="4">4 BA</option>
-                                <option value="6">6 BA</option>
-                            </>
-                        )}
-                    </select>
-
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
                     <button type="submit">Add Size</button>
                 </div>
             </form>

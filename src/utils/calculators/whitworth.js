@@ -1,74 +1,151 @@
+/**
+ * @module whitworth
+ * @description Provides calculations and physical data for Whitworth thread standards (BSW/BSF).
+ * 
+ * Main functions:
+ * - calculateWhitworth (exported): Calculates geometry and tolerances for BSW/BSF threads.
+ * - BSW_SIZES (exported): List of standard BSW size/TPI combinations.
+ * - BSF_SIZES (exported): List of standard BSF size/TPI combinations.
+ * - BSWStandard, BSFStandard (exported): Configuration objects for Whitworth standards.
+ */
 
+
+/**
+ * @internal
+ * Converts fraction strings (e.g. "1 1/8" or "1/16") to decimal values.
+ * @param {string|number} f - The fraction string or number.
+ * @returns {number} Decimal value.
+ */
+const parseFraction = (f) => {
+    if (typeof f === 'number') return f;
+    if (!f.includes('/')) return parseFloat(f);
+    const parts = f.trim().split(/\s+/);
+    if (parts.length === 2) {
+        const [whole, frat] = parts;
+        const [num, den] = frat.split('/').map(Number);
+        return parseFloat(whole) + (num / den);
+    }
+    const [num, den] = f.split('/').map(Number);
+    return num / den;
+};
+
+/**
+ * @internal
+ * Helper to generate consistent Whitworth preset objects.
+ * @param {string} sizeStr - Fraction or whole number string.
+ * @param {number} tpi - Threads per inch.
+ * @param {string} suffix - "BSW" or "BSF".
+ * @returns {Object} Standardized thread metadata.
+ */
+const createWhitworthPreset = (sizeStr, tpi, suffix) => ({
+    designation: `${sizeStr} ${suffix}`,
+    size: parseFraction(sizeStr),
+    tpi,
+    ctd: `${sizeStr} - ${tpi} ${suffix}`
+});
+
+/**
+ * Standard British Standard Whitworth (BSW) - Coarse Series sizes (Ref: BS 84:2007 Table 2).
+ * @type {Array<[string, number]>}
+ */
+export const BSW_SIZES = [
+    ['1/16', 60], ['3/32', 48], ['1/8', 40], ['5/32', 32], ['3/16', 24],
+    ['7/32', 24], ['1/4', 20], ['5/16', 18], ['3/8', 16], ['7/16', 14],
+    ['1/2', 12], ['9/16', 12], ['5/8', 11], ['11/16', 11], ['3/4', 10],
+    ['7/8', 9], ['1', 8], ['1 1/8', 7], ['1 1/4', 7], ['1 3/8', 6],
+    ['1 1/2', 6], ['1 5/8', 5], ['1 3/4', 5], ['1 7/8', 4.5], ['2', 4.5],
+    ['2 1/4', 4], ['2 1/2', 4], ['2 3/4', 3.5], ['3', 3.5], ['3 1/4', 3.25],
+    ['3 1/2', 3.25], ['3 3/4', 3], ['4', 3], ['4 1/4', 3], ['4 1/2', 3],
+    ['4 3/4', 2.75], ['5', 2.75], ['5 1/2', 2.625], ['6', 2.5]
+].map(([s, t]) => createWhitworthPreset(s, t, 'BSW'));
+
+
+/**
+ * Standard British Standard Fine (BSF) - Fine Series sizes (Ref: BS 84:2007 Table 3).
+ * @type {Array<[string, number]>}
+ */
+export const BSF_SIZES = [
+    ['1/16', 60], ['3/32', 48], ['1/8', 40], ['5/32', 32], ['3/16', 32],
+    ['7/32', 28], ['1/4', 26], ['9/32', 26], ['5/16', 22], ['3/8', 20],
+    ['7/16', 18], ['1/2', 16], ['9/16', 16], ['5/8', 14], ['11/16', 14],
+    ['3/4', 12], ['13/16', 12], ['7/8', 11], ['1', 10], ['1 1/8', 9],
+    ['1 1/4', 9], ['1 3/8', 8], ['1 1/2', 8], ['1 5/8', 8], ['1 3/4', 7],
+    ['1 7/8', 7], ['2', 7], ['2 1/4', 6], ['2 1/2', 6], ['2 3/4', 6],
+    ['3', 5], ['3 1/4', 5], ['3 1/2', 4.5], ['3 3/4', 4.5], ['4', 4.5],
+    ['4 1/4', 4]
+].map(([s, t]) => createWhitworthPreset(s, t, 'BSF'));
+
+
+/**
+ * Calculates Whitworth thread geometry and tolerances based on BS 84:2007.
+ * @param {number} diameter - Nominal diameter in inches.
+ * @param {number} tpi - Threads per inch.
+ * @param {number|null} [lengthOfEngagement] - Length of engagement (defaults to diameter if null).
+ * @returns {Object} Calculated thread data including basic dimensions and classes (Close, Medium, Free).
+ */
 export const calculateWhitworth = (diameter, tpi, lengthOfEngagement = null) => {
-    // Inputs: diameter (inches), tpi (threads per inch)
-    // lengthOfEngagement (inches) - defaults to diameter if not provided
+    // 1. Calculate basic geometry parameters
+    const p = 1 / tpi; // Pitch
+    const D = diameter;
+    const L = lengthOfEngagement || D;
 
-    const p = 1 / tpi; // Pitch in inches
-    const D = diameter; // Major Diameter
-    const L = lengthOfEngagement || D; // Default length of engagement
+    const theta = (55 / 2) * (Math.PI / 180); // Half-angle in radians
+    const H = p / (2 * Math.tan(theta));      // Total depth of V-thread
+    const d = (2 / 3) * H;                    // Actual thread depth (Whitworth standard)
+    const r = (H / 6) / ((1 / Math.sin(theta)) - 1); // Radius at root and crest
 
-    // Basic Form Constants (from Handbook)
-    // Whitworth angle = 55 degrees
-    const theta = (55 / 2) * (Math.PI / 180);
-    const H = p / (2 * Math.tan(theta));
-
-    // d = 2/3 * H
-    // r = (H/6) / (csc(theta) - 1) -> height of capping circular segment is H/6
-    const d = (2 / 3) * H;
-    const r = (H / 6) / ((1 / Math.sin(theta)) - 1);
-
-    // Basic Dimensions
-    // Major = D
-    // Pitch (Effective) = D - d
-    // Minor = D - 2d
+    // 2. Derive basic diameters
     const basicMajor = D;
     const basicPitch = D - d;
     const basicMinor = D - (2 * d);
 
-    // Tolerance Formula (Medium Class)
-    // T = 0.002 * cbrt(D) + 0.003 * sqrt(L) + 0.005 * sqrt(p)
-    // Note: D, L, p in inches.
+    // 3. Calculate common tolerance factor T based on BS 84 formula
     const T = 0.002 * Math.cbrt(D) + 0.003 * Math.sqrt(L) + 0.005 * Math.sqrt(p);
-
-    // External (Bolt) - Medium Class
-    // Major Max: D
-    // Major Min: D - (T + 0.01 * sqrt(p))
-    // Pitch Max: Basic Pitch
-    // Pitch Min: Basic Pitch - T
-    // Minor Max: Basic Minor
-    // Minor Min: Basic Minor - (T + 0.02 * sqrt(p))
-
-    // Note: Fusion usually prefers the Maximum Material Condition (MMC) for the model geometry,
-    // which for external threads is the upper limit (Basic sizes).
-    const extMajor = basicMajor;
-    const extPitch = basicPitch;
-    const extMinor = basicMinor;
-
-    // Minor Max: Basic Minor + Tolerance
-    // Table footnotes for Nut Minor Dia Tolerance:
-    // b: 26 TPI and finer -> 0.2p + 0.004
-    // c: 24 and 22 TPI -> 0.2p + 0.005
-    // d: 20 TPI and coarser -> 0.2p + 0.007
-    let minorTolTerm;
-    if (tpi >= 26) {
-        minorTolTerm = 0.004;
-    } else if (tpi >= 22) {
-        minorTolTerm = 0.005;
-    } else {
-        minorTolTerm = 0.007;
-    }
-    const nutMinorTol = 0.2 * p + minorTolTerm;
-
-    // Fusion uses these values for the hole. MMC is the lower limit (Basic sizes).
-    const intMajor = basicMajor;
-    const intPitch = basicPitch;
-    const intMinor = basicMinor; // Tap Drill approx
-
-    // Formatting to 6 decimal places (standard precision for machining)
     const fmt = (n) => Number(n.toFixed(6));
 
+    // 4. Calculate nut minor diameter tolerance (special logic based on TPI)
+    let minorTolTerm;
+    if (tpi >= 26) minorTolTerm = 0.004;
+    else if (tpi >= 22) minorTolTerm = 0.005;
+    else minorTolTerm = 0.007;
+    const nutMinorTol = 0.2 * p + minorTolTerm;
+
+    /**
+     * @internal
+     * Helper to calculate dimensions for specific Whitworth tolerance classes.
+     * @param {number} multiplier - Tolerance multiplier (e.g., 2/3 for Close).
+     * @param {number} majorOffset - Major diameter offset factor.
+     * @param {number} minorOffsetBolt - Minor diameter offset factor for bolts.
+     * @param {number|null} nutMultiplier - Specialized multiplier for nuts if different from bolt.
+     */
+    const getTolerances = (multiplier, majorOffset = 0.01, minorOffsetBolt = 0.02, nutMultiplier = null) => {
+        const tEff = T * multiplier;
+        const tMajor = tEff + majorOffset * Math.sqrt(p);
+        const tMinorBolt = tEff + minorOffsetBolt * Math.sqrt(p);
+        const nutTEff = T * (nutMultiplier || multiplier);
+
+        return {
+            external: {
+                major: fmt(basicMajor),
+                pitch: fmt(basicPitch),
+                minor: fmt(basicMinor),
+                majorMin: fmt(basicMajor - tMajor),
+                pitchMin: fmt(basicPitch - tEff),
+                minorMin: fmt(basicMinor - tMinorBolt)
+            },
+            internal: {
+                major: fmt(basicMajor),
+                pitch: fmt(basicPitch),
+                minor: fmt(basicMinor),
+                minorMax: fmt(basicMinor + nutMinorTol),
+                pitchMax: fmt(basicPitch + nutTEff),
+                tapDrill: fmt(basicMinor)
+            }
+        };
+    };
+
+    // 5. Build final result mapping for all standard classes
     return {
-        T: fmt(T),
         basic: {
             major: fmt(basicMajor),
             pitch: fmt(basicPitch),
@@ -77,29 +154,36 @@ export const calculateWhitworth = (diameter, tpi, lengthOfEngagement = null) => 
             r: fmt(r),
             p: fmt(p)
         },
-        external: {
-            major: fmt(extMajor),
-            pitch: fmt(extPitch),
-            minor: fmt(extMinor),
-            majorMin: fmt(extMajor - (T + 0.01 * Math.sqrt(p))),
-            pitchMin: fmt(extPitch - T),
-            minorMin: fmt(extMinor - (T + 0.02 * Math.sqrt(p)))
-        },
-        internal: {
-            major: fmt(intMajor),
-            pitch: fmt(intPitch),
-            minor: fmt(intMinor),
-            minorMax: fmt(intMinor + nutMinorTol),
-            pitchMax: fmt(intPitch + T),
-            tapDrill: fmt(intMinor)
+        classes: {
+            'Close': getTolerances(2 / 3, 0.01, 0.013),
+            'Medium': getTolerances(1, 0.01, 0.02),
+            'Free': getTolerances(3 / 2, 0.01, 0.02)
         }
     };
 };
 
-export const WhitworthStandard = {
-    name: 'Whitworth',
+/**
+ * Metadata configuration for the British Standard Whitworth (BSW) Standard.
+ */
+export const BSWStandard = {
+    name: 'Whitworth (BSW)',
     unit: 'in',
     angle: 55,
     sortOrder: 1,
-    threadForm: 7
+    threadForm: 7,
+    classes: ['Close', 'Medium', 'Free'],
+    docUrl: 'docs/WHITWORTH_SPEC.md'
+};
+
+/**
+ * Metadata configuration for the British Standard Fine (BSF) Standard.
+ */
+export const BSFStandard = {
+    name: 'Whitworth (BSF)',
+    unit: 'in',
+    angle: 55,
+    sortOrder: 2,
+    threadForm: 7,
+    classes: ['Close', 'Medium', 'Free'],
+    docUrl: 'docs/WHITWORTH_SPEC.md'
 };

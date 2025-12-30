@@ -1,8 +1,21 @@
+/**
+ * @module xmlGenerator
+ * @description Generates Fusion 360 compatible XML files for thread definitions.
+ * 
+ * Main functions:
+ * - generateFusionXML (exported): Entry point for creating the XML string from thread data.
+ */
 
-export const generateFusionXML = (threadStandard, threads) => {
-  // threadStandard: { name, unit, angle, sortOrder, threadForm }
-  // threads: Array of calculated thread objects
-
+/**
+ * Generates the full XML string for a thread standard.
+ * 
+ * @param {Object} threadStandard - Metadata about the standard (name, unit, angle, etc.).
+ * @param {Array<Object>} threads - Array of calculated thread size objects.
+ * @param {Array<string>} selectedClasses - List of class names to include in the output.
+ * @returns {string} The formatted XML content.
+ */
+export const generateFusionXML = (threadStandard, threads, selectedClasses) => {
+  // 1. Construct the XML Header with standard metadata
   const header = `<?xml version="1.0" encoding="UTF-8"?>
 <ThreadType>
   <Name>${threadStandard.name}</Name>
@@ -12,40 +25,52 @@ export const generateFusionXML = (threadStandard, threads) => {
   <SortOrder>${threadStandard.sortOrder}</SortOrder>
   <ThreadForm>${threadStandard.threadForm}</ThreadForm>`;
 
+  // 2. Determine if we use Pitch (Metric) or TPI (Imperial)
   const isMetric = threadStandard.unit === 'mm';
 
+  // 3. Generate each <ThreadSize> block
   const body = threads.map(t => {
-    // For BA (metric), we use <Pitch>. For Whitworth (inch), we use <TPI>.
     const pitchElement = isMetric
       ? `<Pitch>${t.basic.p}</Pitch>`
       : `<TPI>${t.tpi}</TPI>`;
+
+    // 4. For each size, generate <Thread> blocks for both internal and external genders
+    // Filters based on the classes selected by the user in the UI
+    const threadBlocks = selectedClasses
+      .filter(className => t.classes[className])
+      .map(className => {
+        const c = t.classes[className];
+        return `
+      <Thread>
+        <Gender>external</Gender>
+        <Class>${className}</Class>
+        <MajorDia>${c.external.major}</MajorDia>
+        <PitchDia>${c.external.pitch}</PitchDia>
+        <MinorDia>${c.external.minor}</MinorDia>
+      </Thread>
+      <Thread>
+        <Gender>internal</Gender>
+        <Class>${className}</Class>
+        <MajorDia>${c.internal.major}</MajorDia>
+        <PitchDia>${c.internal.pitch}</PitchDia>
+        <MinorDia>${c.internal.minor}</MinorDia>
+        <TapDrill>${c.internal.tapDrill}</TapDrill>
+      </Thread>`;
+      }).join('');
 
     return `
   <ThreadSize>
     <Size>${t.size}</Size>
     <Designation>
       <ThreadDesignation>${t.designation}</ThreadDesignation>
-      <CTD>${t.designation}</CTD>
+      <CTD>${t.ctd || t.designation}</CTD>
       ${pitchElement}
-      <Thread>
-        <Gender>external</Gender>
-        <Class>Medium</Class>
-        <MajorDia>${t.external.major}</MajorDia>
-        <PitchDia>${t.external.pitch}</PitchDia>
-        <MinorDia>${t.external.minor}</MinorDia>
-      </Thread>
-      <Thread>
-        <Gender>internal</Gender>
-        <Class>Medium</Class>
-        <MajorDia>${t.internal.major}</MajorDia>
-        <PitchDia>${t.internal.pitch}</PitchDia>
-        <MinorDia>${t.internal.minor}</MinorDia>
-        <TapDrill>${t.internal.tapDrill}</TapDrill>
-      </Thread>
+      ${threadBlocks}
     </Designation>
   </ThreadSize>`;
   }).join('');
 
+  // 5. Append the closing tag and return the complete document
   const footer = `
 </ThreadType>`;
 

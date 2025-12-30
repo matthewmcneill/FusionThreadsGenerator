@@ -143,3 +143,17 @@ th {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
 }
+
+.doc-link {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+  opacity: 0.8;
+}
+
+.doc-link:hover {
+  opacity: 1;
+  text-decoration: underline;
+  filter: drop-shadow(0 0 5px var(--accent-color));
+}
