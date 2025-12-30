@@ -164,20 +164,7 @@ function App() {
       <div className="glass-panel" style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center' }}>
           <div className="input-group" style={{ margin: 0 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <label style={{ marginBottom: 0 }}>Thread Standard:</label>
-              {standard.docUrl && (
-                <a
-                  href={`${import.meta.env.BASE_URL}${standard.docUrl}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="doc-link"
-                  style={{ fontSize: '0.85rem' }}
-                >
-                  View Engineering Specification
-                </a>
-              )}
-            </div>
+            <label>Thread Standard:</label>
             <select
               value={standard.name === 'Whitworth (BSW)' ? 'BSW' : standard.name === 'Whitworth (BSF)' ? 'BSF' : 'BA'}
               onChange={(e) => handleStandardChange(e.target.value)}
@@ -204,6 +191,17 @@ function App() {
                 </label>
               ))}
             </div>
+            {standard.docUrl && (
+              <a
+                href={`${import.meta.env.BASE_URL}${standard.docUrl}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="doc-link"
+                style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}
+              >
+                View Engineering Specification
+              </a>
+            )}
           </div>
         </div>
       </div>
