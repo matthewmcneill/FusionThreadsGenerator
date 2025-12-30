@@ -1,9 +1,9 @@
 
 export const generateFusionXML = (threadStandard, threads) => {
-    // threadStandard: { name, unit, angle, sortOrder, threadForm }
-    // threads: Array of calculated thread objects
+  // threadStandard: { name, unit, angle, sortOrder, threadForm }
+  // threads: Array of calculated thread objects
 
-    const header = `<?xml version="1.0" encoding="UTF-8"?>
+  const header = `<?xml version="1.0" encoding="UTF-8"?>
 <ThreadType>
   <Name>${threadStandard.name}</Name>
   <CustomName>${threadStandard.name}</CustomName>
@@ -12,15 +12,21 @@ export const generateFusionXML = (threadStandard, threads) => {
   <SortOrder>${threadStandard.sortOrder}</SortOrder>
   <ThreadForm>${threadStandard.threadForm}</ThreadForm>`;
 
-    const body = threads.map(t => {
-        // t contains: size, designation, tpi, defaults (external/internal dimensions)
-        return `
+  const isMetric = threadStandard.unit === 'mm';
+
+  const body = threads.map(t => {
+    // For BA (metric), we use <Pitch>. For Whitworth (inch), we use <TPI>.
+    const pitchElement = isMetric
+      ? `<Pitch>${t.basic.p}</Pitch>`
+      : `<TPI>${t.tpi}</TPI>`;
+
+    return `
   <ThreadSize>
     <Size>${t.size}</Size>
     <Designation>
       <ThreadDesignation>${t.designation}</ThreadDesignation>
       <CTD>${t.designation}</CTD>
-      <TPI>${t.tpi}</TPI>
+      ${pitchElement}
       <Thread>
         <Gender>external</Gender>
         <Class>Medium</Class>
@@ -38,10 +44,10 @@ export const generateFusionXML = (threadStandard, threads) => {
       </Thread>
     </Designation>
   </ThreadSize>`;
-    }).join('');
+  }).join('');
 
-    const footer = `
+  const footer = `
 </ThreadType>`;
 
-    return header + body + footer;
+  return header + body + footer;
 };

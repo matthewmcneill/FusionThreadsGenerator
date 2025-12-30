@@ -1,7 +1,7 @@
 
 import React from 'react';
 
-const ThreadList = ({ threads, onRemove }) => {
+const ThreadList = ({ threads, onRemove, unit }) => {
     if (threads.length === 0) {
         return (
             <div className="glass-panel" style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
@@ -9,6 +9,8 @@ const ThreadList = ({ threads, onRemove }) => {
             </div>
         );
     }
+
+    const isMetric = unit === 'mm';
 
     return (
         <div className="glass-panel">
@@ -18,11 +20,10 @@ const ThreadList = ({ threads, onRemove }) => {
                     <thead>
                         <tr>
                             <th>Designation</th>
-                            <th>Size (in)</th>
-                            <th>TPI</th>
-                            <th>Pitch (in)</th>
-                            <th>Major (Ext)</th>
-                            <th>Minor (Int)</th>
+                            <th>{isMetric ? 'BA No.' : 'Size (in)'}</th>
+                            <th>{isMetric ? 'Pitch (mm)' : 'TPI'}</th>
+                            <th>Major</th>
+                            <th>Minor</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -30,9 +31,8 @@ const ThreadList = ({ threads, onRemove }) => {
                         {threads.map((t, idx) => (
                             <tr key={idx}>
                                 <td>{t.designation}</td>
-                                <td>{t.size}</td>
-                                <td>{t.tpi}</td>
-                                <td>{(1 / t.tpi).toFixed(4)}</td>
+                                <td>{isMetric ? t.size : t.size.toFixed(3)}</td>
+                                <td>{isMetric ? t.basic.p.toFixed(4) : t.tpi}</td>
                                 <td>{t.external.major}</td>
                                 <td>{t.internal.minor}</td>
                                 <td className="row-actions">
