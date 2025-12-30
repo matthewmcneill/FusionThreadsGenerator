@@ -28,7 +28,7 @@ function App() {
   const [standard, setStandard] = useState(WhitworthStandard);
   const [threads, setThreads] = useState([]);
   const [selectedClasses, setSelectedClasses] = useState(WhitworthStandard.classes);
-  const [whitworthFilters, setWhitworthFilters] = useState({ standard: true, fine: false });
+  const [whitworthFilters, setWhitworthFilters] = useState({ standard: true, fine: true });
 
   /**
    * Helper to calculate a full thread object based on standard and basic input.
@@ -152,8 +152,11 @@ function App() {
    * Orchestrates the XML generation and triggers browser download.
    */
   const handleDownload = () => {
-    // 1. Generate XML string
-    const xml = generateFusionXML(standard, threads, selectedClasses);
+    // 1. Generate XML string with build metadata
+    const xml = generateFusionXML(standard, threads, selectedClasses, {
+      version: __APP_VERSION__,
+      commitHash: __COMMIT_HASH__
+    });
 
     // 2. Create Blob and temporary URL
     const blob = new Blob([xml], { type: 'text/xml' });
