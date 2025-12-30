@@ -35,7 +35,7 @@ export const generateFusionXML = (threadStandard, threads, selectedClasses) => {
       : `<TPI>${t.tpi}</TPI>`;
 
     // 4. For each size, generate <Thread> blocks for both internal and external genders
-    // Filters based on the classes selected by the user in the UI
+    // Includes <ThreadToleranceClass> for enhanced CAD compatibility
     const threadBlocks = selectedClasses
       .filter(className => t.classes[className])
       .map(className => {
@@ -60,6 +60,7 @@ export const generateFusionXML = (threadStandard, threads, selectedClasses) => {
       </Thread>`;
       }).join('');
 
+    // 5. Build the encapsulation for the specific size
     return `
   <ThreadSize>
     <Size>${t.size}</Size>
@@ -72,7 +73,7 @@ export const generateFusionXML = (threadStandard, threads, selectedClasses) => {
   </ThreadSize>`;
   }).join('');
 
-  // 5. Append the closing tag and return the complete document
+  // 6. Append the closing tag and return the complete document
   const footer = `
 </ThreadType>`;
 

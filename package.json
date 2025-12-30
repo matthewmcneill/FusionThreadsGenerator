@@ -1,6 +1,7 @@
 {
   "name": "fusion-thread-generator",
-  "private": true,
+  "private": false,
+  "license": "GPL-3.0-only",
   "version": "0.0.0",
   "type": "module",
   "homepage": "https://matthewmcneill.github.io/FusionThreadsGenerator",

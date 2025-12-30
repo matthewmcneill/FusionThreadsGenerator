@@ -63,3 +63,10 @@ npm run deploy
 **How it works:**
 - `npm run deploy` automatically triggers the `predeploy` script, which runs `npm run build` to generate the production bundle in the `dist/` directory.
 - It then uses the `gh-pages` package to push the contents of the `dist/` directory to the `gh-pages` branch of your repository, making the app live.
+
+---
+
+## License
+
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
+

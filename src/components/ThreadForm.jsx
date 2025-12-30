@@ -25,24 +25,25 @@ const ThreadForm = ({ onAdd, currentStandard }) => {
 
     /**
      * Handles form submission and validation.
-     * @param {Event} e - Submit event.
+     * @param {Event} e - Submit event object.
      */
     const handleSubmit = (e) => {
-        // 1. Prevent default reload
+        // 1. Prevent default form submission and page reload
         e.preventDefault();
 
-        // 2. Perform basic validation
+        // 2. Perform validation to ensure required fields are present
         if (!designation || !size) return;
         if (isWhitworth && !tpi) return;
 
-        // 3. Format and send data to parent
+        // 3. Transform input values and pass to parent callback
+        // Converts strings to numbers where appropriate for the calculator
         onAdd({
             designation,
             size: isWhitworth ? parseFloat(size) : size,
             tpi: isWhitworth ? parseFloat(tpi) : null
         });
 
-        // 4. Clear form
+        // 4. Reset form state to clear inputs for next entry
         setDesignation('');
         setSize('');
         setTpi('');

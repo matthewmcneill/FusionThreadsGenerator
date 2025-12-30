@@ -40,6 +40,7 @@ function App() {
     let calc;
     const isWhitworth = std.name.includes('Whitworth');
 
+    // 1. Run standard-specific geometry calculator
     if (isWhitworth) {
       calc = calculateWhitworth(input.size, input.tpi);
     } else {
@@ -48,12 +49,14 @@ function App() {
 
     if (!calc) return null;
 
-    // Auto-generate CTD if missing (useful for custom additions)
+    // 2. Auto-generate CTD (Custom Thread Designation) if missing
+    // Standardizes the naming for Fusion 360 lookup
     const ctd = input.ctd || (isWhitworth
       ? `${input.designation.replace(' BSW', '').replace(' BSF', '')} - ${input.tpi} ${std.name.includes('BSW') ? 'BSW' : 'BSF'}`
       : input.designation
     );
 
+    // 3. Return combined data
     return { ...input, ...calc, ctd };
   };
 
@@ -161,47 +164,93 @@ function App() {
       </p>
 
       {/* Configuration Panel */}
-      <div className="glass-panel" style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center' }}>
-          <div className="input-group" style={{ margin: 0 }}>
-            <label>Thread Standard:</label>
-            <select
-              value={standard.name === 'Whitworth (BSW)' ? 'BSW' : standard.name === 'Whitworth (BSF)' ? 'BSF' : 'BA'}
-              onChange={(e) => handleStandardChange(e.target.value)}
-              style={{ width: '220px' }}
-            >
-              <option value="BSW">Whitworth (BSW)</option>
-              <option value="BSF">Whitworth (BSF)</option>
-              <option value="BA">British Association (BA)</option>
-            </select>
+      <div className="glass-panel" style={{ marginBottom: '2rem', padding: '1.5rem 0' }}>
+        <div className="workflow-container">
+          {/* Stage 1: Select */}
+          <div className="workflow-column">
+            <div className="step-header">
+              <span className="step-number">1</span>
+              <span className="step-title">Select Standard</span>
+            </div>
+            <div className="input-group" style={{ margin: 0, width: '100%' }}>
+              <select
+                value={standard.name === 'Whitworth (BSW)' ? 'BSW' : standard.name === 'Whitworth (BSF)' ? 'BSF' : 'BA'}
+                onChange={(e) => handleStandardChange(e.target.value)}
+              >
+                <option value="BSW">Whitworth (BSW)</option>
+                <option value="BSF">Whitworth (BSF)</option>
+                <option value="BA">British Association (BA)</option>
+              </select>
+              {standard.docUrl && (
+                <a
+                  href={standard.docUrl.startsWith('http') ? standard.docUrl : `${import.meta.env.BASE_URL}${standard.docUrl}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="doc-link"
+                  style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}
+                >
+                  View Engineering Specification
+                </a>
+              )}
+            </div>
           </div>
 
-          <div className="input-group" style={{ margin: 0 }}>
-            <label>Include Classes/Fits:</label>
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
-              {standard.classes.map(c => (
-                <label key={c} style={{ display: 'flex', alignItems: 'center', fontWeight: 'normal', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={selectedClasses.includes(c)}
-                    onChange={() => toggleClass(c)}
-                    style={{ marginRight: '0.5rem', width: 'auto' }}
-                  />
-                  {c}
-                </label>
-              ))}
+          {/* Stage 2: Refine */}
+          <div className="workflow-column">
+            <div className="step-header">
+              <span className="step-number">2</span>
+              <span className="step-title">Refine Fits</span>
             </div>
-            {standard.docUrl && (
+            <div className="input-group" style={{ margin: 0 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '0.25rem' }}>
+                {standard.classes.map(c => (
+                  <label key={c} style={{ display: 'flex', alignItems: 'center', fontWeight: 'normal', cursor: 'pointer', fontSize: '0.9rem' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedClasses.includes(c)}
+                      onChange={() => toggleClass(c)}
+                      style={{ marginRight: '0.4rem', width: 'auto' }}
+                    />
+                    {c}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Stage 3: Export */}
+          <div className="workflow-column">
+            <div className="step-header">
+              <span className="step-number">3</span>
+              <span className="step-title">Launch Export</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+              <button
+                onClick={handleDownload}
+                disabled={threads.length === 0}
+                style={{
+                  width: '100%',
+                  padding: '0.8rem',
+                  opacity: threads.length === 0 ? 0.5 : 1,
+                  cursor: threads.length === 0 ? 'not-allowed' : 'pointer',
+                  background: 'linear-gradient(to right, #38bdf8, #818cf8)',
+                  color: 'white',
+                  border: 'none',
+                  boxShadow: threads.length === 0 ? 'none' : '0 4px 15px rgba(56, 189, 248, 0.3)'
+                }}
+              >
+                Download XML ({threads.length})
+              </button>
               <a
-                href={standard.docUrl.startsWith('http') ? standard.docUrl : `${import.meta.env.BASE_URL}${standard.docUrl}`}
+                href="https://github.com/matthewmcneill/FusionThreadsGenerator#installation-in-fusion-360"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="doc-link"
-                style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}
+                style={{ fontSize: '0.8rem' }}
               >
-                View Engineering Specification
+                Installation Guide
               </a>
-            )}
+            </div>
           </div>
         </div>
       </div>
@@ -211,32 +260,22 @@ function App() {
 
       <ThreadForm onAdd={handleAddThread} currentStandard={standard.name} />
 
-      {/* Download Action */}
-      {threads.length > 0 && (
-        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-          <button
-            onClick={handleDownload}
-            disabled={selectedClasses.length === 0}
-            className="download-btn"
-            style={{
-              padding: '1rem 3rem',
-              fontSize: '1.2rem',
-              background: selectedClasses.length === 0 ? '#4b5563' : 'linear-gradient(to right, #38bdf8, #818cf8)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: selectedClasses.length === 0 ? 'not-allowed' : 'pointer',
-              boxShadow: selectedClasses.length === 0 ? 'none' : '0 0 20px rgba(56, 189, 248, 0.4)',
-              transition: 'all 0.3s ease'
-            }}
-          >
-            Download {standard.name} XML
-          </button>
-          {selectedClasses.length === 0 && (
-            <p style={{ color: '#f87171', marginTop: '0.5rem' }}>Please select at least one class.</p>
-          )}
+      <footer className="app-footer">
+        <div className="footer-content">
+          <p>
+            <strong>Fusion 360 Thread Generator</strong><br />
+            Generates custom XML definitions for Whitworth (BSW/BSF) and British Association (BA) threads.
+          </p>
+          <div className="footer-links">
+            <a href="https://github.com/matthewmcneill/FusionThreadsGenerator" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
+            <span className="separator">|</span>
+            <a href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">GPLv3 License</a>
+          </div>
+          <p className="copyright">
+            © {new Date().getFullYear()} Matthew McNeill. All rights reserved.
+          </p>
         </div>
-      )}
+      </footer>
     </div>
   );
 }

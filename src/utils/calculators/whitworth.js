@@ -13,29 +13,36 @@
 /**
  * @internal
  * Converts fraction strings (e.g. "1 1/8" or "1/16") to decimal values.
- * @param {string|number} f - The fraction string or number.
- * @returns {number} Decimal value.
+ * @param {string|number} f - The fraction string or number to parse.
+ * @returns {number} Decimal value of the fraction.
  */
 const parseFraction = (f) => {
+    // 1. If already a number, return as-is
     if (typeof f === 'number') return f;
+
+    // 2. Handle cases without a fraction bar
     if (!f.includes('/')) return parseFloat(f);
+
+    // 3. Handle mixed fractions (e.g. "1 1/8")
     const parts = f.trim().split(/\s+/);
     if (parts.length === 2) {
         const [whole, frat] = parts;
         const [num, den] = frat.split('/').map(Number);
         return parseFloat(whole) + (num / den);
     }
+
+    // 4. Handle simple fractions (e.g. "1/16")
     const [num, den] = f.split('/').map(Number);
     return num / den;
 };
 
 /**
  * @internal
- * Helper to generate consistent Whitworth preset objects.
- * @param {string} sizeStr - Fraction or whole number string.
+ * Helper to generate consistent Whitworth preset objects with standardized designations and CTDs.
+ * @param {string} sizeStr - Fraction or whole number string (e.g. "1/4").
  * @param {number} tpi - Threads per inch.
  * @param {string} suffix - "BSW" or "BSF".
- * @returns {Object} Standardized thread metadata.
+ * @returns {Object} Standardized thread metadata object.
  */
 const createWhitworthPreset = (sizeStr, tpi, suffix) => ({
     designation: `${sizeStr} ${suffix}`,
@@ -46,7 +53,7 @@ const createWhitworthPreset = (sizeStr, tpi, suffix) => ({
 
 /**
  * Standard British Standard Whitworth (BSW) - Coarse Series sizes (Ref: BS 84:2007 Table 2).
- * @type {Array<[string, number]>}
+ * @type {Array<Object>}
  */
 export const BSW_SIZES = [
     ['1/16', 60], ['3/32', 48], ['1/8', 40], ['5/32', 32], ['3/16', 24],
@@ -62,7 +69,7 @@ export const BSW_SIZES = [
 
 /**
  * Standard British Standard Fine (BSF) - Fine Series sizes (Ref: BS 84:2007 Table 3).
- * @type {Array<[string, number]>}
+ * @type {Array<Object>}
  */
 export const BSF_SIZES = [
     ['1/16', 60], ['3/32', 48], ['1/8', 40], ['5/32', 32], ['3/16', 32],
@@ -117,6 +124,7 @@ export const calculateWhitworth = (diameter, tpi, lengthOfEngagement = null) => 
      * @param {number} majorOffset - Major diameter offset factor.
      * @param {number} minorOffsetBolt - Minor diameter offset factor for bolts.
      * @param {number|null} nutMultiplier - Specialized multiplier for nuts if different from bolt.
+     * @returns {Object} Tolerance boundary dimensions for external and internal threads.
      */
     const getTolerances = (multiplier, majorOffset = 0.01, minorOffsetBolt = 0.02, nutMultiplier = null) => {
         const tEff = T * multiplier;
