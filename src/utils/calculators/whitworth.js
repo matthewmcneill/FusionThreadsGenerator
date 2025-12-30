@@ -184,13 +184,13 @@ export const BSWStandard = {
 };
 
 /**
- * Metadata configuration for the British Standard Fine (BSF) Standard.
+ * Unified Whitworth Standard configuration.
  */
-export const BSFStandard = {
-    name: 'Whitworth (BSF)',
+export const WhitworthStandard = {
+    name: 'Whitworth',
     unit: 'in',
     angle: 55,
-    sortOrder: 2,
+    sortOrder: 1,
     threadForm: 8,
     classes: ['Close', 'Medium', 'Free'],
     docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/WHITWORTH_SPEC.md'

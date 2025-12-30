@@ -12,8 +12,7 @@ import ThreadList from './components/ThreadList';
 import {
   calculateWhitworth,
   calculateBA,
-  BSWStandard,
-  BSFStandard,
+  WhitworthStandard,
   BAStandard,
   BSW_SIZES,
   BSF_SIZES,
@@ -26,9 +25,10 @@ import { generateFusionXML } from './utils/xmlGenerator';
  * Manages the list of threads, the current standard, and the XML generation process.
  */
 function App() {
-  const [standard, setStandard] = useState(BSWStandard);
+  const [standard, setStandard] = useState(WhitworthStandard);
   const [threads, setThreads] = useState([]);
-  const [selectedClasses, setSelectedClasses] = useState(BSWStandard.classes);
+  const [selectedClasses, setSelectedClasses] = useState(WhitworthStandard.classes);
+  const [whitworthFilters, setWhitworthFilters] = useState({ standard: true, fine: false });
 
   /**
    * Helper to calculate a full thread object based on standard and basic input.
@@ -57,19 +57,23 @@ function App() {
     );
 
     // 3. Return combined data
-    return { ...input, ...calc, ctd };
+    return { ...input, ...calc, ctd, type: input.designation.includes('BSW') ? 'standard' : 'fine' };
   };
 
   /**
    * Populates the thread list with default sizes for a given standard.
    * @param {Object} newStd - The standard to load defaults for.
+   * @param {Object} [filters] - Optional filters for Whitworth (Standard/Fine).
    */
-  const loadStandardDefaults = (newStd) => {
+  const loadStandardDefaults = (newStd, filters = whitworthFilters) => {
     // 1. Select the appropriate default size array
     let defaultSizes = [];
-    if (newStd.name === 'Whitworth (BSW)') defaultSizes = BSW_SIZES;
-    else if (newStd.name === 'Whitworth (BSF)') defaultSizes = BSF_SIZES;
-    else defaultSizes = BA_SIZES;
+    if (newStd.name === 'Whitworth') {
+      if (filters.standard) defaultSizes = [...defaultSizes, ...BSW_SIZES];
+      if (filters.fine) defaultSizes = [...defaultSizes, ...BSF_SIZES];
+    } else {
+      defaultSizes = BA_SIZES;
+    }
 
     // 2. Map default sizes through the calculator
     const populated = defaultSizes
@@ -82,24 +86,35 @@ function App() {
   };
 
   /**
-   * Effect hook to load the initial standard (BSW) on mount.
+   * Effect hook to load the initial standard (Whitworth) on mount.
    */
   useEffect(() => {
-    loadStandardDefaults(BSWStandard);
+    loadStandardDefaults(WhitworthStandard);
   }, []);
 
   /**
    * Handles user selection of a different thread standard.
-   * @param {string} standardName - Short code for the standard (BSW, BSF, BA).
+   * @param {string} standardName - Short code for the standard (Whitworth, BA).
    */
   const handleStandardChange = (standardName) => {
     let newStd;
-    if (standardName === 'BSW') newStd = BSWStandard;
-    else if (standardName === 'BSF') newStd = BSFStandard;
+    if (standardName === 'Whitworth') newStd = WhitworthStandard;
     else newStd = BAStandard;
 
     setStandard(newStd);
     loadStandardDefaults(newStd);
+  };
+
+  /**
+   * Toggles Whitworth filters (Standard/Fine).
+   * @param {string} filterKey - 'standard' or 'fine'.
+   */
+  const toggleWhitworthFilter = (filterKey) => {
+    const newFilters = { ...whitworthFilters, [filterKey]: !whitworthFilters[filterKey] };
+    setWhitworthFilters(newFilters);
+    if (standard.name === 'Whitworth') {
+      loadStandardDefaults(standard, newFilters);
+    }
   };
 
   /**
@@ -184,11 +199,10 @@ function App() {
             </div>
             <div className="input-group" style={{ margin: 0 }}>
               <select
-                value={standard.name === 'Whitworth (BSW)' ? 'BSW' : standard.name === 'Whitworth (BSF)' ? 'BSF' : 'BA'}
+                value={standard.name === 'Whitworth' ? 'Whitworth' : 'BA'}
                 onChange={(e) => handleStandardChange(e.target.value)}
               >
-                <option value="BSW">Whitworth (BSW)</option>
-                <option value="BSF">Whitworth (BSF)</option>
+                <option value="Whitworth">Whitworth</option>
                 <option value="BA">British Association (BA)</option>
               </select>
               {standard.docUrl && (
@@ -208,9 +222,31 @@ function App() {
           <div className="workflow-column">
             <div className="step-header">
               <span className="step-number">2</span>
-              <span className="step-title">Refine Fits</span>
+              <span className="step-title">Refine Series & Fits</span>
             </div>
             <div className="input-group" style={{ margin: 0 }}>
+              {standard.name === 'Whitworth' && (
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)', justifyContent: 'center' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}>
+                    <input
+                      type="checkbox"
+                      checked={whitworthFilters.standard}
+                      onChange={() => toggleWhitworthFilter('standard')}
+                      style={{ marginRight: '0.4rem', width: 'auto' }}
+                    />
+                    Standard (BSW)
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}>
+                    <input
+                      type="checkbox"
+                      checked={whitworthFilters.fine}
+                      onChange={() => toggleWhitworthFilter('fine')}
+                      style={{ marginRight: '0.4rem', width: 'auto' }}
+                    />
+                    Fine (BSF)
+                  </label>
+                </div>
+              )}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '0.25rem', justifyContent: 'center' }}>
                 {standard.classes.map(c => (
                   <label key={c} style={{ display: 'flex', alignItems: 'center', fontWeight: 'normal', cursor: 'pointer', fontSize: '0.9rem' }}>
