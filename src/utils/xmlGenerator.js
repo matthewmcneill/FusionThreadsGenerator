@@ -28,52 +28,63 @@ export const generateFusionXML = (threadStandard, threads, selectedClasses) => {
   // 2. Determine if we use Pitch (Metric) or TPI (Imperial)
   const isMetric = threadStandard.unit === 'mm';
 
-  // 3. Generate each <ThreadSize> block
-  const body = threads.map(t => {
-    const pitchElement = isMetric
-      ? `<Pitch>${t.basic.p}</Pitch>`
-      : `<TPI>${t.tpi}</TPI>`;
+  // 3. Group threads by nominal size
+  const groupedThreads = threads.reduce((acc, thread) => {
+    const size = thread.size.toString();
+    if (!acc[size]) acc[size] = [];
+    acc[size].push(thread);
+    return acc;
+  }, {});
 
-    // 4. For each size, generate <Thread> blocks for both internal and external genders
-    // Includes <ThreadToleranceClass> for enhanced CAD compatibility
-    const threadBlocks = selectedClasses
-      .filter(className => t.classes[className])
-      .map(className => {
-        const c = t.classes[className];
-        return `
-      <Thread>
-        <Gender>external</Gender>
-        <Class>${className}</Class>
-        <ThreadToleranceClass>${className}</ThreadToleranceClass>
-        <MajorDia>${c.external.major}</MajorDia>
-        <PitchDia>${c.external.pitch}</PitchDia>
-        <MinorDia>${c.external.minor}</MinorDia>
-      </Thread>
-      <Thread>
-        <Gender>internal</Gender>
-        <Class>${className}</Class>
-        <ThreadToleranceClass>${className}</ThreadToleranceClass>
-        <MajorDia>${c.internal.major}</MajorDia>
-        <PitchDia>${c.internal.pitch}</PitchDia>
-        <MinorDia>${c.internal.minor}</MinorDia>
-        <TapDrill>${c.internal.tapDrill}</TapDrill>
-      </Thread>`;
-      }).join('');
+  // 4. Generate each <ThreadSize> block
+  const body = Object.entries(groupedThreads).map(([size, sizeThreads]) => {
+    const designations = sizeThreads.map(t => {
+      const pitchElement = isMetric
+        ? `<Pitch>${t.basic.p}</Pitch>`
+        : `<TPI>${t.tpi}</TPI>`;
 
-    // 5. Build the encapsulation for the specific size
+      // Generate <Thread> blocks for both internal and external genders
+      const threadBlocks = selectedClasses
+        .filter(className => t.classes[className])
+        .map(className => {
+          const c = t.classes[className];
+          return `
+        <Thread>
+          <Gender>external</Gender>
+          <Class>${className}</Class>
+          <ThreadToleranceClass>${className}</ThreadToleranceClass>
+          <MajorDia>${c.external.major}</MajorDia>
+          <PitchDia>${c.external.pitch}</PitchDia>
+          <MinorDia>${c.external.minor}</MinorDia>
+        </Thread>
+        <Thread>
+          <Gender>internal</Gender>
+          <Class>${className}</Class>
+          <ThreadToleranceClass>${className}</ThreadToleranceClass>
+          <MajorDia>${c.internal.major}</MajorDia>
+          <PitchDia>${c.internal.pitch}</PitchDia>
+          <MinorDia>${c.internal.minor}</MinorDia>
+          <TapDrill>${c.internal.tapDrill}</TapDrill>
+        </Thread>`;
+        }).join('');
+
+      return `
+      <Designation>
+        <ThreadDesignation>${t.designation}</ThreadDesignation>
+        <CTD>${t.ctd || t.designation}</CTD>
+        ${pitchElement}
+        ${threadBlocks}
+      </Designation>`;
+    }).join('');
+
     return `
-  <ThreadSize>
-    <Size>${t.size}</Size>
-    <Designation>
-      <ThreadDesignation>${t.designation}</ThreadDesignation>
-      <CTD>${t.ctd || t.designation}</CTD>
-      ${pitchElement}
-      ${threadBlocks}
-    </Designation>
-  </ThreadSize>`;
+    <ThreadSize>
+      <Size>${size}</Size>
+      ${designations}
+    </ThreadSize>`;
   }).join('');
 
-  // 6. Append the closing tag and return the complete document
+  // 5. Append the closing tag and return the complete document
   const footer = `
 </ThreadType>`;
 
