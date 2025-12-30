@@ -318,7 +318,10 @@ function App() {
             <a href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">GPLv3 License</a>
           </div>
           <p className="copyright">
-            © {new Date().getFullYear()} Matthew McNeill. All rights reserved.
+            © {new Date().getFullYear()} Matthew McNeill. All rights reserved.<br />
+            <span style={{ opacity: 0.6, fontSize: '0.8rem' }}>
+              Version {__APP_VERSION__} ({__COMMIT_HASH__})
+            </span>
           </p>
         </div>
       </footer>
