@@ -96,8 +96,10 @@ select:focus {
 .input-group {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
+  /* Stretch children to fill width */
   gap: 0.5rem;
+  width: 100%;
   margin-bottom: 1.5rem;
 }
 
@@ -122,20 +124,33 @@ select:focus {
   gap: 1rem;
   padding: 0 1.5rem;
   border-right: 1px solid var(--glass-border);
-  align-items: flex-start;
-  text-align: left;
+  align-items: center;
+  /* Center column children by default to help centering links */
+  text-align: center;
 }
 
 .workflow-column:last-child {
   border-right: none;
-  flex: 0.8;
+  flex: 1;
+  /* Make columns equal width */
 }
 
+/* Ensure step headers are still left-aligned relative to the column content */
 .step-header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 0.5rem;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.workflow-link {
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  text-align: center;
+  width: 100%;
+  display: block;
 }
 
 .step-number {

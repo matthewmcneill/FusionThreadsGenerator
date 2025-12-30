@@ -147,7 +147,17 @@ function App() {
     // 3. Create invisible anchor and trigger click
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${standard.name.replace(/\s+/g, '_')}.xml`;
+
+    // Sanitize filename: remove brackets, replace spaces/dots with underscores,
+    // remove non-alphanumeric, collapse underscores
+    const cleanName = standard.name
+      .replace(/[()]/g, '')
+      .replace(/[\s.]+/g, '_')
+      .replace(/[^a-zA-Z0-9_-]/g, '')
+      .replace(/_{2,}/g, '_')
+      .replace(/^_+|_+$/g, '');
+
+    a.download = `${cleanName}.xml`;
     document.body.appendChild(a);
     a.click();
 
@@ -172,7 +182,7 @@ function App() {
               <span className="step-number">1</span>
               <span className="step-title">Select Standard</span>
             </div>
-            <div className="input-group" style={{ margin: 0, width: '100%' }}>
+            <div className="input-group" style={{ margin: 0 }}>
               <select
                 value={standard.name === 'Whitworth (BSW)' ? 'BSW' : standard.name === 'Whitworth (BSF)' ? 'BSF' : 'BA'}
                 onChange={(e) => handleStandardChange(e.target.value)}
@@ -186,8 +196,7 @@ function App() {
                   href={standard.docUrl.startsWith('http') ? standard.docUrl : `${import.meta.env.BASE_URL}${standard.docUrl}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="doc-link"
-                  style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}
+                  className="doc-link workflow-link"
                 >
                   View Engineering Specification
                 </a>
@@ -202,7 +211,7 @@ function App() {
               <span className="step-title">Refine Fits</span>
             </div>
             <div className="input-group" style={{ margin: 0 }}>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '0.25rem' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '0.25rem', justifyContent: 'center' }}>
                 {standard.classes.map(c => (
                   <label key={c} style={{ display: 'flex', alignItems: 'center', fontWeight: 'normal', cursor: 'pointer', fontSize: '0.9rem' }}>
                     <input
@@ -224,10 +233,11 @@ function App() {
               <span className="step-number">3</span>
               <span className="step-title">Launch Export</span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+            <div className="input-group" style={{ margin: 0 }}>
               <button
                 onClick={handleDownload}
                 disabled={threads.length === 0}
+                className="download-btn-small"
                 style={{
                   width: '100%',
                   padding: '0.8rem',
@@ -236,6 +246,7 @@ function App() {
                   background: 'linear-gradient(to right, #38bdf8, #818cf8)',
                   color: 'white',
                   border: 'none',
+                  borderRadius: '8px',
                   boxShadow: threads.length === 0 ? 'none' : '0 4px 15px rgba(56, 189, 248, 0.3)'
                 }}
               >
@@ -245,8 +256,7 @@ function App() {
                 href="https://github.com/matthewmcneill/FusionThreadsGenerator#installation-in-fusion-360"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="doc-link"
-                style={{ fontSize: '0.8rem' }}
+                className="doc-link workflow-link"
               >
                 Installation Guide
               </a>
