@@ -2,7 +2,7 @@
 
 This web application allows users to generate custom XML definitions for Fusion 360 thread standards, specifically focusing on British Association (BA) and Whitworth (BSW/BSF) imperial threads.
 
-## [🚀 Access the Live App](https://matthewmcneill.github.io/FusionThreadsGenerator)
+## [![Access Live App](https://img.shields.io/badge/Access%20Live%20App-🚀-blue?style=for-the-badge&logo=github&logoColor=white)](https://matthewmcneill.github.io/FusionThreadsGenerator)
 
 ## Technical Documentation
 
