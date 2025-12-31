@@ -2,7 +2,7 @@
 
 This web application allows users to generate custom XML definitions for Fusion 360 thread standards, specifically focusing on British Association (BA) and Whitworth (BSW/BSF) imperial threads.
 
-## [![Access Live App](https://img.shields.io/badge/Access%20Live%20App-🚀-blue?style=for-the-badge&logo=github&logoColor=white)](https://matthewmcneill.github.io/FusionThreadsGenerator)
+## [![Access Live App](https://img.shields.io/badge/Access%20Live%20App-🚀-blue?style=for-the-badge&logo=github&logoColor=white)](https://matthewmcneill.github.io/FusionThreadsGenerator) [![Download Whitworth](https://img.shields.io/badge/Download%20Whitworth-XML-green?style=for-the-badge&logo=xml&logoColor=white)](ThreadData/Whitworth.xml) [![Download BA](https://img.shields.io/badge/Download%20BA-XML-green?style=for-the-badge&logo=xml&logoColor=white)](ThreadData/BA_Threads.xml) [![Download ME](https://img.shields.io/badge/Download%20ME-XML-green?style=for-the-badge&logo=xml&logoColor=white)](ThreadData/Model_Engineer_ME.xml)
 
 ## Technical Documentation
 
@@ -15,10 +15,12 @@ This web application allows users to generate custom XML definitions for Fusion 
 
 ## How to Use the App
 
-1. **Select a Thread Standard**: Choose between Whitworth (BSW), Whitworth (BSF), or British Association (BA).
-2. **Review & Customize Sizes**: The app loads standard sizes by default. You can remove existing ones from the table or add custom sizes using the form at the bottom.
-3. **Select Classes/Fits**: Check the thread classes (e.g., Close, Medium, Free, Normal) you want to include in the export.
-4. **Download XML**: Click the download button to generate and save the `.xml` file to your computer.
+1. **Select a Thread Standard**: Use the tabs at the top to select the desired standard: **Whitworth**, **British Association (BA)**, or **Model Engineer (ME)**.
+2. **Filter by Series & Class**:
+    - For **Whitworth**, use the checkboxes to toggle between **Standard (BSW)** and **Fine (BSF)** series.
+    - Select the desired **Thread Classes** (e.g., Close, Medium, Free) to include in the export.
+3. **Review & Customize Sizes**: The app loads standard sizes by default. You can remove existing entries from the table or add custom sizes using the form at the bottom.
+4. **Download XML**: Click the **Download XML** button to generate and save the `.xml` file.
 
 ---
 
