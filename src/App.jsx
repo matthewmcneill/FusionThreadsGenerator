@@ -454,6 +454,18 @@ function App() {
               >
                 Installation Guide
               </a>
+              <div style={{ marginTop: '0.5rem', fontSize: '0.7rem', opacity: 0.6, color: 'var(--text-secondary)' }}>
+                To manage custom threads easily:
+              </div>
+              <a
+                href="https://apps.autodesk.com/FUSION/en/Detail/Index?id=1725038115223093226"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="doc-link workflow-link"
+                style={{ fontSize: '0.75rem', marginTop: '0.2rem' }}
+              >
+                ThreadKeeper (Autodesk Store)
+              </a>
             </div>
           </div>
         </div>

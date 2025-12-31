@@ -38,6 +38,9 @@ Navigate to:
 2. Right-click on the **"Autodesk Fusion 360"** application icon and select **"Show Package Contents"**.
 3. Continue the path: `Contents/Libraries/Applications/Fusion/Fusion/Server/Fusion/Configuration/ThreadData`
 
+> [!TIP]
+> **Easier Management**: Instead of manual copying, consider using the [ThreadKeeper](https://apps.autodesk.com/FUSION/en/Detail/Index?id=1725038115223093226) app from the Autodesk App Store. It provides a dedicated UI within Fusion 360 to manage custom thread definitions and preserves them across updates.
+> 
 > [!IMPORTANT]
 > - **Hidden Files**: Ensure your operating system is set to show hidden files and folders.
 > - **Updates**: When Fusion 360 updates to a new version, it creates a new `<version ID>` folder. You will need to copy your custom XML files from the old version folder to the new one.
