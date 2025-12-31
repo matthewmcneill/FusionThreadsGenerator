@@ -136,5 +136,5 @@ export const MEStandard = {
     threadForm: 8,
     series: ['Fine (40 TPI)', 'Medium (32 TPI)', 'BSB (26 TPI)'],
     classes: ['Medium'],
-    docUrl: 'docs/ME_SPEC.md'
+    docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/ME_SPEC.md'
 };
