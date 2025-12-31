@@ -9,6 +9,20 @@
  */
 
 /**
+ * Model Engineer (ME) Standard configuration.
+ */
+export const MEStandard = {
+    name: 'Model Engineer (ME)',
+    unit: 'in',
+    angle: 55,
+    sortOrder: 4,
+    threadForm: 8,
+    series: ['Fine (40 TPI)', 'Medium (32 TPI)', 'BSB (26 TPI)'],
+    classes: ['Medium'],
+    docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/ME_SPEC.md'
+};
+
+/**
  * @internal
  * Converts fraction strings (e.g. "1 1/8" or "1/16") to decimal values.
  */
@@ -125,16 +139,3 @@ export const calculateME = (diameter, tpi) => {
     };
 };
 
-/**
- * Model Engineer (ME) Standard configuration.
- */
-export const MEStandard = {
-    name: 'Model Engineer (ME)',
-    unit: 'in',
-    angle: 55,
-    sortOrder: 4,
-    threadForm: 8,
-    series: ['Fine (40 TPI)', 'Medium (32 TPI)', 'BSB (26 TPI)'],
-    classes: ['Medium'],
-    docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/ME_SPEC.md'
-};

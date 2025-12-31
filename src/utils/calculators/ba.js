@@ -9,6 +9,20 @@
  */
 
 /**
+ * Metadata configuration for the BA Thread Standard.
+ */
+export const BAStandard = {
+    name: 'BA Threads',
+    unit: 'mm',
+    angle: 47.5,
+    sortOrder: 3,
+    threadForm: 8,
+    series: ['BA'],
+    classes: ['Close', 'Normal'],
+    docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/BA_SPEC.md'
+};
+
+/**
  * Standard BA thread designations and size indices (0-16).
  * @type {Array<{designation: string, size: string}>}
  */
@@ -128,16 +142,3 @@ export const calculateBA = (sizeNumber) => {
     return results;
 };
 
-/**
- * Metadata configuration for the BA Thread Standard.
- */
-export const BAStandard = {
-    name: 'BA Threads',
-    unit: 'mm',
-    angle: 47.5,
-    sortOrder: 3,
-    threadForm: 8,
-    series: ['BA'],
-    classes: ['Close', 'Normal'],
-    docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/BA_SPEC.md'
-};

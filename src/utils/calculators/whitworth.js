@@ -9,6 +9,19 @@
  * - BSWStandard, BSFStandard (exported): Configuration objects for Whitworth standards.
  */
 
+/**
+ * Unified Whitworth Standard configuration.
+ */
+export const WhitworthStandard = {
+    name: 'Whitworth',
+    unit: 'in',
+    angle: 55,
+    sortOrder: 1,
+    threadForm: 8,
+    series: ['BSW', 'BSF'],
+    classes: ['Close', 'Medium', 'Free'],
+    docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/WHITWORTH_SPEC.md'
+};
 
 /**
  * @internal
@@ -172,17 +185,3 @@ export const calculateWhitworth = (diameter, tpi, lengthOfEngagement = null) => 
 };
 
 
-
-/**
- * Unified Whitworth Standard configuration.
- */
-export const WhitworthStandard = {
-    name: 'Whitworth',
-    unit: 'in',
-    angle: 55,
-    sortOrder: 1,
-    threadForm: 8,
-    series: ['BSW', 'BSF'],
-    classes: ['Close', 'Medium', 'Free'],
-    docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/WHITWORTH_SPEC.md'
-};
