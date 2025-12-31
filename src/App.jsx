@@ -274,7 +274,7 @@ function App() {
               <span className="step-number">1</span>
               <span className="step-title">Select Standard</span>
             </div>
-            <div className="input-group" style={{ margin: 0 }}>
+            <div className="input-group" style={{ margin: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
               <select
                 value={standard.name === 'Whitworth' ? 'Whitworth' : (standard.name.includes('ME') ? 'ME' : 'BA')}
                 onChange={(e) => handleStandardChange(e.target.value)}
@@ -283,6 +283,19 @@ function App() {
                 <option value="BA">British Association (BA)</option>
                 <option value="ME">Model Engineer (ME)</option>
               </select>
+              <div style={{ flexGrow: 1 }} />
+              <div style={{ fontSize: '0.7rem', opacity: 0.6, color: 'var(--text-secondary)', lineHeight: '1.2' }}>
+                For more information and instructions please look at the:
+              </div>
+              <a
+                href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/README.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="doc-link workflow-link"
+                style={{ fontSize: '0.75rem', marginTop: '0.3rem' }}
+              >
+                App Documentation
+              </a>
             </div>
           </div>
 
@@ -299,7 +312,7 @@ function App() {
                   <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.4rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
                     <span>Designation (Series)</span>
                     <a
-                      href={standard.docUrl.startsWith('http') ? standard.docUrl : `${import.meta.env.BASE_URL}${standard.docUrl}`}
+                      href={`${standard.docUrl}${standard.seriesAnchor || ''}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="doc-link"
@@ -331,7 +344,7 @@ function App() {
                   <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.4rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
                     <span>Class (Tolerance)</span>
                     <a
-                      href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/DRILL_SPEC.md#4-safety-guard-rails"
+                      href={`${standard.docUrl}${standard.classAnchor || ''}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="doc-link"

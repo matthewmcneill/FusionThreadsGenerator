@@ -22,7 +22,9 @@ export const BAStandard = {
     series: ['BA'],
     classes: ['Close', 'Normal'],
     defaultDrillSets: ['Metric', 'Number'],
-    docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/BA_SPEC.md'
+    docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/BA_SPEC.md',
+    seriesAnchor: '#2-basic-dimensions-bs-931951',
+    classAnchor: '#41-tolerance-classes-bs-93'
 };
 
 /**

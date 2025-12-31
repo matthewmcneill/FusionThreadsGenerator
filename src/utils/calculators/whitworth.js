@@ -21,7 +21,9 @@ export const WhitworthStandard = {
     series: ['BSW', 'BSF'],
     classes: ['Close', 'Medium', 'Free', 'Normal'],
     defaultDrillSets: ['Number', 'Letter', 'Imperial'],
-    docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/WHITWORTH_SPEC.md'
+    docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/WHITWORTH_SPEC.md',
+    seriesAnchor: '#5-standard-size-reference-tables',
+    classAnchor: '#61-standard-tolerance-classes-bs-84'
 };
 
 /**

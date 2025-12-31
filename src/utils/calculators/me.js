@@ -22,7 +22,9 @@ export const MEStandard = {
     series: ['Fine (40 TPI)', 'Medium (32 TPI)', 'BSB (26 TPI)'],
     classes: ['Medium'],
     defaultDrillSets: ['Number', 'Letter', 'Imperial'],
-    docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/ME_SPEC.md'
+    docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/ME_SPEC.md',
+    seriesAnchor: '#4-common-mebsb-thread-sizes-and-tap-drill-data',
+    classAnchor: '#2-technical-specifications'
 };
 
 /**
