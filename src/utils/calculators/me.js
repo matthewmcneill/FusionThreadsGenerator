@@ -8,6 +8,8 @@
  * - MEStandard (exported): Configuration object for the ME standard.
  */
 
+import { getNearestDrill, validateTapDrill } from '../drills.js';
+
 /**
  * Model Engineer (ME) Standard configuration.
  */
@@ -19,6 +21,7 @@ export const MEStandard = {
     threadForm: 8,
     series: ['Fine (40 TPI)', 'Medium (32 TPI)', 'BSB (26 TPI)'],
     classes: ['Medium'],
+    defaultDrillSets: ['Number', 'Letter', 'Imperial'],
     docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/ME_SPEC.md'
 };
 
@@ -53,6 +56,7 @@ const createMEPreset = (sizeStr, tpi) => {
         designation: isBSB ? `ME ${sizeStr} x 26 BSB` : `ME ${sizeStr} x ${tpi}`,
         series,
         size: parseFraction(sizeStr),
+        nominalFraction: sizeStr,
         tpi,
         ctd: `${sizeStr} - ${tpi} ${isBSB ? 'BSB' : 'ME'}`
     };
@@ -76,9 +80,10 @@ export const ME_SIZES = [
  * Reuses Whitworth form (55°) logic.
  * @param {number} diameter - Nominal diameter in inches.
  * @param {number} tpi - Threads per inch.
+ * @param {Array<string>} [drillSets] - Drill sets to use for tap recommendations.
  * @returns {Object} Calculated thread data.
  */
-export const calculateME = (diameter, tpi) => {
+export const calculateME = (diameter, tpi, drillSets) => {
     const p = 1 / tpi;
     const D = diameter;
 
@@ -99,29 +104,47 @@ export const calculateME = (diameter, tpi) => {
     const fmt = (n) => Number(n.toFixed(6));
 
     const getTolerances = (multiplier) => {
+        const result = {};
         const tEff = T * multiplier;
         const tMajor = tEff + 0.01 * Math.sqrt(p);
         const tMinorBolt = tEff + 0.02 * Math.sqrt(p);
         const nutMinorTol = 0.2 * p + (tpi >= 26 ? 0.004 : 0.007);
 
-        return {
-            external: {
-                major: fmt(basicMajor),
-                pitch: fmt(basicPitch),
-                minor: fmt(basicMinor),
-                majorMin: fmt(basicMajor - tMajor),
-                pitchMin: fmt(basicPitch - tEff),
-                minorMin: fmt(basicMinor - tMinorBolt)
-            },
-            internal: {
-                major: fmt(basicMajor),
-                pitch: fmt(basicPitch),
-                minor: fmt(basicMinor),
-                minorMax: fmt(basicMinor + nutMinorTol),
-                pitchMax: fmt(basicPitch + tEff),
-                tapDrill: fmt(basicMinor)
-            }
+        result.external = {
+            major: fmt(basicMajor),
+            pitch: fmt(basicPitch),
+            minor: fmt(basicMinor),
+            majorMin: fmt(basicMajor - tMajor),
+            pitchMin: fmt(basicPitch - tEff),
+            minorMin: fmt(basicMinor - tMinorBolt)
         };
+
+        const minorMin = basicMinor;
+        const minorMax = basicMinor + nutMinorTol;
+        // Target the median of the specification to ensure a "Spec Fit" (Green) recommendation
+        const targetDecimal = (minorMin + minorMax) / 2;
+        const shopDrill = getNearestDrill(targetDecimal, 'in', drillSets);
+
+        result.internal = {
+            major: fmt(basicMajor),
+            pitch: fmt(basicPitch),
+            minor: fmt(basicMinor),
+            minorMax: fmt(basicMinor + nutMinorTol),
+            pitchMax: fmt(basicPitch + tEff),
+            ...(shopDrill ? {
+                tapDrillTarget: fmt(targetDecimal),
+                tapDrillToolSize: fmt(shopDrill.size),
+                tapDrillName: shopDrill.name,
+                tapDrillValidation: validateTapDrill(
+                    shopDrill.size,
+                    basicMajor,
+                    basicMinor,
+                    basicMinor + nutMinorTol
+                )
+            } : {})
+        };
+
+        return result;
     };
 
     return {

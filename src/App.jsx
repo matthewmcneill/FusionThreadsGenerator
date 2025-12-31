@@ -9,6 +9,7 @@
 import React, { useState, useEffect } from 'react';
 import ThreadForm from './components/ThreadForm';
 import ThreadList from './components/ThreadList';
+import ThreadPreview from './components/ThreadPreview';
 import {
   calculateWhitworth,
   calculateBA,
@@ -32,24 +33,30 @@ function App() {
   const [threads, setThreads] = useState([]);
   const [selectedClasses, setSelectedClasses] = useState(WhitworthStandard.classes);
   const [selectedSeries, setSelectedSeries] = useState(WhitworthStandard.series);
+  const [selectedDrillSets, setSelectedDrillSets] = useState(WhitworthStandard.defaultDrillSets);
+  const [showPreview, setShowPreview] = useState(false);
+
+  const ALL_DRILL_SETS = ['Metric', 'Number', 'Letter', 'Imperial'];
 
   /**
    * Helper to calculate a full thread object based on standard and basic input.
    * @param {Object} std - The active thread standard.
    * @param {Object} input - Basic thread dimensions (size, tpi, designation).
+   * @param {Array<string>} [drillSets] - Optional override for drill sets (uses state if omitted).
    * @returns {Object|null} The calculated thread object.
    */
-  const calculateThreadItem = (std, input) => {
+  const calculateThreadItem = (std, input, drillSets = null) => {
     let calc;
     const isWhitworth = std.name.includes('Whitworth');
+    const activeDrillSets = drillSets || selectedDrillSets;
 
     // 1. Run standard-specific geometry calculator
     if (isWhitworth) {
-      calc = calculateWhitworth(input.size, input.tpi);
+      calc = calculateWhitworth(input.size, input.tpi, activeDrillSets);
     } else if (std.name.includes('ME')) {
-      calc = calculateME(input.size, input.tpi);
+      calc = calculateME(input.size, input.tpi, activeDrillSets);
     } else {
-      calc = calculateBA(input.size);
+      calc = calculateBA(input.size, activeDrillSets);
     }
 
     if (!calc) return null;
@@ -99,7 +106,7 @@ function App() {
 
     // 2. Map default sizes through the calculator (preserving custom threads)
     const populatedDefaults = defaultSizes
-      .map(s => calculateThreadItem(newStd, s))
+      .map(s => calculateThreadItem(newStd, s, newStd.defaultDrillSets))
       .filter(Boolean);
 
     const customThreads = threads.filter(t => !t.isPreset);
@@ -108,6 +115,7 @@ function App() {
     setThreads([...populatedDefaults.map(t => ({ ...t, isPreset: true })), ...customThreads]);
     setSelectedClasses(newStd.classes);
     setSelectedSeries(activeSeries);
+    setSelectedDrillSets(newStd.defaultDrillSets || ['Number', 'Letter', 'Imperial']);
   };
 
   /**
@@ -175,6 +183,23 @@ function App() {
     } else {
       setSelectedClasses([...selectedClasses, className]);
     }
+  };
+
+  /**
+   * Toggles inclusion of a drill bit set in the search logic.
+   * @param {string} setName - 'Metric', 'Number', 'Letter', or 'Fractional'.
+   */
+  const toggleDrillSet = (setName) => {
+    const newSets = selectedDrillSets.includes(setName)
+      ? selectedDrillSets.filter(s => s !== setName)
+      : [...selectedDrillSets, setName];
+
+    setSelectedDrillSets(newSets);
+
+    // Recalculate all threads to update drill names in real-time
+    // Must pass newSets explicitly because setSelectedDrillSets is async
+    const updatedThreads = threads.map(t => calculateThreadItem(standard, t, newSets));
+    setThreads(updatedThreads);
   };
 
   /**
@@ -251,53 +276,81 @@ function App() {
             </div>
           </div>
 
-          {/* Stage 2: Refine (Only show if there are options) */}
-          {(standard.series.length > 1 || standard.classes.length > 1) && (
-            <div className="workflow-column">
-              <div className="step-header">
-                <span className="step-number">2</span>
-                <span className="step-title">Refine Series & Fits</span>
+          {/* Stage 2: Refine */}
+          <div className="workflow-column" style={{ flex: 1.5 }}>
+            <div className="step-header">
+              <span className="step-number">2</span>
+              <span className="step-title">Refine Configuration</span>
+            </div>
+            <div className="input-group" style={{ margin: 0 }}>
+              {/* Designation Toggle */}
+              {standard.series.length > 1 && (
+                <div style={{ marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.4rem', textAlign: 'center' }}>Designation (Series)</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
+                    {standard.series.map(s => (
+                      <label key={s} style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedSeries.includes(s)}
+                          onChange={() => toggleSeries(s)}
+                          style={{ marginRight: '0.3rem', width: 'auto' }}
+                        />
+                        {s}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Class Toggle */}
+              <div style={{ marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.4rem', textAlign: 'center' }}>Class (Tolerance)</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
+                  {standard.classes.map(c => (
+                    <label key={c} style={{ display: 'flex', alignItems: 'center', fontWeight: 'normal', cursor: 'pointer', fontSize: '0.85rem' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedClasses.includes(c)}
+                        onChange={() => toggleClass(c)}
+                        style={{ marginRight: '0.3rem', width: 'auto' }}
+                      />
+                      {c}
+                    </label>
+                  ))}
+                </div>
               </div>
-              <div className="input-group" style={{ margin: 0 }}>
-                {standard.series.length > 1 && (
-                  <div style={{ marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                    <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.5rem', textAlign: 'center' }}>Designation (Series)</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
-                      {standard.series.map(s => (
-                        <label key={s} style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}>
-                          <input
-                            type="checkbox"
-                            checked={selectedSeries.includes(s)}
-                            onChange={() => toggleSeries(s)}
-                            style={{ marginRight: '0.4rem', width: 'auto' }}
-                          />
-                          {s}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {standard.classes.length > 1 && (
-                  <div>
-                    <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.5rem', textAlign: 'center' }}>Class (Tolerance)</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
-                      {standard.classes.map(c => (
-                        <label key={c} style={{ display: 'flex', alignItems: 'center', fontWeight: 'normal', cursor: 'pointer', fontSize: '0.9rem' }}>
-                          <input
-                            type="checkbox"
-                            checked={selectedClasses.includes(c)}
-                            onChange={() => toggleClass(c)}
-                            style={{ marginRight: '0.4rem', width: 'auto' }}
-                          />
-                          {c}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
+
+              {/* Drill Set Toggle */}
+              <div>
+                <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.4rem', textAlign: 'center' }}>Drill Bit Sets</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
+                  {ALL_DRILL_SETS.map(s => (
+                    <label key={s} style={{ display: 'flex', alignItems: 'center', fontWeight: 'normal', cursor: 'pointer', fontSize: '0.85rem' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedDrillSets.includes(s)}
+                        onChange={() => toggleDrillSet(s)}
+                        style={{ marginRight: '0.3rem', width: 'auto' }}
+                      />
+                      {s}
+                    </label>
+                  ))}
+                </div>
+                <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
+                  <a
+                    href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/DRILL_SPEC.md"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="doc-link workflow-link"
+                    style={{ fontSize: '0.75rem' }}
+                  >
+                    View Tapping Drill Specification
+                  </a>
+                </div>
               </div>
             </div>
-          )}
+          </div>
 
           {/* Stage 3: Export */}
           <div className="workflow-column">
@@ -337,10 +390,35 @@ function App() {
         </div>
       </div>
 
-      {/* List and Form components */}
-      <ThreadList threads={threads} onRemove={handleRemoveThread} unit={standard.unit} />
+      {/* View Toggle */}
+      <div className="view-toggle">
+        <button
+          className={`toggle-btn ${!showPreview ? 'active' : ''}`}
+          onClick={() => setShowPreview(false)}
+        >
+          Configuration
+        </button>
+        <button
+          className={`toggle-btn ${showPreview ? 'active' : ''}`}
+          onClick={() => setShowPreview(true)}
+        >
+          Data Preview
+        </button>
+      </div>
 
-      <ThreadForm onAdd={handleAddThread} currentStandard={standard.name} />
+      {!showPreview ? (
+        <>
+          {/* List and Form components */}
+          <ThreadList threads={threads} onRemove={handleRemoveThread} unit={standard.unit} />
+          <ThreadForm onAdd={handleAddThread} currentStandard={standard.name} />
+        </>
+      ) : (
+        <ThreadPreview
+          threads={threads}
+          selectedClasses={selectedClasses}
+          unit={standard.unit}
+        />
+      )}
 
       <footer className="app-footer">
         <div className="footer-content">

@@ -56,7 +56,10 @@ export const generateFusionXML = (threadStandard, threads, selectedClasses, meta
         .filter(className => t.classes[className])
         .map(className => {
           const c = t.classes[className];
-          return `
+          const blocks = [];
+
+          if (c.external) {
+            blocks.push(`
         <Thread>
           <Gender>external</Gender>
           <Class>${className}</Class>
@@ -64,16 +67,23 @@ export const generateFusionXML = (threadStandard, threads, selectedClasses, meta
           <MajorDia>${c.external.major}</MajorDia>
           <PitchDia>${c.external.pitch}</PitchDia>
           <MinorDia>${c.external.minor}</MinorDia>
-        </Thread>
+        </Thread>`);
+          }
+
+          if (c.internal) {
+            blocks.push(`
         <Thread>
           <Gender>internal</Gender>
           <Class>${className}</Class>
           <ThreadToleranceClass>${className}</ThreadToleranceClass>
           <MajorDia>${c.internal.major}</MajorDia>
           <PitchDia>${c.internal.pitch}</PitchDia>
-          <MinorDia>${c.internal.minor}</MinorDia>
-          <TapDrill>${c.internal.tapDrill}</TapDrill>
-        </Thread>`;
+          <MinorDia>${c.internal.minor}</MinorDia>${(c.internal.tapDrillToolSize && !c.internal.tapDrillValidation?.status?.startsWith('catastrophic')) ? `
+          <TapDrill>${c.internal.tapDrillToolSize}</TapDrill>` : ''}
+        </Thread>`);
+          }
+
+          return blocks.join('');
         }).join('');
 
       return `

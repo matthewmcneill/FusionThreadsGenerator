@@ -25,6 +25,19 @@ const ThreadForm = ({ onAdd, currentStandard }) => {
     const isME = currentStandard.includes('ME');
     const usesTpi = isWhitworth || isME;
 
+    const parseFraction = (f) => {
+        if (!f || typeof f !== 'string') return parseFloat(f);
+        if (!f.includes('/')) return parseFloat(f);
+        const parts = f.trim().split(/\s+/);
+        if (parts.length === 2) {
+            const [whole, frat] = parts;
+            const [num, den] = frat.split('/').map(Number);
+            return parseFloat(whole) + (num / den);
+        }
+        const [num, den] = f.split('/').map(Number);
+        return num / den;
+    };
+
     /**
      * Handles form submission and validation.
      * @param {Event} e - Submit event object.
@@ -39,9 +52,13 @@ const ThreadForm = ({ onAdd, currentStandard }) => {
 
         // 3. Transform input values and pass to parent callback
         // Converts strings to numbers where appropriate for the calculator
+        const nominalSize = usesTpi ? parseFraction(size) : size;
+        const nominalFraction = (usesTpi && size.includes('/')) ? size : null;
+
         onAdd({
             designation,
-            size: usesTpi ? parseFloat(size) : size,
+            size: nominalSize,
+            nominalFraction,
             tpi: usesTpi ? parseFloat(tpi) : null
         });
 
@@ -69,9 +86,8 @@ const ThreadForm = ({ onAdd, currentStandard }) => {
                     <div className="input-group">
                         <label>{usesTpi ? 'Nominal Diameter (inches)' : 'BA Number'}</label>
                         <input
-                            type={usesTpi ? "number" : "text"}
-                            step="any"
-                            placeholder={isWhitworth || isME ? "e.g. 0.25" : "e.g. 2"}
+                            type="text"
+                            placeholder={isWhitworth || isME ? "e.g. 1/4 or 0.25" : "e.g. 2"}
                             value={size}
                             onChange={(e) => setSize(e.target.value)}
                         />

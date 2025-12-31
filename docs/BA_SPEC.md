@@ -47,8 +47,29 @@ Tolerances are in millimeters (mm). The symbol $p$ signifies pitch in millimeter
 | **Bolts (Normal 11-16 BA)** | $0.25p$ | $0.10p + 0.025$ | $0.20p + 0.05$ |
 | **Nuts (All Classes)** | ... | $0.12p + 0.03$ | $0.375p$ |
 
-## 4. Usage Recommendations
+## 4. Implementation Notes
 
-- **Size Selection**: Preference should be given to even-numbered BA sizes.
-- **Comparison to BSF**: For screws smaller than 1/4 inch, BA is generally recommended over BSW/BSF, except that 0 BA is often replaced by 1/4-in BSF.
-- **Allowances**: For Normal Class bolts (sizes 0 to 10 BA), an allowance of 0.025 mm is provided.
+### 4.1 Tolerance Classes (BS 93)
+The generator implements the standard BA fit grades:
+- **Close (Bolts)**: Precision fit with no allowance ($0.15p$ Maj Tol). Available for 0-10 BA.
+- **Normal (Bolts)**: General engineering fit with 0.025mm allowance for 0-10 BA.
+- **Normal (Nuts)**: Corresponds to the "All Classes" nut definition in BS 93.
+
+### 4.2 Allowances
+As per BS 93:1951:
+- **Normal Class Bolts (Sizes 0 to 10 BA)**: A constant allowance of **0.025 mm** is subtracted from the basic diameters (Major, Effective, Minor) to ensure a clearance fit even at maximum material conditions.
+- **Close Class and 11-16 BA**: No allowance is provided; the maximum bolt size equals the basic size.
+
+#### Tap Drill Selection
+For BA threads, the generator targets a **68.75% thread engagement** corresponding to the Maximum Minor Diameter. For detailed formulas and the composition of our modeled drill sets (Metric and Number), see the **[Tapping Drill Specification](DRILL_SPEC.md)**.
+
+#### Recommended Shop Drills (Reference)
+| Size | Pitch (mm) | Target Decimal | Recommended Shop Drill |
+| :--- | :--- | :--- | :--- |
+| **0 BA** | 1.00 | 5.175 | 5.2 mm (Letter 6) |
+| **2 BA** | 0.81 | 4.032 | 4.0 mm |
+| **4 BA** | 0.66 | 3.055 | 3.1 mm (#31) |
+| **6 BA** | 0.53 | 2.363 | 2.35 mm (#42) |
+| **8 BA** | 0.43 | 1.845 | 1.85 mm (#49) |
+| **10 BA** | 0.35 | 1.411 | 1.4 mm (#54) |
+| **12 BA** | 0.28 | 1.069 | 1.05 mm (#58) |

@@ -267,3 +267,228 @@ th {
   opacity: 0.5;
   font-size: 0.8rem;
 }
+
+/* Preview Table Styles */
+.preview-container {
+  padding: 0;
+  overflow: hidden;
+  margin-top: 2rem;
+}
+
+.preview-scroll-area {
+  max-height: 70vh;
+  overflow-y: auto;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.preview-table {
+  margin-top: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.preview-table th {
+  position: sticky;
+  top: 0;
+  background: #1e293b;
+  /* Solid background for sticky header */
+  z-index: 10;
+  border-bottom: 2px solid var(--accent-color);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.75rem 0.5rem;
+}
+
+.preview-table td {
+  font-size: 0.85rem;
+  border-right: 1px solid var(--glass-border);
+  padding: 0.6rem 0.5rem;
+}
+
+.preview-table td:last-child {
+  border-right: none;
+}
+
+.num-column {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  text-align: right;
+  font-size: 0.8rem;
+  padding-right: 1rem !important;
+}
+
+.size-column,
+.designation-column {
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.03) !important;
+  text-align: center;
+  vertical-align: middle;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.external-row {
+  background: rgba(56, 189, 248, 0.05);
+}
+
+.internal-row td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.preview-table tr:hover td:not(.size-column):not(.designation-column) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Tab Switcher Styles */
+.view-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.4rem;
+  border-radius: 50px;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  border: 1px solid var(--glass-border);
+}
+
+.toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0.6rem 1.5rem;
+  border-radius: 40px;
+  font-weight: 600;
+  transition: all 0.3s;
+  box-shadow: none;
+}
+
+.toggle-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  transform: none;
+  box-shadow: none;
+}
+
+.toggle-btn.active {
+  background: var(--accent-color);
+  color: #0f172a;
+  box-shadow: var(--accent-glow);
+}
+
+.toggle-btn.active:hover {
+  background: var(--accent-color);
+  color: #0f172a;
+}
+
+/* Preview Header & Copy Button */
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.preview-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--accent-color);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  line-height: normal;
+}
+
+.copy-btn {
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid var(--accent-color);
+  color: var(--accent-color);
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: none;
+}
+
+.copy-btn:hover {
+  background: var(--accent-color);
+  color: #0f172a;
+  transform: translateY(-1px);
+  box-shadow: var(--accent-glow);
+}
+
+.copy-btn.copied {
+  background: #10b981;
+  border-color: #10b981;
+  color: white;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+/* Limit range display for high-precision data */
+.limit-range {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.nominal {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.limits {
+  font-size: 0.7rem;
+  opacity: 0.5;
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.drill-recommendation {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.drill-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  align-items: baseline;
+}
+
+.drill-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  opacity: 0.4;
+  font-weight: 600;
+}
+
+.drill-name {
+  font-weight: 700;
+  color: #38bdf8;
+  font-size: 0.85rem;
+}
+
+.drill-status {
+  grid-column: span 2;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+  text-align: right;
+  width: 100%;
+}
+
+.drill-size {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-primary);
+}

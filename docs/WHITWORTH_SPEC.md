@@ -141,7 +141,68 @@ These tables list the standard Threads Per Inch (TPI) for BSW and BSF series as 
 | 4 | 4.5 | Standard |
 | 4 1/4 | 4 | Standard |
 
-## 5. References
+## 5. Tap Drill Selection
+
+While the theoretical minor diameter is the absolute minimum hole size, workshop practice usually recommends a slightly larger drill bit to provide roughly **75% to 80% thread engagement**. This prevents tap breakage and reduces the torque required to cut the thread.
+
+### Tap Drill Selection
+For Whitworth threads, the generator recommends tapping drills based on a 75% thread engagement target. For detailed formulas and the composition of our modeled drill sets (Fractional, Letter, Number, Metric), see the **[Tapping Drill Specification](DRILL_SPEC.md)**.
+
+### 5.1 The 75% Engagement Formula
+The generator uses the industry-standard constant for Whitworth (55°) thread forms to calculate the target engagement diameter:
+$$Tap\ Drill = Major\ Diameter - \frac{0.8227}{TPI}$$
+
+### 5.2 Machinist Drill Set Mapping
+The target decimal is automatically mapped to the closest available drill from three standard Imperial sets to ensure high precision (typically within 0.001" to 0.005"):
+1.  **Fractional Drills**: 1/64" increments.
+2.  **Number Drills**: #80 through #1.
+3.  **Letter Drills**: A through Z.
+
+The table displays both the recommended **Shop Drill Name** (e.g., `13/64"`, `#7`, or `F`) and the target decimal diameter.
+
+### 5.3 Recommended Shop Drills (Reference)
+
+| Size | BSW Drill (Shop) | BSF Drill (Shop) |
+| :--- | :--- | :--- |
+| **1/16** | #53 (0.0595) | #53 (0.0595) |
+| **1/8** | #30 (0.1285) | #30 (0.1285) |
+| **3/16** | #9 (0.1960) | #15 (0.1800) |
+| **1/4** | #4 (0.2090) | #4 (0.2090) |
+| **5/16** | 17/64 (0.2656) | L (0.2900) |
+| **3/8** | 5/16 (0.3125) | 21/64 (0.3281) |
+| **7/16** | U (0.3680) | 25/64 (0.3906) |
+| **1/2** | 27/64 (0.4219) | 29/64 (0.4531) |
+
+### 6.1 Standard Tolerance Classes (BS 84)
+The generator provides the standard tolerance grades defined in BS 84:2007. Note that the naming conventions differ between internal (nut) and external (bolt) threads:
+
+#### External Threads (Bolts)
+- **Close**: High-precision fit ($2/3 T$ multiplier).
+- **Medium**: General engineering fit ($1.0 T$ multiplier).
+- **Free**: Loose fit ($1.5 T$ multiplier) for easy assembly.
+
+#### Internal Threads (Nuts)
+- **Medium**: High-precision fit ($1.25 T$ multiplier).
+- **Normal**: General engineering fit ($1.5 T$ multiplier).
+
+### 6.2 Recommended Bolt-Nut Pairings
+For reliable performance, the following pairings are recommended by machining standards:
+
+| Application | Bolt Class | Nut Class |
+| :--- | :--- | :--- |
+| **High Precision** | Close | Medium |
+| **General Purpose** | Medium | Normal |
+| **Loose Fit** | Free | Normal |
+
+### 6.3 Tolerance Limits vs. Nominal Sizes
+The application displays the **Actual Tolerance Limits (Min - Max)** for all diameter (Major, Pitch, Minor) in the preview table.
+- **External Threads (Bolts)**: Nominal values represent the maximum limits; the lower limit is calculated using the multipliers above.
+- **Internal Threads (Nuts)**: Nominal values represent the minimum limits; the upper limit is calculated using the appropriate tolerance factors.
+
+### 6.2 Small BSF Sizes
+In official standards, the BSF series typically begins at **3/16"**. For sizes smaller than 3/16", BSW is the standard. However, this tool includes supplementary entries for 1/16", 3/32", 1/8", and 5/32" in the BSF selector for convenience; these entries use the BSW-equivalent TPI and calculations for historical compatibility.
+
+## 7. References
 
 1. **BS 84:2007**: Parallel screw threads of Whitworth form - Requirements. British Standards Institution.
 2. **Machinery's Handbook** (Various Editions): Technical data for Whitworth thread forms and historical standard sizes.

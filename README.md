@@ -9,6 +9,7 @@ This web application allows users to generate custom XML definitions for Fusion 
 - [Whitworth Thread Specification](docs/WHITWORTH_SPEC.md) - Technical details and formulas for Whitworth (BSW/BSF) thread forms.
 - [BA Thread Specification](docs/BA_SPEC.md) - Technical details and formulas for British Association (BA) thread forms.
 - [Model Engineer (ME) Thread Specification](docs/ME_SPEC.md) - Technical details and formulas for Model Engineer (ME) thread forms.
+- [Tapping Drill Specification](docs/DRILL_SPEC.md) - Technical specification for tapping drill selection logic and toolsets.
 - [Implementation Overview](docs/implementation_overview.md) - Software architecture and developer guide.
 
 ---

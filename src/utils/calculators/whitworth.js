@@ -19,7 +19,8 @@ export const WhitworthStandard = {
     sortOrder: 1,
     threadForm: 8,
     series: ['BSW', 'BSF'],
-    classes: ['Close', 'Medium', 'Free'],
+    classes: ['Close', 'Medium', 'Free', 'Normal'],
+    defaultDrillSets: ['Number', 'Letter', 'Imperial'],
     docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/WHITWORTH_SPEC.md'
 };
 
@@ -61,6 +62,7 @@ const createWhitworthPreset = (sizeStr, tpi, suffix) => ({
     designation: `${sizeStr} ${suffix}`,
     series: suffix,
     size: parseFraction(sizeStr),
+    nominalFraction: sizeStr,
     tpi,
     ctd: `${sizeStr} - ${tpi} ${suffix}`
 });
@@ -97,14 +99,25 @@ export const BSF_SIZES = [
 ].map(([s, t]) => createWhitworthPreset(s, t, 'BSF'));
 
 
+import { getNearestDrill, validateTapDrill } from '../drills';
+
+/**
+ * @internal
+ * Standard BS 84 Tolerance Factor T.
+ */
+const calculateWhitworthTolFactor = (D, p, L) => {
+    return 0.002 * Math.cbrt(D) + 0.003 * Math.sqrt(L) + 0.005 * Math.sqrt(p);
+};
+
 /**
  * Calculates Whitworth thread geometry and tolerances based on BS 84:2007 and Machinery's Handbook formulae.
  * @param {number} diameter - Nominal diameter in inches.
  * @param {number} tpi - Threads per inch.
+ * @param {Array<string>} [drillSets] - Drill sets to use for tap recommendations.
  * @param {number|null} [lengthOfEngagement] - Length of engagement (defaults to diameter if null).
- * @returns {Object} Calculated thread data including basic dimensions and classes (Close, Medium, Free).
+ * @returns {Object} Calculated thread data including basic dimensions and classes.
  */
-export const calculateWhitworth = (diameter, tpi, lengthOfEngagement = null) => {
+export const calculateWhitworth = (diameter, tpi, drillSets, lengthOfEngagement = null) => {
     // 1. Calculate basic geometry parameters
     const p = 1 / tpi; // Pitch
     const D = diameter;
@@ -120,50 +133,69 @@ export const calculateWhitworth = (diameter, tpi, lengthOfEngagement = null) => 
     const basicPitch = D - d;
     const basicMinor = D - (2 * d);
 
-    // 3. Calculate common tolerance factor T based on BS 84 formula
-    const T = 0.002 * Math.cbrt(D) + 0.003 * Math.sqrt(L) + 0.005 * Math.sqrt(p);
+    // 3. Formatter
     const fmt = (n) => Number(n.toFixed(6));
-
-    // 4. Calculate nut minor diameter tolerance (special logic based on TPI)
-    let minorTolTerm;
-    if (tpi >= 26) minorTolTerm = 0.004;
-    else if (tpi >= 22) minorTolTerm = 0.005;
-    else minorTolTerm = 0.007;
-    const nutMinorTol = 0.2 * p + minorTolTerm;
 
     /**
      * @internal
-     * Helper to calculate dimensions for specific Whitworth tolerance classes.
-     * @param {number} multiplier - Tolerance multiplier (e.g., 2/3 for Close).
-     * @param {number} majorOffset - Major diameter offset factor.
-     * @param {number} minorOffsetBolt - Minor diameter offset factor for bolts.
-     * @param {number|null} nutMultiplier - Specialized multiplier for nuts if different from bolt.
+     * Inner helper to calculate tolerances for a specific fit class.
+     * @param {number|null} extMultiplier - Tolerance multiplier for external threads (null if not applicable).
+     * @param {number|null} intMultiplier - Tolerance multiplier for internal threads (null if not applicable).
+     * @param {number} majorOffset - Major diameter offset factor for external threads.
+     * @param {number} minorOffsetBolt - Minor diameter offset factor for external threads.
      * @returns {Object} Tolerance boundary dimensions for external and internal threads.
      */
-    const getTolerances = (multiplier, majorOffset = 0.01, minorOffsetBolt = 0.02, nutMultiplier = null) => {
-        const tEff = T * multiplier;
-        const tMajor = tEff + majorOffset * Math.sqrt(p);
-        const tMinorBolt = tEff + minorOffsetBolt * Math.sqrt(p);
-        const nutTEff = T * (nutMultiplier || multiplier);
+    const getTolerances = (extMultiplier, intMultiplier, majorOffset, minorOffsetBolt) => {
+        const result = {};
+        const T = calculateWhitworthTolFactor(diameter, p, L);
 
-        return {
-            external: {
+        // Shared nut minor tolerance formula
+        const minorTolTerm = tpi >= 26 ? 0.004 : (tpi >= 22 ? 0.005 : 0.007);
+        const nutMinorTol = 0.2 * p + minorTolTerm;
+
+        if (extMultiplier !== null) {
+            const tEffExt = T * extMultiplier;
+            const tMajor = tEffExt + majorOffset * Math.sqrt(p);
+            const tMinorBolt = tEffExt + minorOffsetBolt * Math.sqrt(p);
+            result.external = {
                 major: fmt(basicMajor),
                 pitch: fmt(basicPitch),
                 minor: fmt(basicMinor),
                 majorMin: fmt(basicMajor - tMajor),
-                pitchMin: fmt(basicPitch - tEff),
+                pitchMin: fmt(basicPitch - tEffExt),
                 minorMin: fmt(basicMinor - tMinorBolt)
-            },
-            internal: {
+            };
+        }
+
+        if (intMultiplier !== null) {
+            const tEffInt = T * intMultiplier;
+            const minorMin = basicMinor;
+            const minorMax = basicMinor + (nutMinorTol * (intMultiplier / 1.125));
+            // Target the median of the specification to ensure a "Spec Fit" (Green) recommendation
+            const targetDecimal = (minorMin + minorMax) / 2;
+            const shopDrill = getNearestDrill(targetDecimal, 'in', drillSets);
+
+            result.internal = {
                 major: fmt(basicMajor),
                 pitch: fmt(basicPitch),
                 minor: fmt(basicMinor),
-                minorMax: fmt(basicMinor + nutMinorTol),
-                pitchMax: fmt(basicPitch + nutTEff),
-                tapDrill: fmt(basicMinor)
-            }
-        };
+                minorMax: fmt(basicMinor + (nutMinorTol * (intMultiplier / 1.125))), // Normal internal is looser
+                pitchMax: fmt(basicPitch + tEffInt),
+                ...(shopDrill ? {
+                    tapDrillTarget: fmt(targetDecimal),
+                    tapDrillToolSize: fmt(shopDrill.size),
+                    tapDrillName: shopDrill.name,
+                    tapDrillValidation: validateTapDrill(
+                        shopDrill.size,
+                        basicMajor,
+                        basicMinor,
+                        basicMinor + (nutMinorTol * (intMultiplier / 1.125))
+                    )
+                } : {})
+            };
+        }
+
+        return result;
     };
 
     // 5. Build final result mapping for all standard classes
@@ -177,9 +209,14 @@ export const calculateWhitworth = (diameter, tpi, lengthOfEngagement = null) => 
             p: fmt(p)
         },
         classes: {
-            'Close': getTolerances(2 / 3, 0.01, 0.013),
-            'Medium': getTolerances(1, 0.01, 0.02),
-            'Free': getTolerances(3 / 2, 0.01, 0.02)
+            // Close: Bolt Close (2/3) only
+            'Close': getTolerances(2 / 3, null, 0.01, 0.013),
+            // Medium: Bolt Medium (1.0), Nut Medium (1.25)
+            'Medium': getTolerances(1, 1.25, 0.01, 0.02),
+            // Free: Bolt Free (1.5) only
+            'Free': getTolerances(1.5, null, 0.01, 0.02),
+            // Normal: Nut Normal (1.5) only
+            'Normal': getTolerances(null, 1.5, 0.01, 0.02)
         }
     };
 };

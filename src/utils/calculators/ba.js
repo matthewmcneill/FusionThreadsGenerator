@@ -8,6 +8,8 @@
  * - BAStandard (exported): Configuration object for the BA standard.
  */
 
+import { getNearestDrill, validateTapDrill } from '../drills.js';
+
 /**
  * Metadata configuration for the BA Thread Standard.
  */
@@ -19,6 +21,7 @@ export const BAStandard = {
     threadForm: 8,
     series: ['BA'],
     classes: ['Close', 'Normal'],
+    defaultDrillSets: ['Metric', 'Number'],
     docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/BA_SPEC.md'
 };
 
@@ -65,9 +68,10 @@ const BA_TABLE = {
 /**
  * Calculates BA thread geometry and tolerances.
  * @param {string|number} sizeNumber - The BA number (0-16).
+ * @param {Array<string>} [drillSets] - Drill sets to use for tap recommendations.
  * @returns {Object|null} The calculated thread data or null if size not found.
  */
-export const calculateBA = (sizeNumber) => {
+export const calculateBA = (sizeNumber, drillSets) => {
     // 1. Retrieve basic data from lookup table
     const size = BA_TABLE[sizeNumber.toString()];
     if (!size) return null;
@@ -76,51 +80,62 @@ export const calculateBA = (sizeNumber) => {
     const sizeNum = parseInt(sizeNumber);
     const fmt = (n) => Number(n.toFixed(6));
 
-    /**
-     * @internal
-     * Inner helper to calculate tolerances for a specific fit class.
-     * @param {boolean} isCloseClass - Whether to calculate Close class tolerances.
-     */
-    const getTolerances = (isCloseClass) => {
-        // 2. Define tolerance formulas based on BA size and class
-        // Reference: Metric equivalent of BS 93
-        let majorTol = (sizeNum <= 10) ? (0.20 * p) : (0.25 * p);
-        let effTol = 0.10 * p + 0.025;
-        let minorBoltTol = 0.20 * p + 0.05;
+    const getTolerances = (isCloseClass, includeInternal) => {
+        const result = {};
+        const A = (!isCloseClass && sizeNum <= 10) ? 0.025 : 0; // Allowance for Normal bolts 0-10 BA
 
-        if (isCloseClass) {
-            // Close tolerances for 0-10 BA only
-            majorTol = 0.15 * p;
-            effTol = 0.08 * p + 0.02;
-            minorBoltTol = 0.16 * p + 0.04;
-        }
+        // 2. Bolt (External) Tolerances
+        let majorTol = isCloseClass ? (0.15 * p) : (sizeNum <= 10 ? 0.20 * p : 0.25 * p);
+        let effTol = isCloseClass ? (0.08 * p + 0.02) : (0.10 * p + 0.025);
+        let minorBoltTol = isCloseClass ? (0.16 * p + 0.04) : (0.20 * p + 0.05);
 
-        const nutEffTol = 0.12 * p + 0.03;
-        const nutMinorTol = 0.375 * p;
+        result.external = {
+            major: fmt(size.D - A),
+            pitch: fmt(size.eff - A),
+            minor: fmt(size.min - A),
+            majorMin: fmt(size.D - A - majorTol),
+            pitchMin: fmt(size.eff - A - effTol),
+            minorMin: fmt(size.min - A - minorBoltTol)
+        };
 
-        // 3. Assemble external (bolt) and internal (nut) dimensions
-        return {
-            external: {
-                major: fmt(size.D),
-                pitch: fmt(size.eff),
-                minor: fmt(size.min),
-                majorMin: fmt(size.D - majorTol),
-                pitchMin: fmt(size.eff - effTol),
-                minorMin: fmt(size.min - minorBoltTol)
-            },
-            internal: {
+        // 3. Nut (Internal) Tolerances - BS 93 provides one class for nuts
+        if (includeInternal) {
+            const nutEffTol = 0.12 * p + 0.03;
+            const nutMinorTol = 0.375 * p;
+
+            // Target tap drill at Maximum Minor Diameter (68.75% engagement)
+            // Formulas: Minor Min = Major - 1.2p, Minor Max = Minor Min + 0.375p = Major - 0.825p
+            const minorMin = size.min;
+            const minorMax = minorMin + nutMinorTol;
+            // Target the median of the specification to ensure a "Spec Fit" (Green) recommendation
+            const targetDecimal = (minorMin + minorMax) / 2;
+            const shopDrill = getNearestDrill(targetDecimal, 'mm', drillSets);
+
+            result.internal = {
                 major: fmt(size.D),
                 pitch: fmt(size.eff),
                 minor: fmt(size.min),
                 minorMax: fmt(size.min + nutMinorTol),
                 pitchMax: fmt(size.eff + nutEffTol),
-                tapDrill: fmt(size.min)
-            }
-        };
+                ...(shopDrill ? {
+                    tapDrillTarget: fmt(targetDecimal),
+                    tapDrillToolSize: fmt(shopDrill.size),
+                    tapDrillName: shopDrill.name,
+                    tapDrillValidation: validateTapDrill(
+                        shopDrill.size,
+                        size.D / 25.4,
+                        size.min / 25.4,
+                        (size.min + nutMinorTol) / 25.4
+                    )
+                } : {})
+            };
+        }
+
+        return result;
     };
 
-    // 4. Build the final results object with supported classes
-    const results = {
+    // 4. Build the final results object with gender-specific classes
+    return {
         basic: {
             major: fmt(size.D),
             pitch: fmt(size.eff),
@@ -130,15 +145,11 @@ export const calculateBA = (sizeNumber) => {
             p: fmt(p)
         },
         classes: {
-            'Normal': getTolerances(false)
+            // Close: Bolt Close class only (0-10 BA)
+            ...(sizeNum <= 10 ? { 'Close': getTolerances(true, false) } : {}),
+            // Normal: Bolt Normal class + standard Nut (All Classes)
+            'Normal': getTolerances(false, true)
         }
     };
-
-    // Only sizes 0-10 BA have a defined 'Close' class
-    if (sizeNum <= 10) {
-        results.classes['Close'] = getTolerances(true);
-    }
-
-    return results;
 };
 
