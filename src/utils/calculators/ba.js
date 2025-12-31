@@ -14,6 +14,7 @@
  */
 export const BA_SIZES = Array.from({ length: 17 }, (_, i) => ({
     designation: `${i} BA`,
+    series: 'BA',
     size: i.toString()
 }));
 
@@ -136,6 +137,7 @@ export const BAStandard = {
     angle: 47.5,
     sortOrder: 3,
     threadForm: 8,
+    series: ['BA'],
     classes: ['Close', 'Normal'],
     docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/BA_SPEC.md'
 };

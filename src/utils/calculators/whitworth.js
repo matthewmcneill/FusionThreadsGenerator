@@ -46,6 +46,7 @@ const parseFraction = (f) => {
  */
 const createWhitworthPreset = (sizeStr, tpi, suffix) => ({
     designation: `${sizeStr} ${suffix}`,
+    series: suffix,
     size: parseFraction(sizeStr),
     tpi,
     ctd: `${sizeStr} - ${tpi} ${suffix}`
@@ -181,6 +182,7 @@ export const WhitworthStandard = {
     angle: 55,
     sortOrder: 1,
     threadForm: 8,
+    series: ['BSW', 'BSF'],
     classes: ['Close', 'Medium', 'Free'],
     docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/WHITWORTH_SPEC.md'
 };

@@ -31,8 +31,13 @@ const parseFraction = (f) => {
  */
 const createMEPreset = (sizeStr, tpi) => {
     const isBSB = tpi === 26;
+    let series = 'Medium (32 TPI)';
+    if (tpi === 40) series = 'Fine (40 TPI)';
+    if (tpi === 26) series = 'BSB (26 TPI)';
+
     return {
         designation: isBSB ? `ME ${sizeStr} x 26 BSB` : `ME ${sizeStr} x ${tpi}`,
+        series,
         size: parseFraction(sizeStr),
         tpi,
         ctd: `${sizeStr} - ${tpi} ${isBSB ? 'BSB' : 'ME'}`
@@ -129,6 +134,7 @@ export const MEStandard = {
     angle: 55,
     sortOrder: 4,
     threadForm: 8,
+    series: ['Fine (40 TPI)', 'Medium (32 TPI)', 'BSB (26 TPI)'],
     classes: ['Medium'],
     docUrl: 'docs/ME_SPEC.md'
 };

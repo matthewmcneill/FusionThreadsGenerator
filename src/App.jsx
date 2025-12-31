@@ -31,7 +31,7 @@ function App() {
   const [standard, setStandard] = useState(WhitworthStandard);
   const [threads, setThreads] = useState([]);
   const [selectedClasses, setSelectedClasses] = useState(WhitworthStandard.classes);
-  const [whitworthFilters, setWhitworthFilters] = useState({ standard: true, fine: true });
+  const [selectedSeries, setSelectedSeries] = useState(WhitworthStandard.series);
 
   /**
    * Helper to calculate a full thread object based on standard and basic input.
@@ -64,34 +64,50 @@ function App() {
     );
 
     // 3. Return combined data
-    return { ...input, ...calc, ctd, type: input.designation.includes('BSW') ? 'standard' : 'fine' };
+    let series = input.series;
+    if (!series) {
+      if (std.name === 'Whitworth') {
+        series = input.designation.includes('BSW') ? 'BSW' : 'BSF';
+      } else if (std.name.includes('ME')) {
+        series = input.tpi === 40 ? 'Fine (40 TPI)' : (input.tpi === 26 ? 'BSB (26 TPI)' : 'Medium (32 TPI)');
+      } else {
+        series = std.series[0];
+      }
+    }
+
+    return { ...input, ...calc, ctd, series };
   };
 
   /**
    * Populates the thread list with default sizes for a given standard.
    * @param {Object} newStd - The standard to load defaults for.
-   * @param {Object} [filters] - Optional filters for Whitworth (Standard/Fine).
+   * @param {Object} [filters] - Optional filters for designations (Series).
    */
-  const loadStandardDefaults = (newStd, filters = whitworthFilters) => {
+  const loadStandardDefaults = (newStd, filters = null) => {
     // 1. Select the appropriate default size array
     let defaultSizes = [];
+    const activeSeries = filters || newStd.series;
+
     if (newStd.name === 'Whitworth') {
-      if (filters.standard) defaultSizes = [...defaultSizes, ...BSW_SIZES];
-      if (filters.fine) defaultSizes = [...defaultSizes, ...BSF_SIZES];
+      if (activeSeries.includes('BSW')) defaultSizes = [...defaultSizes, ...BSW_SIZES];
+      if (activeSeries.includes('BSF')) defaultSizes = [...defaultSizes, ...BSF_SIZES];
     } else if (newStd.name.includes('ME')) {
-      defaultSizes = ME_SIZES;
+      defaultSizes = ME_SIZES.filter(s => activeSeries.includes(s.series));
     } else {
       defaultSizes = BA_SIZES;
     }
 
-    // 2. Map default sizes through the calculator
-    const populated = defaultSizes
+    // 2. Map default sizes through the calculator (preserving custom threads)
+    const populatedDefaults = defaultSizes
       .map(s => calculateThreadItem(newStd, s))
       .filter(Boolean);
 
+    const customThreads = threads.filter(t => !t.isPreset);
+
     // 3. Update state
-    setThreads(populated);
+    setThreads([...populatedDefaults.map(t => ({ ...t, isPreset: true })), ...customThreads]);
     setSelectedClasses(newStd.classes);
+    setSelectedSeries(activeSeries);
   };
 
   /**
@@ -116,15 +132,18 @@ function App() {
   };
 
   /**
-   * Toggles Whitworth filters (Standard/Fine).
-   * @param {string} filterKey - 'standard' or 'fine'.
+   * Toggles inclusion of a specific thread series (Designation).
+   * @param {string} seriesName - The name of the series (e.g., 'BSW').
    */
-  const toggleWhitworthFilter = (filterKey) => {
-    const newFilters = { ...whitworthFilters, [filterKey]: !whitworthFilters[filterKey] };
-    setWhitworthFilters(newFilters);
-    if (standard.name === 'Whitworth') {
-      loadStandardDefaults(standard, newFilters);
+  const toggleSeries = (seriesName) => {
+    let newSeries;
+    if (selectedSeries.includes(seriesName)) {
+      newSeries = selectedSeries.filter(s => s !== seriesName);
+    } else {
+      newSeries = [...selectedSeries, seriesName];
     }
+    setSelectedSeries(newSeries);
+    loadStandardDefaults(standard, newSeries);
   };
 
   /**
@@ -198,7 +217,7 @@ function App() {
     <div className="App">
       <h1>Fusion 360 Thread Generator</h1>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-        Create custom XML definitions for Whitworth (BSW/BSF) or British Association (BA) threads.
+        Create custom XML definitions for Whitworth (BSW/BSF), British Association (BA), or Model Engineer (ME) threads.
       </p>
 
       {/* Configuration Panel */}
@@ -232,50 +251,53 @@ function App() {
             </div>
           </div>
 
-          {/* Stage 2: Refine */}
-          <div className="workflow-column">
-            <div className="step-header">
-              <span className="step-number">2</span>
-              <span className="step-title">Refine Series & Fits</span>
-            </div>
-            <div className="input-group" style={{ margin: 0 }}>
-              {standard.name === 'Whitworth' && (
-                <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)', justifyContent: 'center' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}>
-                    <input
-                      type="checkbox"
-                      checked={whitworthFilters.standard}
-                      onChange={() => toggleWhitworthFilter('standard')}
-                      style={{ marginRight: '0.4rem', width: 'auto' }}
-                    />
-                    Standard (BSW)
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}>
-                    <input
-                      type="checkbox"
-                      checked={whitworthFilters.fine}
-                      onChange={() => toggleWhitworthFilter('fine')}
-                      style={{ marginRight: '0.4rem', width: 'auto' }}
-                    />
-                    Fine (BSF)
-                  </label>
-                </div>
-              )}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '0.25rem', justifyContent: 'center' }}>
-                {standard.classes.map(c => (
-                  <label key={c} style={{ display: 'flex', alignItems: 'center', fontWeight: 'normal', cursor: 'pointer', fontSize: '0.9rem' }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedClasses.includes(c)}
-                      onChange={() => toggleClass(c)}
-                      style={{ marginRight: '0.4rem', width: 'auto' }}
-                    />
-                    {c}
-                  </label>
-                ))}
+          {/* Stage 2: Refine (Only show if there are options) */}
+          {(standard.series.length > 1 || standard.classes.length > 1) && (
+            <div className="workflow-column">
+              <div className="step-header">
+                <span className="step-number">2</span>
+                <span className="step-title">Refine Series & Fits</span>
+              </div>
+              <div className="input-group" style={{ margin: 0 }}>
+                {standard.series.length > 1 && (
+                  <div style={{ marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.5rem', textAlign: 'center' }}>Designation (Series)</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
+                      {standard.series.map(s => (
+                        <label key={s} style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.9rem' }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedSeries.includes(s)}
+                            onChange={() => toggleSeries(s)}
+                            style={{ marginRight: '0.4rem', width: 'auto' }}
+                          />
+                          {s}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {standard.classes.length > 1 && (
+                  <div>
+                    <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.5rem', textAlign: 'center' }}>Class (Tolerance)</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
+                      {standard.classes.map(c => (
+                        <label key={c} style={{ display: 'flex', alignItems: 'center', fontWeight: 'normal', cursor: 'pointer', fontSize: '0.9rem' }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedClasses.includes(c)}
+                            onChange={() => toggleClass(c)}
+                            style={{ marginRight: '0.4rem', width: 'auto' }}
+                          />
+                          {c}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
 
           {/* Stage 3: Export */}
           <div className="workflow-column">
@@ -324,7 +346,7 @@ function App() {
         <div className="footer-content">
           <p>
             <strong>Fusion 360 Thread Generator</strong><br />
-            Generates custom XML definitions for Whitworth (BSW/BSF) and British Association (BA) threads.
+            Generates custom XML definitions for Whitworth (BSW/BSF), British Association (BA), and Model Engineer (ME) threads.
           </p>
           <div className="footer-links">
             <a href="https://github.com/matthewmcneill/FusionThreadsGenerator" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
