@@ -66,12 +66,36 @@ const BA_TABLE = {
 };
 
 /**
- * Calculates BA thread geometry and tolerances.
+ * @internal
+ * Derives the BA double-depth factor (K) from fundamental geometry.
+ * BS 93 defines h = 0.6p, so K = 2 * 0.6 = 1.2.
+ * @returns {number} The derived double depth factor.
+ */
+const getBADoubleDepthFactor = () => {
+    return 1.2;
+};
+
+/**
+ * Returns the target Percentage of Thread Engagement (PTE) based on material.
+ * @param {string} material - 'hard', 'ferrous', 'soft'.
+ * @returns {number} Target PTE.
+ */
+const getTargetPTE = (material) => {
+    switch (material) {
+        case 'hard': return 60;
+        case 'soft': return 80;
+        default: return 70; // General Ferrous
+    }
+};
+
+/**
+ * Calculates BA thread geometry and tolerances based on BS 93:1951 and Engineering Analysis.
  * @param {string|number} sizeNumber - The BA number (0-16).
  * @param {Array<string>} [drillSets] - Drill sets to use for tap recommendations.
+ * @param {string} [material='ferrous'] - Substrate material group.
  * @returns {Object|null} The calculated thread data or null if size not found.
  */
-export const calculateBA = (sizeNumber, drillSets) => {
+export const calculateBA = (sizeNumber, drillSets, material = 'ferrous') => {
     // 1. Retrieve basic data from lookup table
     const size = BA_TABLE[sizeNumber.toString()];
     if (!size) return null;
@@ -103,12 +127,13 @@ export const calculateBA = (sizeNumber, drillSets) => {
             const nutEffTol = 0.12 * p + 0.03;
             const nutMinorTol = 0.375 * p;
 
-            // Target tap drill at Maximum Minor Diameter (68.75% engagement)
-            // Formulas: Minor Min = Major - 1.2p, Minor Max = Minor Min + 0.375p = Major - 0.825p
-            const minorMin = size.min;
-            const minorMax = minorMin + nutMinorTol;
-            // Target the median of the specification to ensure a "Spec Fit" (Green) recommendation
-            const targetDecimal = (minorMin + minorMax) / 2;
+            // Algorithmic Determination of Tapping Drill Size
+            const pte = getTargetPTE(material);
+            const K = getBADoubleDepthFactor();
+
+            // Cut Tap Formula: D_drill = D_major - (K * p * PTE / 100)
+            const targetDecimal = size.D - (K * p * pte / 100);
+
             const shopDrill = getNearestDrill(targetDecimal, 'mm', drillSets);
 
             result.internal = {
@@ -125,7 +150,8 @@ export const calculateBA = (sizeNumber, drillSets) => {
                         shopDrill.size,
                         size.D / 25.4,
                         size.min / 25.4,
-                        (size.min + nutMinorTol) / 25.4
+                        (size.min + nutMinorTol) / 25.4,
+                        material
                     )
                 } : {})
             };

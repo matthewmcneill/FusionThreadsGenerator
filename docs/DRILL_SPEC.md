@@ -15,15 +15,24 @@ The generator uses a two-phase **"Scout & Score"** system to recommend drill bit
 
 Unlike simple calculators that rely on a single engagement percentage (like 75%), this generator prioritizes **Technical Compliance**.
 
-### 2.1 Scouting Target (Spec-Median)
-The target diameter used to search the drill pool is always the midpoint of the official engineering tolerance:
-$$Target = \frac{Nut\ Minor\ Min + Nut\ Minor\ Max}{2}$$
-This ensures that the "Nearest" search always points the algorithm toward the safest part of the specification.
+### 2.1 Scouting Target (Material-Optimized)
+The target diameter used to search the drill pool is calculated dynamically based on the thread form and material:
 
-### 2.2 Scoring Metric (Engagement %)
+-   **Whitworth (BSW/BSF/ME)**: $D_{maj} - (K \times p \times \frac{PTE}{100})$ where $K \approx 1.280654$
+-   **British Association (BA)**: $D_{maj} - (K \times p \times \frac{PTE}{100})$ where $K = 1.2$
+
+### 2.2 Material Target Defaults
+
+| Material Category | Target PTE | Optimal Range | Rationale |
+| :--- | :--- | :--- | :--- |
+| **Hard Alloys** | 60% | 55% – 65% | Minimizes torque/heat in tough materials. |
+| **General Ferrous** | 70% | 65% – 75% | Standard balance for mild steel/cast iron. |
+| **Soft Non-Ferrous** | 80% | 75% – 85% | Maximizes shear area in weaker materials. |
+
+### 2.3 Scoring Metric (Engagement %)
 The actual tool performance is scored using the thread engagement formula:
-$$Eng \% = \frac{Major Diameter - Drill Size}{Major Diameter - Basic Minor Diameter} \times 100$$
-Where the **Basic Minor Diameter** is the theoretical 100% engagement point (the root of the bolt thread).
+$$Eng \% = \frac{Major Diameter - Drill Size}{2 \times Thread Depth} \times 100$$
+Where the **Thread Depth** is the distance from Major to Basic Minor (100% engagement point).
 
 ---
 
@@ -37,7 +46,7 @@ Modeled after a professional "Engineers' Store" set with high-precision incremen
 - **3.10mm – 13.00mm**: 0.10mm increments.
 - **13.50mm – 20.00mm**: 0.50mm increments.
 
-### 3.2 Imperial Fractional (Standard Shop Set)
+### 3.2 Imperial (Standard Shop Set)
 Modeled after standard Morse taper and jobber sets with variable increments for larger diameters:
 - **1/64" – 1-3/4"**: 1/64" increments.
 - **1-3/4" – 2-1/4"**: 1/32" increments.
@@ -60,13 +69,15 @@ To prevent part damage and tool breakage, the generator validates the selected d
 
 | Status | Condition | UI Indication | XML Behavior |
 | :--- | :--- | :--- | :--- |
-| **Optimal Fit** | Within Spec (Nut Minor Min/Max) | **Green** | Exported |
-| **Tight Fit** | 82% – 90% Engagement | **Amber** | Exported |
-| **Loose Fit** | Outside Spec but > 50% Engagement | **Amber** | Exported |
-| **Tap Breakage Risk** | > 90% Engagement | **Red** | Exported (with warning) |
-| **Stripping Risk** | < 50% Engagement | **Red** | Exported (with warning) |
-| **Tap Breakage Certain**| **Drill $\le$ Basic Minor** (>100% Eng.) | **Red Bold** | **OMITTED** |
-| **No Thread Remaining** | **Drill $\ge$ Basic Major** (<0% Eng.) | **Red Bold** | **OMITTED** |
+| **Optimal Fit** | Within Material-Specific Range | **Green** | Exported |
+| **Tight Fit** | > Material-Max (but $\le$ 90%) | **Amber** | Exported |
+| **Loose Fit** | < Material-Min (but $\ge$ 50%) | **Amber** | Exported |
+| **Tap Breakage Risk** | > 90% Engagement | **Red** | Exported |
+| **Stripping Risk** | 35% – 50% Engagement | **Red** | Exported |
+| **Low Engagement** | 25% – 35% Engagement | **Red** | Exported |
+| **Critical: Structurally Unsound** | **Engagement < 25%** | **Red Bold** | **OMITTED** |
+| **Critical: Tap Breakage Certain**| **Drill $\le$ Basic Minor** (>100% Eng.) | **Red Bold** | **OMITTED** |
+| **Critical: No Thread Remaining** | **Drill $\ge$ Basic Major** (<0% Eng.) | **Red Bold** | **OMITTED** |
 
 ---
 
@@ -78,7 +89,7 @@ The `getNearestDrill` utility (defined in `src/utils/drills.js`) handles the mat
 1.  **Unit Conversion**: All target diameters are normalized to inches for comparison.
 2.  **Pool Filtering**: Only drill sets selected by the user in the UI are considered.
 3.  **Absolute Difference**: The algorithm calculates the absolute distance to the **Spec-Median Target**.
-4.  **Priority Tie-Breaking**: If two drills (e.g., Metric and Fractional) are effectively equal, the system prioritizes "Native" sets in the order: **Fractional > Letter > Number > Metric**.
+4.  **Priority Tie-Breaking**: If two drills (e.g., Metric and Imperial) are effectively equal, the system prioritizes "Native" sets in the order: **Imperial > Letter > Number > Metric**.
 
 ### 5.2 Precision
 To ensure absolute accuracy across tools, the generator implements:

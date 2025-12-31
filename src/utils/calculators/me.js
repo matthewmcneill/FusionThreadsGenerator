@@ -76,14 +76,38 @@ export const ME_SIZES = [
 ].map(([s, t]) => createMEPreset(s, t));
 
 /**
+ * @internal
+ * Derives the Whitworth double-depth factor (K) from fundamental geometry.
+ * Used for ME threads which share the 55° Whitworth form.
+ */
+const getWhitworthDoubleDepthFactor = () => {
+    const theta = (55 / 2) * (Math.PI / 180);
+    const heightFactor = 1 / (2 * Math.tan(theta));
+    const depthFactor = (2 / 3) * heightFactor;
+    return 2 * depthFactor;
+};
+
+/**
+ * Returns the target Percentage of Thread Engagement (PTE) based on material.
+ */
+const getTargetPTE = (material) => {
+    switch (material) {
+        case 'hard': return 60;
+        case 'soft': return 80;
+        default: return 70; // General Ferrous
+    }
+};
+
+/**
  * Calculates ME thread geometry and tolerances.
- * Reuses Whitworth form (55°) logic.
+ * Reuses Whitworth form (55°) logic and Engineering Analysis.
  * @param {number} diameter - Nominal diameter in inches.
  * @param {number} tpi - Threads per inch.
  * @param {Array<string>} [drillSets] - Drill sets to use for tap recommendations.
+ * @param {string} [material='ferrous'] - Substrate material group.
  * @returns {Object} Calculated thread data.
  */
-export const calculateME = (diameter, tpi, drillSets) => {
+export const calculateME = (diameter, tpi, drillSets, material = 'ferrous') => {
     const p = 1 / tpi;
     const D = diameter;
 
@@ -121,15 +145,21 @@ export const calculateME = (diameter, tpi, drillSets) => {
 
         const minorMin = basicMinor;
         const minorMax = basicMinor + nutMinorTol;
-        // Target the median of the specification to ensure a "Spec Fit" (Green) recommendation
-        const targetDecimal = (minorMin + minorMax) / 2;
+
+        // Algorithmic Determination of Tapping Drill Size
+        const pte = getTargetPTE(material);
+        const K = getWhitworthDoubleDepthFactor();
+
+        // Cut Tap Formula: D_drill = D_major - (K * p * PTE / 100)
+        const targetDecimal = basicMajor - (K * p * pte / 100);
+
         const shopDrill = getNearestDrill(targetDecimal, 'in', drillSets);
 
         result.internal = {
             major: fmt(basicMajor),
             pitch: fmt(basicPitch),
             minor: fmt(basicMinor),
-            minorMax: fmt(basicMinor + nutMinorTol),
+            minorMax: fmt(minorMax),
             pitchMax: fmt(basicPitch + tEff),
             ...(shopDrill ? {
                 tapDrillTarget: fmt(targetDecimal),
@@ -139,7 +169,8 @@ export const calculateME = (diameter, tpi, drillSets) => {
                     shopDrill.size,
                     basicMajor,
                     basicMinor,
-                    basicMinor + nutMinorTol
+                    minorMax,
+                    material
                 )
             } : {})
         };

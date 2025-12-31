@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import EngagementMeter from './EngagementMeter';
 
 /**
  * @module components/ThreadPreview
@@ -33,7 +34,20 @@ const ThreadPreview = ({ threads, selectedClasses, unit }) => {
      * Copies the table data to clipboard in a clean Markdown format.
      */
     const handleCopy = () => {
-        const headers = ['Nominal Size', 'Designation', isImperial ? 'TPI' : 'Pitch (mm)', 'Gender', 'Class', 'Major Dia', 'Pitch Dia', 'Minor Dia', 'Tap Drill'];
+        const headers = [
+            'Nominal Size',
+            'Designation',
+            isImperial ? 'TPI' : 'Pitch (mm)',
+            'Gender',
+            'Class',
+            'Major Dia',
+            'Pitch Dia',
+            'Minor Dia',
+            'Tap Drill Tool',
+            'Tap Drill Target',
+            'Engagement %',
+            'Fit Status'
+        ];
         let rows = [headers.join('\t')];
 
         // Sort groups by the decimal size of their first thread
@@ -56,20 +70,19 @@ const ThreadPreview = ({ threads, selectedClasses, unit }) => {
                         const data = gender === 'External' ? c.external : c.internal;
                         if (!data) return;
 
-                        let diaRange;
-                        if (gender === 'External') {
-                            diaRange = {
-                                major: `${f(data.majorMin)}-${f(data.major)}`,
-                                pitch: `${f(data.pitchMin)}-${f(data.pitch)}`,
-                                minor: `${f(data.minorMin)}-${f(data.minor)}`,
-                                tapDrill: '-'
-                            };
-                        } else {
-                            diaRange = {
-                                major: `${f(data.major)}-${f(data.major + 0.01)}`,
-                                pitch: `${f(data.pitch)}-${f(data.pitchMax)}`,
-                                minor: `${f(data.minor)}-${f(data.minorMax)}`,
-                                tapDrill: data.tapDrillName ? `${data.tapDrillName} (${f(data.tapDrill)})` : f(data.tapDrill)
+                        let drillInfo = {
+                            tool: '-',
+                            target: '-',
+                            engagement: '-',
+                            status: '-'
+                        };
+
+                        if (gender === 'Internal' && data.tapDrillName) {
+                            drillInfo = {
+                                tool: `${data.tapDrillName} (${f(data.tapDrillToolSize)})`,
+                                target: f(data.tapDrillTarget),
+                                engagement: `${Math.round(data.tapDrillValidation?.engagement)}%`,
+                                status: data.tapDrillValidation?.label || '-'
                             };
                         }
 
@@ -79,10 +92,13 @@ const ThreadPreview = ({ threads, selectedClasses, unit }) => {
                             pitchValue,
                             gender,
                             cls,
-                            diaRange.major,
-                            diaRange.pitch,
-                            diaRange.minor,
-                            diaRange.tapDrill
+                            gender === 'External' ? `${f(data.majorMin)}-${f(data.major)}` : `${f(data.major)}-${f(data.major + 0.01)}`,
+                            gender === 'External' ? `${f(data.pitchMin)}-${f(data.pitch)}` : `${f(data.pitch)}-${f(data.pitchMax)}`,
+                            gender === 'External' ? `${f(data.minorMin)}-${f(data.minor)}` : `${f(data.minor)}-${f(data.minorMax)}`,
+                            drillInfo.tool,
+                            drillInfo.target,
+                            drillInfo.engagement,
+                            drillInfo.status
                         ].join('\t'));
                     });
                 });
@@ -231,7 +247,7 @@ const ThreadPreview = ({ threads, selectedClasses, unit }) => {
                                                     <td className="num-column">
                                                         {gender === 'External' ? '-' : (
                                                             <div className="drill-recommendation">
-                                                                {data.tapDrillName ? (
+                                                                {data.tapDrillName && !data.tapDrillValidation?.status?.startsWith('catastrophic') ? (
                                                                     <>
                                                                         <div className="drill-row">
                                                                             <span className="drill-label">Tool:</span>
@@ -242,20 +258,17 @@ const ThreadPreview = ({ threads, selectedClasses, unit }) => {
                                                                                 {data.tapDrillName} ({f(data.tapDrillToolSize)})
                                                                             </span>
                                                                         </div>
-                                                                        <div className="drill-row">
-                                                                            <span className="drill-label">Target:</span>
-                                                                            <span className="drill-size">{f(data.tapDrillTarget)}</span>
-                                                                        </div>
-                                                                        {data.tapDrillValidation && (
-                                                                            <div
-                                                                                className="drill-status"
-                                                                                style={{ color: data.tapDrillValidation.color }}
-                                                                            >
-                                                                                {data.tapDrillValidation.label} ({Math.round(data.tapDrillValidation.engagement)}%)
-                                                                            </div>
-                                                                        )}
+                                                                        <EngagementMeter
+                                                                            engagement={data.tapDrillValidation.engagement}
+                                                                            range={data.tapDrillValidation.range}
+                                                                            status={data.tapDrillValidation.status}
+                                                                        />
                                                                     </>
-                                                                ) : '-'}
+                                                                ) : (
+                                                                    <div style={{ opacity: 0.5, fontStyle: 'italic', fontSize: '0.8rem' }}>
+                                                                        No suitable drill found
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         )}
                                                     </td>

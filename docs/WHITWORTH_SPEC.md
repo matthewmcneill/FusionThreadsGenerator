@@ -8,10 +8,12 @@ The Whitworth thread form is characterized by a 55° included angle and rounded 
 
 - **Angle**: $55^\circ$
 - **Pitch ($p$)**: $1 / n$ (where $n$ is threads per inch)
+- **Fundamental Height ($H$)**: 
+  - $H = \frac{p}{2 \times \tan(27.5^\circ)} \approx 0.960491p$
 - **Depth of Thread ($d$)**:
-  - $d = \frac{1}{3}p \times \cot(27^\circ 30') = 0.640327p$
+  - $d = \frac{2}{3}H \approx 0.640327p$
 - **Radius at crest and root ($r$)**:
-  - $r = \frac{H/6}{\csc(27^\circ 30') - 1} = 0.137329p$ (where $H$ is the fundamental triangle height)
+  - $r = \frac{H/6}{\csc(27.5^\circ) - 1} = 0.137329p$
 
 ## 2. Fundamental Formulas
 
@@ -146,11 +148,22 @@ These tables list the standard Threads Per Inch (TPI) for BSW and BSF series as 
 While the theoretical minor diameter is the absolute minimum hole size, workshop practice usually recommends a slightly larger drill bit to provide roughly **75% to 80% thread engagement**. This prevents tap breakage and reduces the torque required to cut the thread.
 
 ### Tap Drill Selection
-For Whitworth threads, the generator recommends tapping drills based on a 75% thread engagement target. For detailed formulas and the composition of our modeled drill sets (Fractional, Letter, Number, Metric), see the **[Tapping Drill Specification](DRILL_SPEC.md)**.
+For Whitworth threads, the generator recommends tapping drills based on an **Engineering Analysis** of thread engagement and material properties.
 
-### 5.1 The 75% Engagement Formula
-The generator uses the industry-standard constant for Whitworth (55°) thread forms to calculate the target engagement diameter:
-$$Tap\ Drill = Major\ Diameter - \frac{0.8227}{TPI}$$
+#### 1. Algorithmic Determination
+The target drill size ($D_{drill}$) is calculated based on the desired **Percentage of Thread Engagement (PTE)**:
+
+**Cut Taps:**
+$$D_{drill} = Major\ Diameter - (1.280654 \times p \times \frac{PTE}{100})$$
+
+**Roll (Form) Taps:**
+$$D_{drill} = Major\ Diameter - (0.5 \times p \times \frac{PTE}{100})$$
+
+#### 2. Material-Specific Targets
+The generator optimizes the $PTE$ based on the substrate material:
+- **Hard Alloys** (Hard Steel, Ti, Stainless): **60% PTE** (Minimizes tap breakage).
+- **General Ferrous** (Mild Steel, Cast Iron): **70% PTE** (Optimal balance).
+- **Soft Non-Ferrous** (Aluminum, Brass, Plastic): **80% PTE** (Maximizes thread strength).
 
 ### 5.2 Machinist Drill Set Mapping
 The target decimal is automatically mapped to the closest available drill from three standard Imperial sets to ensure high precision (typically within 0.001" to 0.005"):

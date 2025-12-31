@@ -110,14 +110,41 @@ const calculateWhitworthTolFactor = (D, p, L) => {
 };
 
 /**
- * Calculates Whitworth thread geometry and tolerances based on BS 84:2007 and Machinery's Handbook formulae.
+ * @internal
+ * Derives the Whitworth double-depth factor (K) from fundamental geometry.
+ * K = 2 * (h/p), where h = (2/3)H and H = p / (2 * tan(27.5°)).
+ * @returns {number} The derived double depth factor (approx 1.280654).
+ */
+const getWhitworthDoubleDepthFactor = () => {
+    const theta = (55 / 2) * (Math.PI / 180); // 27.5° in radians
+    const heightFactor = 1 / (2 * Math.tan(theta)); // H/p
+    const depthFactor = (2 / 3) * heightFactor; // h/p
+    return 2 * depthFactor; // Double depth factor K
+};
+
+/**
+ * Returns the target Percentage of Thread Engagement (PTE) based on material.
+ * @param {string} material - 'hard', 'ferrous', 'soft'.
+ * @returns {number} Target PTE.
+ */
+const getTargetPTE = (material) => {
+    switch (material) {
+        case 'hard': return 60;
+        case 'soft': return 80;
+        default: return 70; // General Ferrous
+    }
+};
+
+/**
+ * Calculates Whitworth thread geometry and tolerances based on BS 84:2007 and Engineering Analysis.
  * @param {number} diameter - Nominal diameter in inches.
  * @param {number} tpi - Threads per inch.
  * @param {Array<string>} [drillSets] - Drill sets to use for tap recommendations.
  * @param {number|null} [lengthOfEngagement] - Length of engagement (defaults to diameter if null).
+ * @param {string} [material='ferrous'] - Substrate material group.
  * @returns {Object} Calculated thread data including basic dimensions and classes.
  */
-export const calculateWhitworth = (diameter, tpi, drillSets, lengthOfEngagement = null) => {
+export const calculateWhitworth = (diameter, tpi, drillSets, lengthOfEngagement = null, material = 'ferrous') => {
     // 1. Calculate basic geometry parameters
     const p = 1 / tpi; // Pitch
     const D = diameter;
@@ -171,15 +198,21 @@ export const calculateWhitworth = (diameter, tpi, drillSets, lengthOfEngagement 
             const tEffInt = T * intMultiplier;
             const minorMin = basicMinor;
             const minorMax = basicMinor + (nutMinorTol * (intMultiplier / 1.125));
-            // Target the median of the specification to ensure a "Spec Fit" (Green) recommendation
-            const targetDecimal = (minorMin + minorMax) / 2;
+
+            // Algorithmic Determination of Tapping Drill Size
+            const pte = getTargetPTE(material);
+            const K = getWhitworthDoubleDepthFactor();
+
+            // Cut Tap Formula: D_drill = D_major - (K * p * PTE / 100)
+            const targetDecimal = basicMajor - (K * p * pte / 100);
+
             const shopDrill = getNearestDrill(targetDecimal, 'in', drillSets);
 
             result.internal = {
                 major: fmt(basicMajor),
                 pitch: fmt(basicPitch),
                 minor: fmt(basicMinor),
-                minorMax: fmt(basicMinor + (nutMinorTol * (intMultiplier / 1.125))), // Normal internal is looser
+                minorMax: fmt(minorMax), // Normal internal is looser
                 pitchMax: fmt(basicPitch + tEffInt),
                 ...(shopDrill ? {
                     tapDrillTarget: fmt(targetDecimal),
@@ -189,7 +222,8 @@ export const calculateWhitworth = (diameter, tpi, drillSets, lengthOfEngagement 
                         shopDrill.size,
                         basicMajor,
                         basicMinor,
-                        basicMinor + (nutMinorTol * (intMultiplier / 1.125))
+                        minorMax,
+                        material
                     )
                 } : {})
             };

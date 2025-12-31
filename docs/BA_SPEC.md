@@ -61,7 +61,24 @@ As per BS 93:1951:
 - **Close Class and 11-16 BA**: No allowance is provided; the maximum bolt size equals the basic size.
 
 #### Tap Drill Selection
-For BA threads, the generator targets a **68.75% thread engagement** corresponding to the Maximum Minor Diameter. For detailed formulas and the composition of our modeled drill sets (Metric and Number), see the **[Tapping Drill Specification](DRILL_SPEC.md)**.
+For BA threads, the generator recommends tapping drills based on an **Engineering Analysis** of thread engagement and material properties.
+
+##### 1. Algorithmic Determination
+The target drill size ($D_{drill}$) is calculated based on the desired **Percentage of Thread Engagement (PTE)**:
+
+**Cut Taps:**
+$$D_{drill} = Major\ Diameter - (1.2 \times p \times \frac{PTE}{100})$$
+
+**Roll (Form) Taps:**
+$$D_{drill} = Major\ Diameter - (0.5 \times p \times \frac{PTE}{100})$$
+
+##### 2. Material-Specific Targets
+The generator optimizes the $PTE$ based on the substrate material:
+- **Hard Alloys**: **60% PTE**.
+- **General Ferrous**: **70% PTE**.
+- **Soft Non-Ferrous**: **80% PTE**.
+
+For detailed formulas and the composition of our modeled drill sets (Metric and Number), see the **[Tapping Drill Specification](DRILL_SPEC.md)**.
 
 #### Recommended Shop Drills (Reference)
 | Size | Pitch (mm) | Target Decimal | Recommended Shop Drill |

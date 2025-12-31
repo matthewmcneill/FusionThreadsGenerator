@@ -133,19 +133,28 @@ export const getNearestDrill = (targetDiameter, units = 'in', allowedSets = ['Me
 };
 
 /**
- * Validates a drill selection against thread form limits.
+ * Validates a drill selection against thread form limits and material-specific targets.
  * @param {number} drillSize - Selected drill size (in inches).
  * @param {number} major - Basic major diameter (in inches).
  * @param {number} minor - Basic minor diameter (100% engagement, in inches).
  * @param {number} nutMinorMax - Specification limit for minor diameter (in inches).
+ * @param {string} [material='ferrous'] - Substrate material group.
  * @returns {Object} Validation result { engagement, status, label, color }.
  */
-export const validateTapDrill = (drillSize, major, minor, nutMinorMax) => {
+export const validateTapDrill = (drillSize, major, minor, nutMinorMax, material = 'ferrous') => {
     const totalHeight = (major - minor) / 2;
     if (totalHeight <= 0) return { engagement: 0, status: 'error', label: 'Invalid Thread' };
 
     // Engagement % = (Major - Drill) / (2 * totalHeight) * 100
     const engagement = Math.max(0, ((major - drillSize) / (2 * totalHeight)) * 100);
+
+    // Material-Specific Optimal Ranges
+    const ranges = {
+        hard: { min: 55, max: 65, target: 60 },
+        ferrous: { min: 65, max: 75, target: 70 },
+        soft: { min: 75, max: 85, target: 80 }
+    };
+    const range = ranges[material] || ranges.ferrous;
 
     let status = 'optimal';
     let label = 'Optimal Fit';
@@ -153,17 +162,25 @@ export const validateTapDrill = (drillSize, major, minor, nutMinorMax) => {
 
     if (drillSize >= major) {
         status = 'catastrophic-large';
-        label = 'No Thread Remaining';
+        label = 'Critical: No Thread Remaining';
         color = '#ef4444'; // Red
     } else if (drillSize <= minor) {
         status = 'catastrophic-small';
-        label = 'Tap Breakage Certain';
+        label = 'Critical: Tap Breakage Certain';
+        color = '#ef4444'; // Red
+    } else if (engagement < 25) {
+        status = 'catastrophic-weak';
+        label = 'Critical: Structurally Unsound';
+        color = '#ef4444'; // Red
+    } else if (engagement < 35) {
+        status = 'danger-very-loose';
+        label = 'Danger: Low Engagement';
         color = '#ef4444'; // Red
     } else if (engagement < 50) {
         status = 'danger-loose';
         label = 'Stripping Risk';
         color = '#ef4444'; // Red
-    } else if (drillSize > nutMinorMax) {
+    } else if (engagement < range.min) {
         status = 'warning-loose';
         label = 'Loose Fit';
         color = '#f59e0b'; // Amber
@@ -171,11 +188,18 @@ export const validateTapDrill = (drillSize, major, minor, nutMinorMax) => {
         status = 'danger-tight';
         label = 'Tap Breakage Risk';
         color = '#ef4444'; // Red
-    } else if (engagement > 82) {
+    } else if (engagement > range.max) {
         status = 'warning-tight';
         label = 'Tight Fit';
         color = '#f59e0b'; // Amber
     }
 
-    return { engagement, status, label, color };
+    return {
+        engagement,
+        status,
+        label,
+        color,
+        range,
+        target: range.target
+    };
 };

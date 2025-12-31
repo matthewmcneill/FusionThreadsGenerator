@@ -34,6 +34,7 @@ function App() {
   const [selectedClasses, setSelectedClasses] = useState(WhitworthStandard.classes);
   const [selectedSeries, setSelectedSeries] = useState(WhitworthStandard.series);
   const [selectedDrillSets, setSelectedDrillSets] = useState(WhitworthStandard.defaultDrillSets);
+  const [material, setMaterial] = useState('ferrous');
   const [showPreview, setShowPreview] = useState(false);
 
   const ALL_DRILL_SETS = ['Metric', 'Number', 'Letter', 'Imperial'];
@@ -52,11 +53,11 @@ function App() {
 
     // 1. Run standard-specific geometry calculator
     if (isWhitworth) {
-      calc = calculateWhitworth(input.size, input.tpi, activeDrillSets);
+      calc = calculateWhitworth(input.size, input.tpi, activeDrillSets, null, material);
     } else if (std.name.includes('ME')) {
-      calc = calculateME(input.size, input.tpi, activeDrillSets);
+      calc = calculateME(input.size, input.tpi, activeDrillSets, material);
     } else {
-      calc = calculateBA(input.size, activeDrillSets);
+      calc = calculateBA(input.size, activeDrillSets, material);
     }
 
     if (!calc) return null;
@@ -136,6 +137,7 @@ function App() {
     else newStd = BAStandard;
 
     setStandard(newStd);
+    // Explicitly pass material/tapType to ensure fresh calculation
     loadStandardDefaults(newStd);
   };
 
@@ -185,22 +187,40 @@ function App() {
     }
   };
 
-  /**
-   * Toggles inclusion of a drill bit set in the search logic.
-   * @param {string} setName - 'Metric', 'Number', 'Letter', or 'Fractional'.
-   */
   const toggleDrillSet = (setName) => {
     const newSets = selectedDrillSets.includes(setName)
       ? selectedDrillSets.filter(s => s !== setName)
       : [...selectedDrillSets, setName];
 
     setSelectedDrillSets(newSets);
-
-    // Recalculate all threads to update drill names in real-time
-    // Must pass newSets explicitly because setSelectedDrillSets is async
-    const updatedThreads = threads.map(t => calculateThreadItem(standard, t, newSets));
-    setThreads(updatedThreads);
   };
+
+  /**
+   * Handles material change and recalculates threads.
+   */
+  const handleMaterialChange = (newMaterial) => {
+    setMaterial(newMaterial);
+    // The useEffect below will handle recalculation based on material change
+  };
+
+  /**
+   * Recalculates all threads when global process settings change.
+   */
+  useEffect(() => {
+    if (threads.length === 0) return;
+
+    setThreads(prevThreads => prevThreads.map(t => {
+      let calc;
+      if (standard.name.includes('Whitworth')) {
+        calc = calculateWhitworth(t.size, t.tpi, selectedDrillSets, null, material);
+      } else if (standard.name.includes('ME')) {
+        calc = calculateME(t.size, t.tpi, selectedDrillSets, material);
+      } else {
+        calc = calculateBA(t.size, selectedDrillSets, material);
+      }
+      return { ...t, ...calc };
+    }));
+  }, [material, selectedDrillSets]);
 
   /**
    * Orchestrates the XML generation and triggers browser download.
@@ -263,16 +283,6 @@ function App() {
                 <option value="BA">British Association (BA)</option>
                 <option value="ME">Model Engineer (ME)</option>
               </select>
-              {standard.docUrl && (
-                <a
-                  href={standard.docUrl.startsWith('http') ? standard.docUrl : `${import.meta.env.BASE_URL}${standard.docUrl}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="doc-link workflow-link"
-                >
-                  View Engineering Specification
-                </a>
-              )}
             </div>
           </div>
 
@@ -286,7 +296,19 @@ function App() {
               {/* Designation Toggle */}
               {standard.series.length > 1 && (
                 <div style={{ marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                  <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.4rem', textAlign: 'center' }}>Designation (Series)</div>
+                  <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.4rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                    <span>Designation (Series)</span>
+                    <a
+                      href={standard.docUrl.startsWith('http') ? standard.docUrl : `${import.meta.env.BASE_URL}${standard.docUrl}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="doc-link"
+                      style={{ textDecoration: 'none', fontSize: '0.85rem' }}
+                      title="View Series Specification"
+                    >
+                      ⓘ
+                    </a>
+                  </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
                     {standard.series.map(s => (
                       <label key={s} style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>
@@ -304,26 +326,84 @@ function App() {
               )}
 
               {/* Class Toggle */}
+              {standard.classes.length > 1 && (
+                <div style={{ marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.4rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                    <span>Class (Tolerance)</span>
+                    <a
+                      href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/DRILL_SPEC.md#4-safety-guard-rails"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="doc-link"
+                      style={{ textDecoration: 'none', fontSize: '0.85rem' }}
+                      title="View Tolerance Specification"
+                    >
+                      ⓘ
+                    </a>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
+                    {standard.classes.map(c => (
+                      <label key={c} style={{ display: 'flex', alignItems: 'center', fontWeight: 'normal', cursor: 'pointer', fontSize: '0.85rem' }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedClasses.includes(c)}
+                          onChange={() => toggleClass(c)}
+                          style={{ marginRight: '0.3rem', width: 'auto' }}
+                        />
+                        {c}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Tap Drill Selection Options */}
               <div style={{ marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.4rem', textAlign: 'center' }}>Class (Tolerance)</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
-                  {standard.classes.map(c => (
-                    <label key={c} style={{ display: 'flex', alignItems: 'center', fontWeight: 'normal', cursor: 'pointer', fontSize: '0.85rem' }}>
-                      <input
-                        type="checkbox"
-                        checked={selectedClasses.includes(c)}
-                        onChange={() => toggleClass(c)}
-                        style={{ marginRight: '0.3rem', width: 'auto' }}
-                      />
-                      {c}
-                    </label>
-                  ))}
+                <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.6rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                  <span>Tap Drill Selection Options</span>
+                  <a
+                    href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/DRILL_SPEC.md#2-calculation-philosophy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="doc-link"
+                    style={{ textDecoration: 'none', fontSize: '0.85rem' }}
+                    title="View Calculation Philosophy"
+                  >
+                    ⓘ
+                  </a>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                    <label style={{ fontSize: '0.75rem', opacity: 0.8, textAlign: 'center' }}>Workpiece Material / Target Engagement</label>
+                    <select
+                      value={material}
+                      onChange={(e) => setMaterial(e.target.value)}
+                      style={{ fontSize: '0.8rem', padding: '0.4rem', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '4px', width: '100%' }}
+                    >
+                      <option value="hard">Hard Alloys (60% PTE)</option>
+                      <option value="ferrous">General Ferrous (70% PTE)</option>
+                      <option value="soft">Soft Non-Ferrous (80% PTE)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
               {/* Drill Set Toggle */}
               <div>
-                <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.4rem', textAlign: 'center' }}>Drill Bit Sets</div>
+                <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.4rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                  <span>Drill Bit Sets</span>
+                  <a
+                    href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/DRILL_SPEC.md#3-drill-set-modeling"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="doc-link"
+                    style={{ textDecoration: 'none', fontSize: '0.85rem' }}
+                    title="View Drill Set Modeling"
+                  >
+                    ⓘ
+                  </a>
+                </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
                   {ALL_DRILL_SETS.map(s => (
                     <label key={s} style={{ display: 'flex', alignItems: 'center', fontWeight: 'normal', cursor: 'pointer', fontSize: '0.85rem' }}>
@@ -336,17 +416,6 @@ function App() {
                       {s}
                     </label>
                   ))}
-                </div>
-                <div style={{ textAlign: 'center', marginTop: '0.5rem' }}>
-                  <a
-                    href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/DRILL_SPEC.md"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="doc-link workflow-link"
-                    style={{ fontSize: '0.75rem' }}
-                  >
-                    View Tapping Drill Specification
-                  </a>
                 </div>
               </div>
             </div>

@@ -1,12 +1,5 @@
-/**
- * @module components/ThreadList
- * @description Displays the list of defined threads in a tabular format for review.
- * 
- * Main functions:
- * - ThreadList (default export): Renders the table of thread data.
- */
-
 import React from 'react';
+import EngagementMeter from './EngagementMeter';
 
 /**
  * Data table component for viewing and managing thread sizes.
@@ -38,39 +31,63 @@ const ThreadList = ({ threads, onRemove, unit }) => {
                     <thead>
                         <tr>
                             <th>Designation</th>
-                            <th>CTD (Export)</th>
                             <th>{isMetric ? 'BA No.' : 'Size (in)'}</th>
                             <th>{isMetric ? 'Pitch (mm)' : 'TPI'}</th>
                             <th>Major (Basic)</th>
-                            <th>Minor (Basic)</th>
+                            <th>Tap Drill Tool</th>
                             <th style={{ textAlign: 'center' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {/* 2. Map through threads to render rows */}
-                        {threads.map((t, idx) => (
-                            <tr key={`${t.designation}-${idx}`}>
-                                <td>{t.designation}</td>
-                                <td style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{t.ctd}</td>
-                                <td>{isMetric ? t.size : typeof t.size === 'number' ? t.size.toFixed(3) : t.size}</td>
-                                <td>{isMetric ? t.basic.p.toFixed(4) : t.tpi}</td>
-                                <td>{t.basic.major}</td>
-                                <td>{t.basic.minor}</td>
-                                <td style={{ textAlign: 'center' }}>
-                                    <button
-                                        onClick={() => onRemove(idx)}
-                                        style={{
-                                            padding: '0.4rem 0.8rem',
-                                            background: '#ef4444',
-                                            fontSize: '0.9rem',
-                                            boxShadow: 'none'
-                                        }}
-                                    >
-                                        Remove
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
+                        {threads.map((t, idx) => {
+                            // Find the first internal class (typically Medium or Normal) to show a drill preview
+                            const primaryClass = t.classes['Medium'] || t.classes['Normal'] || Object.values(t.classes)[0];
+                            const internalData = primaryClass?.internal;
+
+                            return (
+                                <tr key={`${t.designation}-${idx}`}>
+                                    <td>
+                                        <div>{t.designation}</div>
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{t.ctd}</div>
+                                    </td>
+                                    <td>{isMetric ? t.size : typeof t.size === 'number' ? t.size.toFixed(3) : t.size}</td>
+                                    <td>{isMetric ? t.basic.p.toFixed(4) : t.tpi}</td>
+                                    <td>{t.basic.major}</td>
+                                    <td style={{ minWidth: '150px' }}>
+                                        {internalData?.tapDrillName && !internalData.tapDrillValidation?.status?.startsWith('catastrophic') ? (
+                                            <div style={{ padding: '0.2rem 0' }}>
+                                                <div style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                                    {internalData.tapDrillName} ({internalData.tapDrillToolSize})
+                                                </div>
+                                                <EngagementMeter
+                                                    engagement={internalData.tapDrillValidation.engagement}
+                                                    range={internalData.tapDrillValidation.range}
+                                                    status={internalData.tapDrillValidation.status}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <span style={{ opacity: 0.5, fontStyle: 'italic', fontSize: '0.8rem' }}>
+                                                No safe drill
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td style={{ textAlign: 'center' }}>
+                                        <button
+                                            onClick={() => onRemove(idx)}
+                                            style={{
+                                                padding: '0.4rem 0.8rem',
+                                                background: '#ef4444',
+                                                fontSize: '0.9rem',
+                                                boxShadow: 'none'
+                                            }}
+                                        >
+                                            Remove
+                                        </button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>
