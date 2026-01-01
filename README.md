@@ -64,7 +64,7 @@ Classic 55-degree flank angle with rounded crests and roots.
 - **BSW (British Standard Whitworth)**: General engineering and heavy machinery. [Technical Spec](docs/WHITWORTH_SPEC.md)
 - **BSF (British Standard Fine)**: Finer alternative to BSW, used where vibration is a concern. [Technical Spec](docs/WHITWORTH_SPEC.md)
 - **BSP (British Standard Pipe)**:
-    - **BSPP (Parallel)**: "G" threads.
+    - **BSPP (Parallel)**: "G" threads. [Technical Spec](docs/BSPP_SPEC.md)
     - **BSPT (Taper)**: "R" threads.
 - **BSB (British Standard Brass)**: Specialized for brass tubing; constant pitch of **26 TPI**. [Technical Spec](docs/BSB_SPEC.md)
 - **BS Con (British Standard Conduit)**: Also known as **ET** or **BS 31**.
