@@ -48,6 +48,17 @@ Navigate to:
 
 The generator supports a range of historical British thread standards, focusing on the pre-metric era.
 
+### Summary Comparison Table
+
+| Thread Type | Angle | Typical Use Case | Status |
+| --- | --- | --- | --- |
+| **BSW/BSF** | 55° | General engineering, motorcycles (pre-Unified). | ✅ Implemented |
+| **BA** | 47.5° | Electrical fittings, instruments, modeling. | ✅ Implemented |
+| **ME** | 55° | Small scale steam models and carburetors. | ✅ Implemented |
+| **BSC / CEI** | 60° | Bicycles and motorcycles (BSA, Norton, Triumph). | ✅ Implemented |
+| **BSP** | 55° | Plumbing and hydraulic systems. | 📋 Under consideration, but Fusion already has BSP threads. |
+| **BSB** | 55° | Brass lamps, gas fittings, thin-walled tubing. | ✅ Implemented |
+
 ### 1. Whitworth-Form Threads (55° Angle)
 Classic 55-degree flank angle with rounded crests and roots.
 - **BSW (British Standard Whitworth)**: General engineering and heavy machinery. [Technical Spec](docs/WHITWORTH_SPEC.md)
@@ -64,24 +75,12 @@ Classic 55-degree flank angle with rounded crests and roots.
 
 ### 3. Cycle Threads (60° Angle)
 - **BSC / BSCy (British Standard Cycle)**: Successor to **CEI**. [Technical Spec](docs/BSC_SPEC.md)
-- **The "26 TPI Rule"**: Most BSC threads from 1/4" up to 1" use a constant 26 TPI.
 - **BSA Motorcycle**: Heavier 20 TPI variant for larger sizes.
 
 ### 4. Specialized Industry Threads
 - **ADM (Admiralty Fine)**: Niche standard for the Royal Navy.
 - **BS 341 (Gas Cylinder)**: Taper thread for cylinder valves.
 - **BS 336 (Fire Hose)**: Robust "round" thread form.
-
-### Summary Comparison Table
-
-| Thread Type | Angle | Typical Use Case | Status |
-| --- | --- | --- | --- |
-| **BSW/BSF** | 55° | General engineering, motorcycles (pre-Unified). | ✅ Implemented |
-| **BA** | 47.5° | Electrical fittings, instruments, modeling. | ✅ Implemented |
-| **ME** | 55° | Small scale steam models and carburetors. | ✅ Implemented |
-| **BSC / CEI** | 60° | Bicycles and motorcycles (BSA, Norton, Triumph). | ✅ Implemented |
-| **BSP** | 55° | Plumbing and hydraulic systems. | 📋 Planned |
-| **BSB** | 55° | Brass lamps, gas fittings, thin-walled tubing. | ✅ Implemented |
 
 > [!TIP]
 > **Drill Selection**: All supported threads use our advanced [Tapping Drill Specification](docs/DRILL_SPEC.md) for tool selection.
