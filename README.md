@@ -4,13 +4,6 @@ This web application allows users to generate custom XML definitions for Fusion 
 
 ## [![Access Live App](https://img.shields.io/badge/Access%20Live%20App-🚀-blue?style=for-the-badge&logo=github&logoColor=white)](https://matthewmcneill.github.io/FusionThreadsGenerator) [![Download Whitworth](https://img.shields.io/badge/Download%20Whitworth-XML-green?style=for-the-badge&logo=xml&logoColor=white)](ThreadData/Whitworth.xml) [![Download BA](https://img.shields.io/badge/Download%20BA-XML-green?style=for-the-badge&logo=xml&logoColor=white)](ThreadData/BA_Threads.xml) [![Download ME](https://img.shields.io/badge/Download%20ME-XML-green?style=for-the-badge&logo=xml&logoColor=white)](ThreadData/Model_Engineer_ME.xml)
 
-## Technical Documentation
-
-- [Whitworth Thread Specification](docs/WHITWORTH_SPEC.md) - Technical details and formulas for Whitworth (BSW/BSF) thread forms.
-- [BA Thread Specification](docs/BA_SPEC.md) - Technical details and formulas for British Association (BA) thread forms.
-- [Model Engineer (ME) Thread Specification](docs/ME_SPEC.md) - Technical details and formulas for Model Engineer (ME) thread forms.
-- [Tapping Drill Specification](docs/DRILL_SPEC.md) - Technical specification for tapping drill selection logic and toolsets.
-- [Implementation Overview](docs/implementation_overview.md) - Software architecture and developer guide.
 
 ---
 
@@ -45,6 +38,54 @@ Navigate to:
 > - **Hidden Files**: Ensure your operating system is set to show hidden files and folders.
 > - **Updates**: When Fusion 360 updates to a new version, it creates a new `<version ID>` folder. You will need to copy your custom XML files from the old version folder to the new one.
 > - **Reference**: For more details, see the official [Autodesk Support Article](https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/Custom-Threads-in-Fusion-360.html).
+
+## Thread Standards Overview
+
+The generator supports a range of historical British thread standards, focusing on the pre-metric era.
+
+### 1. Whitworth-Form Threads (55° Angle)
+Classic 55-degree flank angle with rounded crests and roots.
+- **BSW (British Standard Whitworth)**: General engineering and heavy machinery. [Technical Spec](docs/WHITWORTH_SPEC.md)
+- **BSF (British Standard Fine)**: Finer alternative to BSW, used where vibration is a concern. [Technical Spec](docs/WHITWORTH_SPEC.md)
+- **BSP (British Standard Pipe)**:
+    - **BSPP (Parallel)**: "G" threads.
+    - **BSPT (Taper)**: "R" threads.
+- **BSB (British Standard Brass)**: Specialized for brass tubing; constant pitch of **26 TPI**.
+- **BS Con (British Standard Conduit)**: Also known as **ET** or **BS 31**.
+- **ME (Model Engineer)**: Miniature threads for small boilers and steam models. [Technical Spec](docs/ME_SPEC.md)
+
+### 2. British Association (BA) (47.5° Angle)
+- **BA (British Association)**: Unique 47.5° angle. Standard for electrical equipment and instruments. [Technical Spec](docs/BA_SPEC.md)
+
+### 3. Cycle Threads (60° Angle)
+- **BSC / BSCy (British Standard Cycle)**: Successor to **CEI**.
+- **The "26 TPI Rule"**: Most BSC threads from 1/4" up to 1" use a constant 26 TPI.
+
+### 4. Specialized Industry Threads
+- **ADM (Admiralty Fine)**: Niche standard for the Royal Navy.
+- **BS 341 (Gas Cylinder)**: Taper thread for cylinder valves.
+- **BS 336 (Fire Hose)**: Robust "round" thread form.
+
+### Summary Comparison Table
+
+| Thread Type | Angle | Typical Use Case | Status |
+| --- | --- | --- | --- |
+| **BSW/BSF** | 55° | General engineering, motorcycles (pre-Unified). | ✅ Implemented |
+| **BA** | 47.5° | Electrical fittings, instruments, modeling. | ✅ Implemented |
+| **ME** | 55° | Small scale steam models and carburetors. | ✅ Implemented |
+| **BSP** | 55° | Plumbing and hydraulic systems. | 📋 Planned |
+| **BSC / CEI** | 60° | Bicycles and motorcycles (BSA, Norton, Triumph). | 📋 Planned |
+| **BSB** | 55° | Brass lamps, gas fittings, thin-walled tubing. | 📋 Planned |
+
+> [!TIP]
+> **Drill Selection**: All supported threads use our advanced [Tapping Drill Specification](docs/DRILL_SPEC.md) for tool selection.
+>
+> **Future Plans**: For a detailed list of planned features and work, check the [ROADMAP.md](ROADMAP.md).
+
+---
+
+## Technical Documentation & Resources
+- [Implementation Overview](docs/implementation_overview.md) - Software architecture and developer guide.
 
 ---
 

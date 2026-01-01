@@ -5,29 +5,38 @@ This document outlines the planned future features and improvements for the Fusi
 ## Future Implementation Ideas
 
 ### 1. State Management & Persistence
-- **Local State**: Ability to save the current session state in the browser's local storage.
-- **Export/Import**: Functionality to export custom thread definitions and input data to a JSON/file format and import them back to restore a session.
+- **Local State**: Save current session state in browser local storage.
+- **Export/Import**: Export/import custom thread definitions and input data as JSON.
 
 ### 2. "My Workshop" Personalization
-- **Tool Configuration**: A dedicated area to configure the specific drills and taps available in the user's workshop.
-- **Custom Views**:
-    - **Complete Lists**: Toggle to view all standard threads.
-    - **Personalized Lists**: Filter threads to only show those that can be produced with the user's current tool setup.
-- **Custom Profiles**: Ability to generate thread profiles tailored specifically to available tooling.
+- **Tool Configuration**: Configure available drills and taps in a personal workshop area.
+- **Custom Views**: Toggle between complete standard lists and personalized lists.
+- **Custom Profiles**: Generate thread profiles tailored to available tooling.
 
 ### 3. Fusion 360 CAM Integration
-- **Tool Library Export**: Beyond exporting XML definitions for modeling, add the ability to export CAM tool libraries (.tools) for Fusion 360.
-- **Integrated Workflow**: Allow users to load both the model definitions and the corresponding tool data directly into Fusion 360 CAM.
+- **Tool Library Export**: Export CAM tool libraries (.tools) for Fusion 360.
+- **Integrated Workflow**: Load both model definitions and tool data directly into Fusion 360 CAM.
 
 ### 4. Documentation & Reference
-- **Thread Charts**: Export nicely formatted, printable thread charts (PDF format).
-- **Visual Reference**: High-quality layouts designed for workshop walls to provide quick reference for drill sizes and thread specifications.
+- **Thread Charts**: Export nicely formatted, printable PDF thread charts.
+- **Visual Reference**: High-quality workshop wall layouts.
+
+---
+
+## Potential Future Thread Standards
+We plan to expand our library of historical British and specialized threads. For detailed descriptions and a comparison table of these standards, please refer to the **[Thread Standards Overview in the README](README.md#thread-standards-overview)**.
+
+Planned additions include:
+- **British Standard Pipe (BSP)**: Parallel (BSPP) and Taper (BSPT).
+- **British Standard Cycle (BSC/BSCy)**: 60° thread angle.
+- **British Standard Brass (BSB)**: 26 TPI constant pitch.
+- **Specialized Industry Threads**: Conduit (ET), Admiralty Fine (ADM), Gas Cylinder (BS 341), Fire Hose (BS 336).
 
 ---
 
 ## TODO: Improvements & Fixes
 
 ### Data Export Cleanup
-- [ ] **Nominal Size Column**: Add a simple numerical column for nominal size to the copy/export format to facilitate easier sorting and analysis.
-- [ ] **Field Splitting**: Refactor fields containing ranges into separate columns (e.g., Min/Max) to make the exported data more parsable for spreadsheets.
-- [ ] **Copy Button Formatting**: Generally clean up the tab-separated format for better compatibility with Excel/Google Sheets.
+- [ ] **Nominal Size Column**: Add a simple numerical column for nominal size to the export format.
+- [ ] **Field Splitting**: Split fields with ranges (e.g., Min/Max) into separate columns.
+- [ ] **Copy Button Formatting**: Clean up tab-separated format for better spreadsheet compatibility.
