@@ -54,10 +54,12 @@ export const MyStandard = {
     threadForm: 6,           // Fusion 360 Form ID (e.g., 6 for UN, 8 for Whitworth)
     series: ['Series A', 'Series B'], // List of designations
     classes: ['Class 1', 'Class 2'],   // Available tolerance classes
-    defaultDrillSets: ['Metric'],     // Initial drill set selection
-    docUrl: '...',           // Base documentation URL
-    seriesAnchor: '#...',    // Anchor for Series info link
-    classAnchor: '#...'      // Anchor for Class info link
+    getCTD: (item) => `${item.designation} - Custom`, // Format for Fusion 360
+    getSeries: (item) => 'Series A',   // Auto-detect series from input
+    defaultDrillSets: ['Metric'],      // Initial drill set selection
+    docUrl: '...',                     // Base documentation URL (GitHub)
+    seriesAnchor: '#...',              // Anchor for Series info link
+    classAnchor: '#...'                // Anchor for Class info link
 };
 ```
 
@@ -125,8 +127,7 @@ const validation = validateTapDrill(drillSize, major, minor, nutMinorMax, materi
     *   **Dropdown**: Add an `<option>` for your standard in the `handleStandardChange` dropdown (Stage 1), using your ID as the `value`.
     *   **Standard Mapping**: Update the logic in `handleStandardChange` to map your dropdown ID to your exported `Standard` object.
     *   **Default Loading**: Update `loadStandardDefaults` (using ID-based checks) to return your `MY_SIZES` array when your standard is active.
-    *   **Calculator Routing**: Update the `if/else` blocks in `calculateThreadItem` and the main `useEffect` to call your new calculation function based on the `id`.
-    *   **CTD Formatting**: If your standard requires a specific "Custom Thread Designation" string format for Fusion 360, add a case to the `ctd` generation logic in `calculateThreadItem`.
+    *   **Calculator Routing**: Update the logic in `calculateThreadItem` to call your new calculation function based on the `id`. The UI automatically handles `ctd` formatting and `series` detection via your standard's `getCTD` and `getSeries` delegates.
 4.  **Verification**: Run the app locally, select your new standard, verify the preview table values, and check the generated XML file in a text editor to ensure it follows the `<ThreadType>` schema.
 
 ---
