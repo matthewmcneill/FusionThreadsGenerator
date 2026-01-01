@@ -52,9 +52,9 @@ export const MyStandard = {
     angle: 60,               // Thread angle
     sortOrder: 5,            // Order in dropdown
     threadForm: 6,           // Fusion 360 Form ID (e.g., 6 for UN, 8 for Whitworth)
-    series: ['Series A', 'Series B'], // List of designations
+    series: ['Series A', 'Series B'],  // List of designations
     classes: ['Class 1', 'Class 2'],   // Available tolerance classes
-    getCTD: (item) => `${item.designation} - Custom`, // Format for Fusion 360
+    getCTD: (item) => '1/4 My',        // Auto-detect designation from input
     getSeries: (item) => 'Series A',   // Auto-detect series from input
     defaultDrillSets: ['Metric'],      // Initial drill set selection
     docUrl: '...',                     // Base documentation URL (GitHub)
