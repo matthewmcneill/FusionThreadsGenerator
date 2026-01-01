@@ -1,6 +1,6 @@
 # Fusion 360 Thread Generator
 
-This web application allows users to generate custom XML definitions for Fusion 360 thread standards, specifically focusing on British Association (BA) and Whitworth (BSW/BSF) imperial threads.
+This web application allows users to generate custom XML definitions for Fusion 360 thread standards, specifically focusing on British Association (BA), Whitworth (BSW/BSF), and British Standard Cycle (BSC/CEI) imperial threads.
 
 ## [![Access Live App](https://img.shields.io/badge/Access%20Live%20App-🚀-blue?style=for-the-badge&logo=github&logoColor=white)](https://matthewmcneill.github.io/FusionThreadsGenerator) [![Download Whitworth](https://img.shields.io/badge/Download%20Whitworth-XML-green?style=for-the-badge&logo=xml&logoColor=white)](ThreadData/Whitworth.xml) [![Download BA](https://img.shields.io/badge/Download%20BA-XML-green?style=for-the-badge&logo=xml&logoColor=white)](ThreadData/BA_Threads.xml) [![Download ME](https://img.shields.io/badge/Download%20ME-XML-green?style=for-the-badge&logo=xml&logoColor=white)](ThreadData/Model_Engineer_ME.xml)
 
@@ -9,7 +9,7 @@ This web application allows users to generate custom XML definitions for Fusion 
 
 ## How to Use the App
 
-1. **Select a Thread Standard**: Use the tabs at the top to select the desired standard: **Whitworth**, **British Association (BA)**, or **Model Engineer (ME)**.
+1. **Select a Thread Standard**: Use the dropdown at the top to select the desired standard: **Whitworth**, **British Association (BA)**, **Model Engineer (ME)**, or **Cycle (BSC/CEI)**.
 2. **Filter by Series & Class**:
     - For **Whitworth**, use the checkboxes to toggle between **Standard (BSW)** and **Fine (BSF)** series.
     - Select the desired **Thread Classes** (e.g., Close, Medium, Free) to include in the export.
@@ -58,8 +58,9 @@ Classic 55-degree flank angle with rounded crests and roots.
 - **BA (British Association)**: Unique 47.5° angle. Standard for electrical equipment and instruments. [Technical Spec](docs/BA_SPEC.md)
 
 ### 3. Cycle Threads (60° Angle)
-- **BSC / BSCy (British Standard Cycle)**: Successor to **CEI**.
+- **BSC / BSCy (British Standard Cycle)**: Successor to **CEI**. [Technical Spec](docs/BSC_SPEC.md)
 - **The "26 TPI Rule"**: Most BSC threads from 1/4" up to 1" use a constant 26 TPI.
+- **BSA Motorcycle**: Heavier 20 TPI variant for larger sizes.
 
 ### 4. Specialized Industry Threads
 - **ADM (Admiralty Fine)**: Niche standard for the Royal Navy.
@@ -73,8 +74,8 @@ Classic 55-degree flank angle with rounded crests and roots.
 | **BSW/BSF** | 55° | General engineering, motorcycles (pre-Unified). | ✅ Implemented |
 | **BA** | 47.5° | Electrical fittings, instruments, modeling. | ✅ Implemented |
 | **ME** | 55° | Small scale steam models and carburetors. | ✅ Implemented |
+| **BSC / CEI** | 60° | Bicycles and motorcycles (BSA, Norton, Triumph). | ✅ Implemented |
 | **BSP** | 55° | Plumbing and hydraulic systems. | 📋 Planned |
-| **BSC / CEI** | 60° | Bicycles and motorcycles (BSA, Norton, Triumph). | 📋 Planned |
 | **BSB** | 55° | Brass lamps, gas fittings, thin-walled tubing. | 📋 Planned |
 
 > [!TIP]
@@ -85,7 +86,7 @@ Classic 55-degree flank angle with rounded crests and roots.
 ---
 
 ## Technical Documentation & Resources
-- [Implementation Overview](docs/implementation_overview.md) - Software architecture and developer guide.
+- [IMPLEMENTATION_OVERVIEW.md](docs/IMPLEMENTATION_OVERVIEW.md) - Software architecture and developer guide.
 
 ---
 

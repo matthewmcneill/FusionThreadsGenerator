@@ -1,9 +1,9 @@
 # FusionThreadsGenerator Implementation Overview
 
 ## Project Architecture
-FusionThreadsGenerator is a React-based web application designed to generate Fusion 360-compatible XML thread definitions for British Association (BA), Whitworth (BSW/BSF), and Model Engineer (ME) thread standards.
+FusionThreadsGenerator is a React-based web application designed to generate Fusion 360-compatible XML thread definitions for British Association (BA), Whitworth (BSW/BSF), Model Engineer (ME), and British Standard Cycle (BSC/CEI) thread standards.
 
-The application follows a modular, metadata-driven architecture to align with Fusion 360's internal terminology.
+The application follows a modular, metadata-driven architecture to align with Fusion 360's internal terminology. Internal logic is decoupled from descriptive names using unique Standard IDs.
 
 ### 1. UI Layer (`src/App.jsx` and `src/components/`)
 - **App.jsx**: Orchestrates a **3-Stage Workflow** (Select → Refine → Export). It dynamically renders series and class toggles based on standard metadata.
@@ -14,7 +14,8 @@ The application follows a modular, metadata-driven architecture to align with Fu
 Each module defines a `Standard` configuration object containing `series` (Designations) and `classes` (Tolerances).
 - **whitworth.js**: Implements 55° Whitworth threads. Series: `BSW`, `BSF`. Classes: `Close`, `Medium`, `Free`.
 - **ba.js**: Implements 47.5° BA threads. Series: `BA`. Classes: `Close`, `Normal`.
-- **me.js**: Implements 55° constant-pitch threads. Series: `Fine (40 TPI)`, `Medium (32 TPI)`, `BSB (26 TPI)`. Class: `Medium`.
+- **me.js**: Implements 55° constant-pitch threads. Series: `Fine (40 TPI)`, `Medium (32 TPI)`, `BSB (26 TPI)`. Class: `Normal`.
+- **bsc.js**: Implements 60° cycle threads. Series: `Standard`, `BSA`. Classes: `Close`, `Medium`, `Free`.
 - **index.js**: Unified export point for thread calculators.
 
 ### 3. XML Generation Layer (`src/utils/xmlGenerator.js`)
@@ -29,6 +30,7 @@ Each module defines a `Standard` configuration object containing `series` (Desig
 ## Key Technical Concepts
 - **CTD Generation**: The app automatically formats "Custom Thread Designations" (e.g., `1/4 - 20 BSW`) to match Fusion 360's internal lookup logic.
 - **Dynamic Terminology**: The UI uses "Designation (Series)" and "Class (Tolerance)" to remain consistent with Fusion 360's interface.
+- **ID-Based Logic**: Internal switching, state management, and calculation routing are driven by unique IDs (e.g., `WHITWORTH`), allowing user-facing names to be modified (e.g., for localization or better description) without breaking the application.
 - **Metadata-Driven Filtering**: Standards define their own series and classes, and the UI adapts automatically without hardcoded standard-specific logic.
 
 ## Extending the Generator: Adding New Thread Standards
@@ -43,17 +45,18 @@ Each standard must reside in its own file under `src/utils/calculators/` and exp
 This object defines how the standard is identified and what options are available in the UI.
 ```javascript
 export const MyStandard = {
-    name: 'My Standard',    // Display name
-    unit: 'in',             // 'in' or 'mm'
-    angle: 60,              // Thread angle
-    sortOrder: 5,           // Order in dropdown
-    threadForm: 6,          // Fusion 360 Form ID (e.g., 6 for UN, 8 for Whitworth)
+    id: 'MY_THREAD',         // Unique, immutable identity key
+    name: 'My Standard',     // Display name (can be changed safely)
+    unit: 'in',              // 'in' or 'mm'
+    angle: 60,               // Thread angle
+    sortOrder: 5,            // Order in dropdown
+    threadForm: 6,           // Fusion 360 Form ID (e.g., 6 for UN, 8 for Whitworth)
     series: ['Series A', 'Series B'], // List of designations
     classes: ['Class 1', 'Class 2'],   // Available tolerance classes
     defaultDrillSets: ['Metric'],     // Initial drill set selection
-    docUrl: '...',          // Base documentation URL
-    seriesAnchor: '#...',   // Anchor for Series info link
-    classAnchor: '#...'     // Anchor for Class info link
+    docUrl: '...',           // Base documentation URL
+    seriesAnchor: '#...',    // Anchor for Series info link
+    classAnchor: '#...'      // Anchor for Class info link
 };
 ```
 
@@ -118,10 +121,10 @@ const validation = validateTapDrill(drillSize, major, minor, nutMinorMax, materi
 1.  **Create Calculator**: Create `src/utils/calculators/my_standard.js` following the architecture above. Use `whitworth.js` or `ba.js` as a template for tolerance and engagement formulas.
 2.  **Export Module**: Add `export * from './my_standard';` to `src/utils/calculators/index.js`.
 3.  **App.jsx Integration**:
-    *   **Dropdown**: Add an `<option>` for your standard in the `handleStandardChange` dropdown (Stage 1).
-    *   **Standard Mapping**: Update the logic in `handleStandardChange` to map your dropdown value to your exported `Standard` object.
-    *   **Default Loading**: Update `loadStandardDefaults` to return your `MY_SIZES` array when your standard is active.
-    *   **Calculator Routing**: Update the `if/else` blocks in `calculateThreadItem` and the main `useEffect` to call your new calculation function.
+    *   **Dropdown**: Add an `<option>` for your standard in the `handleStandardChange` dropdown (Stage 1), using your ID as the `value`.
+    *   **Standard Mapping**: Update the logic in `handleStandardChange` to map your dropdown ID to your exported `Standard` object.
+    *   **Default Loading**: Update `loadStandardDefaults` (using ID-based checks) to return your `MY_SIZES` array when your standard is active.
+    *   **Calculator Routing**: Update the `if/else` blocks in `calculateThreadItem` and the main `useEffect` to call your new calculation function based on the `id`.
     *   **CTD Formatting**: If your standard requires a specific "Custom Thread Designation" string format for Fusion 360, add a case to the `ctd` generation logic in `calculateThreadItem`.
 4.  **Verification**: Run the app locally, select your new standard, verify the preview table values, and check the generated XML file in a text editor to ensure it follows the `<ThreadType>` schema.
 

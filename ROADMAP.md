@@ -28,7 +28,6 @@ We plan to expand our library of historical British and specialized threads. For
 
 Planned additions include:
 - **British Standard Pipe (BSP)**: Parallel (BSPP) and Taper (BSPT).
-- **British Standard Cycle (BSC/BSCy)**: 60° thread angle.
 - **British Standard Brass (BSB)**: 26 TPI constant pitch.
 - **Specialized Industry Threads**: Conduit (ET), Admiralty Fine (ADM), Gas Cylinder (BS 341), Fire Hose (BS 336).
 
