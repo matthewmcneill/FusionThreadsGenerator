@@ -339,7 +339,7 @@ function App() {
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
                     {standard.series.map(s => (
-                      <label key={s} style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold', cursor: 'pointer', fontSize: '0.85rem' }}>
+                      <label key={s} style={{ display: 'flex', alignItems: 'center', fontWeight: 'normal', cursor: 'pointer', fontSize: '0.85rem' }}>
                         <input
                           type="checkbox"
                           checked={selectedSeries.includes(s)}
@@ -403,7 +403,7 @@ function App() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                    <label style={{ fontSize: '0.75rem', opacity: 0.8, textAlign: 'center' }}>Workpiece Material / Target Engagement</label>
+                    <label style={{ fontSize: '0.75rem', opacity: 0.8, textAlign: 'center', fontWeight: 'normal' }}>Workpiece Material / Target Engagement</label>
                     <select
                       value={material}
                       onChange={(e) => setMaterial(e.target.value)}
