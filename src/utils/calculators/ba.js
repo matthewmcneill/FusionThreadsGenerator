@@ -22,6 +22,8 @@ export const BAStandard = {
     threadForm: 8,
     series: ['BA'],
     classes: ['Close', 'Normal'],
+    getCTD: (item) => item.designation,
+    getSeries: () => 'BA',
     defaultDrillSets: ['Metric'],
     docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/BA_SPEC.md',
     seriesAnchor: '#2-basic-dimensions-bs-931951',

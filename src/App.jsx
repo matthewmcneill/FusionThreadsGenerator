@@ -15,16 +15,19 @@ import {
   calculateBA,
   calculateME,
   calculateBSC,
+  calculateBSB,
   WhitworthStandard,
   BAStandard,
   MEStandard,
   BSCStandard,
+  BSBStandard,
   BSW_SIZES,
   BSF_SIZES,
   BA_SIZES,
   ME_SIZES,
   STANDARD_BSC_SIZES,
-  BSA_HEAVY_SIZES
+  BSA_HEAVY_SIZES,
+  BSB_SIZES
 } from './utils/calculators';
 import { generateFusionXML } from './utils/xmlGenerator';
 
@@ -62,34 +65,17 @@ function App() {
       calc = calculateME(input.size, input.tpi, activeDrillSets, material);
     } else if (std.id === 'BSC') {
       calc = calculateBSC(input.size, input.tpi, activeDrillSets, null, material);
+    } else if (std.id === 'BSB') {
+      calc = calculateBSB(input.size, input.tpi, activeDrillSets, material);
     } else {
       calc = calculateBA(input.size, activeDrillSets, material);
     }
 
     if (!calc) return null;
 
-    // 2. Auto-generate CTD (Custom Thread Designation) if missing
-    // Standardizes the naming for Fusion 360 lookup
-    const ctd = input.ctd || (std.id === 'WHITWORTH'
-      ? `${input.designation.replace(' BSW', '').replace(' BSF', '')} - ${input.tpi} ${input.designation.includes('BSW') ? 'BSW' : 'BSF'}`
-      : std.id === 'ME'
-        ? `${input.designation.replace('ME ', '').replace(' BSB', '')} - ${input.tpi} ${input.tpi === 26 ? 'BSB' : 'ME'}`
-        : std.id === 'BSC'
-          ? `${input.designation.replace(' BSC', '').replace(' BSA', '')} - ${input.tpi} ${input.designation.includes('BSA') ? 'BSA' : 'BSC'}`
-          : input.designation
-    );
-
-    // 3. Return combined data
-    let series = input.series;
-    if (!series) {
-      if (std.id === 'WHITWORTH') {
-        series = input.designation.includes('BSW') ? 'BSW' : 'BSF';
-      } else if (std.id === 'ME') {
-        series = input.tpi === 40 ? 'Fine (40 TPI)' : (input.tpi === 26 ? 'BSB (26 TPI)' : 'Medium (32 TPI)');
-      } else {
-        series = std.series[0];
-      }
-    }
+    // 2. Auto-generate CTD and detect Series if missing (using standard delegates)
+    const ctd = input.ctd || (std.getCTD ? std.getCTD(input) : input.designation);
+    const series = input.series || (std.getSeries ? std.getSeries(input) : std.series[0]);
 
     return { ...input, ...calc, ctd, series };
   };
@@ -112,6 +98,8 @@ function App() {
     } else if (newStd.id === 'BSC') {
       if (activeSeries.includes('Standard')) defaultSizes = [...defaultSizes, ...STANDARD_BSC_SIZES];
       if (activeSeries.includes('BSA')) defaultSizes = [...defaultSizes, ...BSA_HEAVY_SIZES];
+    } else if (newStd.id === 'BSB') {
+      defaultSizes = BSB_SIZES;
     } else {
       defaultSizes = BA_SIZES;
     }
@@ -146,6 +134,7 @@ function App() {
     if (standardId === 'WHITWORTH') newStd = WhitworthStandard;
     else if (standardId === 'ME') newStd = MEStandard;
     else if (standardId === 'BSC') newStd = BSCStandard;
+    else if (standardId === 'BSB') newStd = BSBStandard;
     else newStd = BAStandard;
 
     setStandard(newStd);
@@ -221,19 +210,7 @@ function App() {
   useEffect(() => {
     if (threads.length === 0) return;
 
-    setThreads(prevThreads => prevThreads.map(t => {
-      let calc;
-      if (standard.id === 'WHITWORTH') {
-        calc = calculateWhitworth(t.size, t.tpi, selectedDrillSets, null, material);
-      } else if (standard.id === 'ME') {
-        calc = calculateME(t.size, t.tpi, selectedDrillSets, material);
-      } else if (standard.id === 'BSC') {
-        calc = calculateBSC(t.size, t.tpi, selectedDrillSets, null, material);
-      } else {
-        calc = calculateBA(t.size, selectedDrillSets, material);
-      }
-      return { ...t, ...calc };
-    }));
+    setThreads(prevThreads => prevThreads.map(t => calculateThreadItem(standard, t)).filter(Boolean));
   }, [material, selectedDrillSets]);
 
   /**
@@ -296,6 +273,7 @@ function App() {
                 <option value="WHITWORTH">{WhitworthStandard.name}</option>
                 <option value="BA">{BAStandard.name}</option>
                 <option value="ME">{MEStandard.name}</option>
+                <option value="BSB">{BSBStandard.name}</option>
                 <option value="BSC">{BSCStandard.name}</option>
               </select>
               <div style={{ flexGrow: 1 }} />

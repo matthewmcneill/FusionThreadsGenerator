@@ -2,17 +2,22 @@
 
 This web application allows users to generate custom XML definitions for Fusion 360 thread standards, specifically focusing on British Association (BA), Whitworth (BSW/BSF), and British Standard Cycle (BSC/CEI) imperial threads.
 
-## [![Access Live App](https://img.shields.io/badge/Access%20Live%20App-🚀-blue?style=for-the-badge&logo=github&logoColor=white)](https://matthewmcneill.github.io/FusionThreadsGenerator) [![Download Whitworth](https://img.shields.io/badge/Download%20Whitworth-XML-green?style=for-the-badge&logo=xml&logoColor=white)](ThreadData/Whitworth.xml) [![Download BA](https://img.shields.io/badge/Download%20BA-XML-green?style=for-the-badge&logo=xml&logoColor=white)](ThreadData/BA_Threads.xml) [![Download ME](https://img.shields.io/badge/Download%20ME-XML-green?style=for-the-badge&logo=xml&logoColor=white)](ThreadData/Model_Engineer_ME.xml)
+## [![Access Live App](https://img.shields.io/badge/Access%20Live%20App-🚀-blue?style=for-the-badge&logo=github&logoColor=white)](https://matthewmcneill.github.io/FusionThreadsGenerator)
+
+### Prebaked Thread Definitions (Download XML)
+[![Download Whitworth](https://img.shields.io/badge/Whitworth-XML-green?style=for-the-badge&logo=xml&logoColor=white)](ThreadData/British_Standard_Whitworth_BSWBSF.xml) [![Download BA](https://img.shields.io/badge/BA-XML-green?style=for-the-badge&logo=xml&logoColor=white)](ThreadData/British_Association_BA.xml) [![Download ME](https://img.shields.io/badge/ME-XML-green?style=for-the-badge&logo=xml&logoColor=white)](ThreadData/British_Model_Engineer_ME.xml) [![Download BSC](https://img.shields.io/badge/Cycle%20(BSC)-XML-green?style=for-the-badge&logo=xml&logoColor=white)](ThreadData/British_Standard_Cycle_BSCCEI.xml)
 
 
 ---
 
 ## How to Use the App
 
-1. **Select a Thread Standard**: Use the dropdown at the top to select the desired standard: **Whitworth**, **British Association (BA)**, **Model Engineer (ME)**, or **Cycle (BSC/CEI)**.
-2. **Filter by Series & Class**:
+1. **Select a Thread Standard**: Use the dropdown at the top to select the desired standard: **Whitworth**, **British Association (BA)**, **Model Engineer (ME)**, **British Standard Brass (BSB)**, or **Cycle (BSC/CEI)**.
+2. **Refine Configuration**:
     - For **Whitworth**, use the checkboxes to toggle between **Standard (BSW)** and **Fine (BSF)** series.
     - Select the desired **Thread Classes** (e.g., Close, Medium, Free) to include in the export.
+    - Choose your **Workpiece Material** to optimize target thread engagement.
+    - Select the **Drill Bit Sets** available in your workshop.
 3. **Review & Customize Sizes**: The app loads standard sizes by default. You can remove existing entries from the table or add custom sizes using the form at the bottom.
 4. **Download XML**: Click the **Download XML** button to generate and save the `.xml` file.
 
@@ -50,7 +55,7 @@ Classic 55-degree flank angle with rounded crests and roots.
 - **BSP (British Standard Pipe)**:
     - **BSPP (Parallel)**: "G" threads.
     - **BSPT (Taper)**: "R" threads.
-- **BSB (British Standard Brass)**: Specialized for brass tubing; constant pitch of **26 TPI**.
+- **BSB (British Standard Brass)**: Specialized for brass tubing; constant pitch of **26 TPI**. [Technical Spec](docs/BSB_SPEC.md)
 - **BS Con (British Standard Conduit)**: Also known as **ET** or **BS 31**.
 - **ME (Model Engineer)**: Miniature threads for small boilers and steam models. [Technical Spec](docs/ME_SPEC.md)
 
@@ -76,7 +81,7 @@ Classic 55-degree flank angle with rounded crests and roots.
 | **ME** | 55° | Small scale steam models and carburetors. | ✅ Implemented |
 | **BSC / CEI** | 60° | Bicycles and motorcycles (BSA, Norton, Triumph). | ✅ Implemented |
 | **BSP** | 55° | Plumbing and hydraulic systems. | 📋 Planned |
-| **BSB** | 55° | Brass lamps, gas fittings, thin-walled tubing. | 📋 Planned |
+| **BSB** | 55° | Brass lamps, gas fittings, thin-walled tubing. | ✅ Implemented |
 
 > [!TIP]
 > **Drill Selection**: All supported threads use our advanced [Tapping Drill Specification](docs/DRILL_SPEC.md) for tool selection.

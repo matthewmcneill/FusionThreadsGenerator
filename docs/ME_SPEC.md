@@ -43,6 +43,9 @@ In a standard bolt (like a 1/2" UNC), as the diameter increases, the thread gets
 
 The **26 TPI (Threads Per Inch)** series is the heavyweight of the model engineering world. While the "standard" Model Engineer threads are 32 and 40 TPI, the 26 TPI series—frequently referred to as **British Standard Brass (BSB)** or simply **Brass Thread**—is the go-to for larger-scale models and robust boiler fittings.
 
+> [!NOTE]
+> For a full technical derivation of BSB threads, see the [BSB Technical Specification](BSB_SPEC.md).
+
 #### The "Brass Thread" Identity
 The 26 TPI series is synonymous with brass tube work. Because brass tubing typically has a consistent wall thickness regardless of its diameter, using a standard thread (like BSW) would result in the thread being too deep for larger tubes, effectively cutting the tube in half.
 By keeping the pitch constant at 26 TPI, the thread depth remains shallow enough to be safely cut into the side of a thin-walled pipe without compromising its structural integrity.

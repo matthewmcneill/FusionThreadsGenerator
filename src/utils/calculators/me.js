@@ -22,6 +22,17 @@ export const MEStandard = {
     threadForm: 8,
     series: ['Fine (40 TPI)', 'Medium (32 TPI)', 'BSB (26 TPI)'],
     classes: ['Medium'],
+    getCTD: (item) => {
+        // Find size string if it's a preset
+        let sizeStr = item.nominalFraction || item.size.toString();
+        const isBSB = item.tpi === 26;
+        return `${sizeStr} - ${item.tpi} ${isBSB ? 'BSB' : 'ME'}`;
+    },
+    getSeries: (item) => {
+        if (item.tpi === 40) return 'Fine (40 TPI)';
+        if (item.tpi === 26) return 'BSB (26 TPI)';
+        return 'Medium (32 TPI)';
+    },
     defaultDrillSets: ['Number', 'Letter', 'Imperial'],
     docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/ME_SPEC.md',
     seriesAnchor: '#4-common-mebsb-thread-sizes-and-tap-drill-data',

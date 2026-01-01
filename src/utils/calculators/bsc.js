@@ -23,6 +23,12 @@ export const BSCStandard = {
     threadForm: 8,
     series: ['Standard', 'BSA'],
     classes: ['Close', 'Medium', 'Free'],
+    getCTD: (item) => {
+        let sizeStr = item.nominalFraction || item.size.toString();
+        const suffix = item.designation.includes('BSA') ? 'BSA' : 'BSC';
+        return `${sizeStr} - ${item.tpi} ${suffix}`;
+    },
+    getSeries: (item) => item.tpi === 20 ? 'BSA' : 'Standard',
     defaultDrillSets: ['Number', 'Letter', 'Imperial'],
     docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/BSC_SPEC.md',
     seriesAnchor: '#3-thread-designations-series',

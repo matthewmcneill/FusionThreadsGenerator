@@ -13,9 +13,10 @@ The application follows a modular, metadata-driven architecture to align with Fu
 ### 2. Logic Layer (`src/utils/calculators/`)
 Each module defines a `Standard` configuration object containing `series` (Designations) and `classes` (Tolerances).
 - **whitworth.js**: Implements 55° Whitworth threads. Series: `BSW`, `BSF`. Classes: `Close`, `Medium`, `Free`.
-- **ba.js**: Implements 47.5° BA threads. Series: `BA`. Classes: `Close`, `Normal`.
-- **me.js**: Implements 55° constant-pitch threads. Series: `Fine (40 TPI)`, `Medium (32 TPI)`, `BSB (26 TPI)`. Class: `Normal`.
-- **bsc.js**: Implements 60° cycle threads. Series: `Standard`, `BSA`. Classes: `Close`, `Medium`, `Free`.
+- **[`ba.js`](../src/utils/calculators/ba.js)**: Implements the British Association (BA) standard with its unique 47.5° angle.
+- **[`me.js`](../src/utils/calculators/me.js)**: Implements Model Engineer (ME) threads with constant 32/40 TPI.
+- **[`bsb.js`](../src/utils/calculators/bsb.js)**: Implements British Standard Brass (BSB) threads with a constant 26 TPI.
+- **[`bsc.js`](../src/utils/calculators/bsc.js)**: Implements British Standard Cycle (BSC/CEI) threads.
 - **index.js**: Unified export point for thread calculators.
 
 ### 3. XML Generation Layer (`src/utils/xmlGenerator.js`)

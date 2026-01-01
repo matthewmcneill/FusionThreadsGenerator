@@ -21,6 +21,12 @@ export const WhitworthStandard = {
     threadForm: 8,
     series: ['BSW', 'BSF'],
     classes: ['Close', 'Medium', 'Free', 'Normal'],
+    getCTD: (item) => {
+        const base = item.designation.replace(' BSW', '').replace(' BSF', '');
+        const suffix = item.designation.includes('BSW') ? 'BSW' : 'BSF';
+        return `${base} - ${item.tpi} ${suffix}`;
+    },
+    getSeries: (item) => item.designation.includes('BSW') ? 'BSW' : 'BSF',
     defaultDrillSets: ['Number', 'Letter', 'Imperial'],
     docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/WHITWORTH_SPEC.md',
     seriesAnchor: '#5-standard-size-reference-tables',
