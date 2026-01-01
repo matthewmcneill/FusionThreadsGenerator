@@ -14,7 +14,8 @@ import { getNearestDrill, validateTapDrill } from '../drills.js';
  * Metadata configuration for the BA Thread Standard.
  */
 export const BAStandard = {
-    name: 'BA Threads',
+    id: 'BA',
+    name: 'British Association (BA)',
     unit: 'mm',
     angle: 47.5,
     sortOrder: 3,

@@ -14,7 +14,8 @@ import { getNearestDrill, validateTapDrill } from '../drills.js';
  * Model Engineer (ME) Standard configuration.
  */
 export const MEStandard = {
-    name: 'Model Engineer (ME)',
+    id: 'ME',
+    name: 'British Model Engineer (ME)',
     unit: 'in',
     angle: 55,
     sortOrder: 4,

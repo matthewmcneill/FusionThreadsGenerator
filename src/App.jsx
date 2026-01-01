@@ -14,13 +14,17 @@ import {
   calculateWhitworth,
   calculateBA,
   calculateME,
+  calculateBSC,
   WhitworthStandard,
   BAStandard,
   MEStandard,
+  BSCStandard,
   BSW_SIZES,
   BSF_SIZES,
   BA_SIZES,
-  ME_SIZES
+  ME_SIZES,
+  STANDARD_BSC_SIZES,
+  BSA_HEAVY_SIZES
 } from './utils/calculators';
 import { generateFusionXML } from './utils/xmlGenerator';
 
@@ -52,10 +56,12 @@ function App() {
     const activeDrillSets = drillSets || selectedDrillSets;
 
     // 1. Run standard-specific geometry calculator
-    if (isWhitworth) {
+    if (std.id === 'WHITWORTH') {
       calc = calculateWhitworth(input.size, input.tpi, activeDrillSets, null, material);
-    } else if (std.name.includes('ME')) {
+    } else if (std.id === 'ME') {
       calc = calculateME(input.size, input.tpi, activeDrillSets, material);
+    } else if (std.id === 'BSC') {
+      calc = calculateBSC(input.size, input.tpi, activeDrillSets, null, material);
     } else {
       calc = calculateBA(input.size, activeDrillSets, material);
     }
@@ -64,19 +70,21 @@ function App() {
 
     // 2. Auto-generate CTD (Custom Thread Designation) if missing
     // Standardizes the naming for Fusion 360 lookup
-    const ctd = input.ctd || (isWhitworth
-      ? `${input.designation.replace(' BSW', '').replace(' BSF', '')} - ${input.tpi} ${std.name.includes('BSW') ? 'BSW' : 'BSF'}`
-      : std.name.includes('ME')
+    const ctd = input.ctd || (std.id === 'WHITWORTH'
+      ? `${input.designation.replace(' BSW', '').replace(' BSF', '')} - ${input.tpi} ${input.designation.includes('BSW') ? 'BSW' : 'BSF'}`
+      : std.id === 'ME'
         ? `${input.designation.replace('ME ', '').replace(' BSB', '')} - ${input.tpi} ${input.tpi === 26 ? 'BSB' : 'ME'}`
-        : input.designation
+        : std.id === 'BSC'
+          ? `${input.designation.replace(' BSC', '').replace(' BSA', '')} - ${input.tpi} ${input.designation.includes('BSA') ? 'BSA' : 'BSC'}`
+          : input.designation
     );
 
     // 3. Return combined data
     let series = input.series;
     if (!series) {
-      if (std.name === 'Whitworth') {
+      if (std.id === 'WHITWORTH') {
         series = input.designation.includes('BSW') ? 'BSW' : 'BSF';
-      } else if (std.name.includes('ME')) {
+      } else if (std.id === 'ME') {
         series = input.tpi === 40 ? 'Fine (40 TPI)' : (input.tpi === 26 ? 'BSB (26 TPI)' : 'Medium (32 TPI)');
       } else {
         series = std.series[0];
@@ -96,11 +104,14 @@ function App() {
     let defaultSizes = [];
     const activeSeries = filters || newStd.series;
 
-    if (newStd.name === 'Whitworth') {
+    if (newStd.id === 'WHITWORTH') {
       if (activeSeries.includes('BSW')) defaultSizes = [...defaultSizes, ...BSW_SIZES];
       if (activeSeries.includes('BSF')) defaultSizes = [...defaultSizes, ...BSF_SIZES];
-    } else if (newStd.name.includes('ME')) {
+    } else if (newStd.id === 'ME') {
       defaultSizes = ME_SIZES.filter(s => activeSeries.includes(s.series));
+    } else if (newStd.id === 'BSC') {
+      if (activeSeries.includes('Standard')) defaultSizes = [...defaultSizes, ...STANDARD_BSC_SIZES];
+      if (activeSeries.includes('BSA')) defaultSizes = [...defaultSizes, ...BSA_HEAVY_SIZES];
     } else {
       defaultSizes = BA_SIZES;
     }
@@ -130,10 +141,11 @@ function App() {
    * Handles user selection of a different thread standard.
    * @param {string} standardName - Short code for the standard (Whitworth, BA).
    */
-  const handleStandardChange = (standardName) => {
+  const handleStandardChange = (standardId) => {
     let newStd;
-    if (standardName === 'Whitworth') newStd = WhitworthStandard;
-    else if (standardName === 'ME') newStd = MEStandard;
+    if (standardId === 'WHITWORTH') newStd = WhitworthStandard;
+    else if (standardId === 'ME') newStd = MEStandard;
+    else if (standardId === 'BSC') newStd = BSCStandard;
     else newStd = BAStandard;
 
     setStandard(newStd);
@@ -211,10 +223,12 @@ function App() {
 
     setThreads(prevThreads => prevThreads.map(t => {
       let calc;
-      if (standard.name.includes('Whitworth')) {
+      if (standard.id === 'WHITWORTH') {
         calc = calculateWhitworth(t.size, t.tpi, selectedDrillSets, null, material);
-      } else if (standard.name.includes('ME')) {
+      } else if (standard.id === 'ME') {
         calc = calculateME(t.size, t.tpi, selectedDrillSets, material);
+      } else if (standard.id === 'BSC') {
+        calc = calculateBSC(t.size, t.tpi, selectedDrillSets, null, material);
       } else {
         calc = calculateBA(t.size, selectedDrillSets, material);
       }
@@ -276,12 +290,13 @@ function App() {
             </div>
             <div className="input-group" style={{ margin: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
               <select
-                value={standard.name === 'Whitworth' ? 'Whitworth' : (standard.name.includes('ME') ? 'ME' : 'BA')}
+                value={standard.id}
                 onChange={(e) => handleStandardChange(e.target.value)}
               >
-                <option value="Whitworth">Whitworth</option>
-                <option value="BA">British Association (BA)</option>
-                <option value="ME">Model Engineer (ME)</option>
+                <option value="WHITWORTH">{WhitworthStandard.name}</option>
+                <option value="BA">{BAStandard.name}</option>
+                <option value="ME">{MEStandard.name}</option>
+                <option value="BSC">{BSCStandard.name}</option>
               </select>
               <div style={{ flexGrow: 1 }} />
               <div style={{ fontSize: '0.7rem', opacity: 0.6, color: 'var(--text-secondary)', lineHeight: '1.2' }}>
@@ -504,7 +519,7 @@ function App() {
         <>
           {/* List and Form components */}
           <ThreadList threads={threads} onRemove={handleRemoveThread} unit={standard.unit} />
-          <ThreadForm onAdd={handleAddThread} currentStandard={standard.name} />
+          <ThreadForm onAdd={handleAddThread} currentStandard={standard.name} standardId={standard.id} />
         </>
       ) : (
         <ThreadPreview

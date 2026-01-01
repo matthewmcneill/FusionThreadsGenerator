@@ -15,15 +15,17 @@ import React, { useState } from 'react';
  * @param {Object} props
  * @param {Function} props.onAdd - Callback when a valid size is submitted.
  * @param {string} props.currentStandard - Name of the active thread standard.
+ * @param {string} props.standardId - Unique ID of the active thread standard.
  */
-const ThreadForm = ({ onAdd, currentStandard }) => {
+const ThreadForm = ({ onAdd, currentStandard, standardId }) => {
     const [designation, setDesignation] = useState('');
     const [size, setSize] = useState('');
     const [tpi, setTpi] = useState('');
 
-    const isWhitworth = currentStandard.includes('Whitworth');
-    const isME = currentStandard.includes('ME');
-    const usesTpi = isWhitworth || isME;
+    const isWhitworth = standardId === 'WHITWORTH';
+    const isME = standardId === 'ME';
+    const isBSC = standardId === 'BSC';
+    const usesTpi = isWhitworth || isME || isBSC;
 
     const parseFraction = (f) => {
         if (!f || typeof f !== 'string') return parseFloat(f);

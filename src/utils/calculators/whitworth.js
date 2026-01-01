@@ -13,7 +13,8 @@
  * Unified Whitworth Standard configuration.
  */
 export const WhitworthStandard = {
-    name: 'Whitworth',
+    id: 'WHITWORTH',
+    name: 'British Standard Whitworth (BSW/BSF)',
     unit: 'in',
     angle: 55,
     sortOrder: 1,
