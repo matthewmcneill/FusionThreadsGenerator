@@ -281,11 +281,20 @@ function App() {
                 For more information and instructions please look at the:
               </div>
               <a
-                href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/README.md"
+                href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/BRITISH_THREADING_OVERVIEW.md"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="doc-link workflow-link"
                 style={{ fontSize: '0.75rem', marginTop: '0.3rem' }}
+              >
+                Overview of British Threading Standards
+              </a>
+              <a
+                href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/README.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="doc-link workflow-link"
+                style={{ fontSize: '0.75rem', marginTop: '0.2rem' }}
               >
                 App Documentation
               </a>

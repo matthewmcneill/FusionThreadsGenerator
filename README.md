@@ -90,6 +90,7 @@ Classic 55-degree flank angle with rounded crests and roots.
 ---
 
 ## Technical Documentation & Resources
+- [BRITISH_THREADING_OVERVIEW.md](docs/BRITISH_THREADING_OVERVIEW.md) - A historical and technical exploration of historical British threading standards, with a focus on their usage for the workshop engineer.
 - [IMPLEMENTATION_OVERVIEW.md](docs/IMPLEMENTATION_OVERVIEW.md) - Software architecture and developer guide.
 
 ---
