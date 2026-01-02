@@ -1,4 +1,4 @@
-# **The Imperial Helix: An Exhaustive Analysis of Historical British Threading Standards**
+# **The Imperial Helix: An Historical and Technical Analysis of Historical British Threading Standards**
 
 ## **1\. Introduction: The Pre-Standardization Chaos and the Whitworth Revolution**
 
