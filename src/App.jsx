@@ -10,6 +10,7 @@ import React, { useState, useEffect } from 'react';
 import ThreadForm from './components/ThreadForm';
 import ThreadList from './components/ThreadList';
 import ThreadPreview from './components/ThreadPreview';
+import WorkshopGuide from './components/WorkshopGuide';
 import {
   calculateWhitworth,
   calculateBA,
@@ -42,7 +43,7 @@ function App() {
   const [selectedSeries, setSelectedSeries] = useState(WhitworthStandard.series);
   const [selectedDrillSets, setSelectedDrillSets] = useState(WhitworthStandard.defaultDrillSets);
   const [material, setMaterial] = useState('ferrous');
-  const [showPreview, setShowPreview] = useState(false);
+  const [activeTab, setActiveTab] = useState('config');
 
   const ALL_DRILL_SETS = ['Metric', 'Number', 'Letter', 'Imperial'];
 
@@ -250,291 +251,291 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <h1>Fusion 360 Thread Generator</h1>
-      <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-        Create custom XML definitions for Whitworth (BSW/BSF), British Association (BA), or Model Engineer (ME) threads.
-      </p>
+    <div className="min-h-screen bg-transparent py-8 px-8">
+      <div className="max-w-[1344px] mx-auto flex flex-col items-center">
+        <h1 className="text-3xl md:text-[51.2px] font-bold tracking-tight mt-[34px] mb-[25px] bg-clip-text text-transparent bg-gradient-to-r from-white to-sky-400 drop-shadow-2xl leading-tight">
+          Fusion 360 Thread Generator
+        </h1>
+        <p className="text-slate-400 text-lg mb-10 max-w-2xl text-center">
+          Create & Customise Professional Fusion 360 XML definitions for British Standard Threads.
+        </p>
 
-      {/* Configuration Panel */}
-      <div className="glass-panel" style={{ marginBottom: '2rem', padding: '1.5rem 0' }}>
-        <div className="workflow-container">
-          {/* Stage 1: Select */}
-          <div className="workflow-column">
-            <div className="step-header">
-              <span className="step-number">1</span>
-              <span className="step-title">Select Standard</span>
-            </div>
-            <div className="input-group" style={{ margin: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <select
-                value={standard.id}
-                onChange={(e) => handleStandardChange(e.target.value)}
-              >
-                <option value="WHITWORTH">{WhitworthStandard.name}</option>
-                <option value="BA">{BAStandard.name}</option>
-                <option value="ME">{MEStandard.name}</option>
-                <option value="BSB">{BSBStandard.name}</option>
-                <option value="BSC">{BSCStandard.name}</option>
-              </select>
-              <div style={{ flexGrow: 1 }} />
-              <div style={{ fontSize: '0.7rem', opacity: 0.6, color: 'var(--text-secondary)', lineHeight: '1.2' }}>
-                For more information and instructions please look at the:
+        {/* Persistent Configuration Panel (Visible for all tabs) */}
+        {(activeTab === 'config' || activeTab === 'preview' || activeTab === 'guide') && (
+          <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="bg-slate-800/40 backdrop-blur-xl rounded-3xl border border-slate-700/50 shadow-2xl overflow-hidden mb-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-slate-700/50">
+
+                {/* Stage 1: Select */}
+                <div className="p-6 flex flex-col gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-sky-500 text-slate-950 flex items-center justify-center font-bold text-xs shadow-[0_0_10px_rgba(56,189,248,0.5)]">1</span>
+                    <span className="text-sm font-semibold uppercase tracking-wide text-slate-300">Select Standard</span>
+                  </div>
+
+                  <div className="flex-grow flex flex-col">
+                    <div className="flex-grow space-y-4 mb-8">
+                      <select
+                        aria-label="Select Standard"
+                        className="w-full bg-slate-950/50 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-100 focus:ring-1 focus:ring-sky-500 outline-none transition-all cursor-pointer font-bold"
+                        value={standard.id}
+                        onChange={(e) => handleStandardChange(e.target.value)}
+                      >
+                        <option value="WHITWORTH">{WhitworthStandard.name}</option>
+                        <option value="BA">{BAStandard.name}</option>
+                        <option value="ME">{MEStandard.name}</option>
+                        <option value="BSB">{BSBStandard.name}</option>
+                        <option value="BSC">{BSCStandard.name}</option>
+                      </select>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-700/40">
+                      <div className="flex items-center justify-center mb-3">
+                        <p className="text-[10.5px] text-slate-400 font-medium uppercase tracking-widest">Resources</p>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <a
+                          href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/BRITISH_THREADING_OVERVIEW.md"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] text-sky-400/80 hover:text-sky-300 transition-colors font-bold flex items-center gap-2"
+                        >
+                          <span className="opacity-20">→</span> British Standards Overview
+                        </a>
+                        <a
+                          href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/README.md"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] text-sky-400/80 hover:text-sky-300 transition-colors font-bold flex items-center gap-2"
+                        >
+                          <span className="opacity-20">→</span> App Documentation
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stage 2: Refine */}
+                <div className="p-6 flex flex-col gap-4 bg-slate-400/[0.02]">
+                  <div className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-sky-500 text-slate-950 flex items-center justify-center font-bold text-xs shadow-[0_0_10px_rgba(56,189,248,0.5)]">2</span>
+                    <span className="text-sm font-semibold uppercase tracking-wide text-slate-300">Refine Configuration</span>
+                  </div>
+
+                  <div className="space-y-4 flex-grow">
+                    {/* Series Selection */}
+                    {standard.series.length > 1 && (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-center gap-2">
+                          <p className="text-[10.5px] text-slate-400 font-medium uppercase tracking-widest">Designation (Series)</p>
+                          <a href={`${standard.docUrl}${standard.seriesAnchor || ''}`} target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 text-xs transition-colors leading-none opacity-80 hover:opacity-100">ⓘ</a>
+                        </div>
+                        <div className="flex flex-wrap justify-center gap-x-5 gap-y-1">
+                          {standard.series.map(s => (
+                            <label key={s} className="flex items-center gap-2 cursor-pointer group">
+                              <input
+                                type="checkbox"
+                                className="w-3.5 h-3.5 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500 focus:ring-offset-slate-900"
+                                checked={selectedSeries.includes(s)}
+                                onChange={() => toggleSeries(s)}
+                              />
+                              <span className="text-xs text-slate-400 group-hover:text-white transition-colors font-bold tracking-tight">{s}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Tolerance Class */}
+                    {standard.classes.length > 1 && (
+                      <div className="space-y-2 pt-3 border-t border-slate-700/40">
+                        <div className="flex items-center justify-center gap-2">
+                          <p className="text-[10.5px] text-slate-400 font-medium uppercase tracking-widest">Class (Tolerance)</p>
+                          <a href={`${standard.docUrl}${standard.classAnchor || ''}`} target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 text-xs transition-colors leading-none opacity-80 hover:opacity-100">ⓘ</a>
+                        </div>
+                        <div className="flex flex-wrap justify-center gap-x-5 gap-y-1">
+                          {standard.classes.map(c => (
+                            <label key={c} className="flex items-center gap-2 cursor-pointer group">
+                              <input
+                                type="checkbox"
+                                className="w-3.5 h-3.5 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500 focus:ring-offset-slate-900"
+                                checked={selectedClasses.includes(c)}
+                                onChange={() => toggleClass(c)}
+                              />
+                              <span className="text-xs text-slate-400 group-hover:text-white transition-colors font-bold tracking-tight">{c}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Material Options */}
+                    <div className="space-y-2 pt-3 border-t border-slate-700/40">
+                      <div className="flex items-center justify-center gap-2">
+                        <p className="text-[10.5px] text-slate-400 font-medium uppercase tracking-widest">Tap Drill Selection</p>
+                        <a href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/DRILL_SPEC.md#2-calculation-philosophy" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 text-xs transition-colors leading-none opacity-80 hover:opacity-100">ⓘ</a>
+                      </div>
+                      <div className="space-y-1.5 px-4">
+                        <select
+                          aria-label="Tap Drill Selection"
+                          className="w-full bg-slate-950/50 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:ring-1 focus:ring-sky-500 outline-none transition-all cursor-pointer font-bold"
+                          value={material}
+                          onChange={(e) => setMaterial(e.target.value)}
+                        >
+                          <option value="hard">Hard Alloys (60% PTE)</option>
+                          <option value="ferrous">General Ferrous (70% PTE)</option>
+                          <option value="soft">Soft Non-Ferrous (80% PTE)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Drill Sets */}
+                    <div className="space-y-2 pt-3 border-t border-slate-700/40 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <p className="text-[10.5px] text-slate-400 font-medium uppercase tracking-widest">Drill Bit Sets</p>
+                        <a href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/DRILL_SPEC.md#3-drill-set-modeling" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 text-xs transition-colors leading-none opacity-80 hover:opacity-100">ⓘ</a>
+                      </div>
+                      <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
+                        {ALL_DRILL_SETS.map(s => (
+                          <label key={s} className="flex items-center gap-1.5 cursor-pointer group">
+                            <input
+                              type="checkbox"
+                              className="w-3 h-3 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500 focus:ring-offset-slate-900"
+                              checked={selectedDrillSets.includes(s)}
+                              onChange={() => toggleDrillSet(s)}
+                            />
+                            <span className="text-[10px] text-slate-500 group-hover:text-slate-300 transition-colors uppercase tracking-tight font-black">{s}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stage 3: Export */}
+                <div className="p-6 flex flex-col gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full bg-sky-500 text-slate-950 flex items-center justify-center font-bold text-xs shadow-[0_0_10px_rgba(56,189,248,0.5)]">3</span>
+                    <span className="text-sm font-semibold uppercase tracking-wide text-slate-300">Launch Export</span>
+                  </div>
+
+                  <div className="flex-grow flex flex-col">
+                    <div className="flex-grow flex flex-col justify-center space-y-3 mb-8">
+                      <button
+                        onClick={handleDownload}
+                        disabled={threads.length === 0}
+                        className="w-full bg-gradient-to-r from-sky-500 to-indigo-500 hover:from-sky-400 hover:to-indigo-400 text-slate-950 font-black py-4 px-6 rounded-xl shadow-[0_0_20px_rgba(56,189,248,0.2)] disabled:opacity-20 disabled:cursor-not-allowed transform active:scale-[0.98] transition-all text-xs uppercase tracking-widest"
+                      >
+                        Download XML ({threads.length})
+                      </button>
+                      <a
+                        href="https://github.com/matthewmcneill/FusionThreadsGenerator#installation-in-fusion-360"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] text-sky-400/80 hover:text-sky-300 transition-colors font-bold flex items-center gap-2"
+                      >
+                        <span className="opacity-20">→</span> Installation Guide
+                      </a>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-700/40">
+                      <div className="flex items-center justify-center mb-3">
+                        <p className="text-[10.5px] text-slate-400 font-medium uppercase tracking-widest">Thread Management</p>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <a
+                          href="https://apps.autodesk.com/FUSION/en/Detail/Index?id=1725038115223093226"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[11px] text-sky-400/80 hover:text-sky-300 transition-colors font-bold flex items-center gap-2"
+                        >
+                          <span className="opacity-20">→</span> ThreadKeeper (Autodesk Store)
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <a
-                href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/BRITISH_THREADING_OVERVIEW.md"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="doc-link workflow-link"
-                style={{ fontSize: '0.75rem', marginTop: '0.3rem' }}
-              >
-                Overview of British Threading Standards
-              </a>
-              <a
-                href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/README.md"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="doc-link workflow-link"
-                style={{ fontSize: '0.75rem', marginTop: '0.2rem' }}
-              >
-                App Documentation
-              </a>
             </div>
           </div>
+        )}
 
-          {/* Stage 2: Refine */}
-          <div className="workflow-column" style={{ flex: 1.5 }}>
-            <div className="step-header">
-              <span className="step-number">2</span>
-              <span className="step-title">Refine Configuration</span>
-            </div>
-            <div className="input-group" style={{ margin: 0 }}>
-              {/* Designation Toggle */}
-              {standard.series.length > 1 && (
-                <div style={{ marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                  <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.4rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
-                    <span>Designation (Series)</span>
-                    <a
-                      href={`${standard.docUrl}${standard.seriesAnchor || ''}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="doc-link"
-                      style={{ textDecoration: 'none', fontSize: '0.85rem' }}
-                      title="View Series Specification"
-                    >
-                      ⓘ
-                    </a>
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
-                    {standard.series.map(s => (
-                      <label key={s} style={{ display: 'flex', alignItems: 'center', fontWeight: 'normal', cursor: 'pointer', fontSize: '0.85rem' }}>
-                        <input
-                          type="checkbox"
-                          checked={selectedSeries.includes(s)}
-                          onChange={() => toggleSeries(s)}
-                          style={{ marginRight: '0.3rem', width: 'auto' }}
-                        />
-                        {s}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Class Toggle */}
-              {standard.classes.length > 1 && (
-                <div style={{ marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                  <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.4rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
-                    <span>Class (Tolerance)</span>
-                    <a
-                      href={`${standard.docUrl}${standard.classAnchor || ''}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="doc-link"
-                      style={{ textDecoration: 'none', fontSize: '0.85rem' }}
-                      title="View Tolerance Specification"
-                    >
-                      ⓘ
-                    </a>
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
-                    {standard.classes.map(c => (
-                      <label key={c} style={{ display: 'flex', alignItems: 'center', fontWeight: 'normal', cursor: 'pointer', fontSize: '0.85rem' }}>
-                        <input
-                          type="checkbox"
-                          checked={selectedClasses.includes(c)}
-                          onChange={() => toggleClass(c)}
-                          style={{ marginRight: '0.3rem', width: 'auto' }}
-                        />
-                        {c}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Tap Drill Selection Options */}
-              <div style={{ marginBottom: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.6rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
-                  <span>Tap Drill Selection Options</span>
-                  <a
-                    href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/DRILL_SPEC.md#2-calculation-philosophy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="doc-link"
-                    style={{ textDecoration: 'none', fontSize: '0.85rem' }}
-                    title="View Calculation Philosophy"
-                  >
-                    ⓘ
-                  </a>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                    <label style={{ fontSize: '0.75rem', opacity: 0.8, textAlign: 'center', fontWeight: 'normal' }}>Workpiece Material / Target Engagement</label>
-                    <select
-                      value={material}
-                      onChange={(e) => setMaterial(e.target.value)}
-                      style={{ fontSize: '0.8rem', padding: '0.4rem', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '4px', width: '100%' }}
-                    >
-                      <option value="hard">Hard Alloys (60% PTE)</option>
-                      <option value="ferrous">General Ferrous (70% PTE)</option>
-                      <option value="soft">Soft Non-Ferrous (80% PTE)</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Drill Set Toggle */}
-              <div>
-                <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', opacity: 0.5, marginBottom: '0.4rem', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
-                  <span>Drill Bit Sets</span>
-                  <a
-                    href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/DRILL_SPEC.md#3-drill-set-modeling"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="doc-link"
-                    style={{ textDecoration: 'none', fontSize: '0.85rem' }}
-                    title="View Drill Set Modeling"
-                  >
-                    ⓘ
-                  </a>
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', justifyContent: 'center' }}>
-                  {ALL_DRILL_SETS.map(s => (
-                    <label key={s} style={{ display: 'flex', alignItems: 'center', fontWeight: 'normal', cursor: 'pointer', fontSize: '0.85rem' }}>
-                      <input
-                        type="checkbox"
-                        checked={selectedDrillSets.includes(s)}
-                        onChange={() => toggleDrillSet(s)}
-                        style={{ marginRight: '0.3rem', width: 'auto' }}
-                      />
-                      {s}
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Stage 3: Export */}
-          <div className="workflow-column">
-            <div className="step-header">
-              <span className="step-number">3</span>
-              <span className="step-title">Launch Export</span>
-            </div>
-            <div className="input-group" style={{ margin: 0 }}>
-              <button
-                onClick={handleDownload}
-                disabled={threads.length === 0}
-                className="download-btn-small"
-                style={{
-                  width: '100%',
-                  padding: '0.8rem',
-                  opacity: threads.length === 0 ? 0.5 : 1,
-                  cursor: threads.length === 0 ? 'not-allowed' : 'pointer',
-                  background: 'linear-gradient(to right, #38bdf8, #818cf8)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  boxShadow: threads.length === 0 ? 'none' : '0 4px 15px rgba(56, 189, 248, 0.3)'
-                }}
-              >
-                Download XML ({threads.length})
-              </button>
-              <a
-                href="https://github.com/matthewmcneill/FusionThreadsGenerator#installation-in-fusion-360"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="doc-link workflow-link"
-              >
-                Installation Guide
-              </a>
-              <div style={{ marginTop: '0.5rem', fontSize: '0.7rem', opacity: 0.6, color: 'var(--text-secondary)' }}>
-                To manage custom threads easily:
-              </div>
-              <a
-                href="https://apps.autodesk.com/FUSION/en/Detail/Index?id=1725038115223093226"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="doc-link workflow-link"
-                style={{ fontSize: '0.75rem', marginTop: '0.2rem' }}
-              >
-                ThreadKeeper (Autodesk Store)
-              </a>
-            </div>
-          </div>
+        {/* View Toggle - Now below Configuration */}
+        <div className="flex bg-slate-900/50 backdrop-blur-md p-1.5 rounded-full border border-slate-700/50 mb-12 shadow-2xl">
+          <button
+            className={`px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${activeTab === 'guide' ? 'bg-amber-500 text-slate-950 shadow-[0_0_20px_rgba(245,158,11,0.4)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+            onClick={() => setActiveTab('guide')}
+          >
+            Workshop Guide
+          </button>
+          <button
+            className={`px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${activeTab === 'config' ? 'bg-sky-500 text-slate-950 shadow-[0_0_20px_rgba(56,189,248,0.4)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+            onClick={() => setActiveTab('config')}
+          >
+            Configuration
+          </button>
+          <button
+            className={`px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${activeTab === 'preview' ? 'bg-sky-500 text-slate-950 shadow-[0_0_20px_rgba(56,189,248,0.4)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+            onClick={() => setActiveTab('preview')}
+          >
+            Data Preview
+          </button>
         </div>
-      </div>
 
-      {/* View Toggle */}
-      <div className="view-toggle">
-        <button
-          className={`toggle-btn ${!showPreview ? 'active' : ''}`}
-          onClick={() => setShowPreview(false)}
-        >
-          Configuration
-        </button>
-        <button
-          className={`toggle-btn ${showPreview ? 'active' : ''}`}
-          onClick={() => setShowPreview(true)}
-        >
-          Data Preview
-        </button>
-      </div>
-
-      {!showPreview ? (
-        <>
-          {/* List and Form components */}
-          <ThreadList threads={threads} onRemove={handleRemoveThread} unit={standard.unit} />
-          <ThreadForm onAdd={handleAddThread} currentStandard={standard.name} standardId={standard.id} />
-        </>
-      ) : (
-        <ThreadPreview
-          threads={threads}
-          selectedClasses={selectedClasses}
-          unit={standard.unit}
-        />
-      )}
-
-      <footer className="app-footer">
-        <div className="footer-content">
-          <p>
-            <strong>Fusion 360 Thread Generator</strong><br />
-            Generates custom XML definitions for Whitworth (BSW/BSF), British Association (BA), and Model Engineer (ME) threads.
-          </p>
-          <div className="footer-links">
-            <a href="https://github.com/matthewmcneill/FusionThreadsGenerator" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
-            <span className="separator">|</span>
-            <a href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">GPLv3 License</a>
+        {/* Dynamic Content Area */}
+        {activeTab === 'config' && (
+          <div className="w-full space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <ThreadList
+              threads={threads}
+              onRemove={handleRemoveThread}
+              unit={standard.unit}
+            />
+            <ThreadForm
+              onAdd={handleAddThread}
+              currentStandard={standard.name}
+              standardId={standard.id}
+            />
           </div>
-          <p className="copyright">
-            © {new Date().getFullYear()} Matthew McNeill. All rights reserved.<br />
-            <span style={{ opacity: 0.6, fontSize: '0.8rem' }}>
-              Version {__APP_VERSION__} ({__COMMIT_HASH__})
-            </span>
-          </p>
-        </div>
-      </footer>
+        )}
+
+        {activeTab === 'preview' && (
+          <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <ThreadPreview
+              threads={threads}
+              selectedClasses={selectedClasses}
+              unit={standard.unit}
+            />
+          </div>
+        )}
+
+        {activeTab === 'guide' && (
+          <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <WorkshopGuide />
+          </div>
+        )}
+
+        <footer className="w-full py-12 border-t border-slate-700/30 mt-12">
+          <div className="max-w-2xl mx-auto px-6 text-center">
+            <p className="text-slate-400 font-bold text-sm mb-4 tracking-tight">
+              Fusion 360 Thread Generator
+            </p>
+            <p className="text-slate-500 text-[11px] leading-relaxed mb-6">
+              Generates custom XML definitions for Whitworth (BSW/BSF), British Association (BA), and Model Engineer (ME) threads.
+            </p>
+            <div className="flex justify-center items-center gap-4 mb-8 text-sm font-bold tracking-tight">
+              <a href="https://github.com/matthewmcneill/FusionThreadsGenerator" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 transition-colors">GitHub Repository</a>
+              <span className="text-slate-700">|</span>
+              <a href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 transition-colors">GPLv3 License</a>
+            </div>
+            <div className="text-[10px] text-slate-600 font-mono">
+              © {new Date().getFullYear()} Matthew McNeill. All rights reserved.
+              <div className="mt-2 opacity-50 uppercase tracking-tighter">
+                Version {__APP_VERSION__} ({__COMMIT_HASH__})
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
