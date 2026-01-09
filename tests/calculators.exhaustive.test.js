@@ -5,7 +5,7 @@ import {
     calculateME,
     calculateBSC,
     calculateBSB
-} from './index';
+} from '../src/utils/calculators/index';
 
 describe('Exhaustive Calculator Tests', () => {
 

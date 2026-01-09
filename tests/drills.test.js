@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getNearestDrill } from './drills';
+import { getNearestDrill } from '../src/utils/drills';
 
 describe('getNearestDrill Inventory Logic', () => {
 

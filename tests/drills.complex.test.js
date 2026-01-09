@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getNearestDrill, validateTapDrill } from './drills';
+import { getNearestDrill, validateTapDrill } from '../src/utils/drills';
 
 describe('Complex Drill Selection & Validation', () => {
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { generateFusionXML } from './xmlGenerator';
-import { WhitworthStandard, calculateWhitworth } from './calculators/index';
+import { generateFusionXML } from '../src/utils/xmlGenerator';
+import { WhitworthStandard, calculateWhitworth } from '../src/utils/calculators/index';
 
 describe('XML Generation Validation', () => {
 

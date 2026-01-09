@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateBA } from './ba';
+import { calculateBA } from '../src/utils/calculators/ba';
 
 describe('BA Calculator', () => {
     it('should calculate 0 BA correctly', () => {

@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import WorkshopGuide from './WorkshopGuide';
+import WorkshopGuide from '../src/components/WorkshopGuide';
 
 describe('WorkshopGuide Component', () => {
 

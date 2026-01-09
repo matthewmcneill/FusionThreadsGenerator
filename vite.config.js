@@ -18,6 +18,6 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'happy-dom',
-    setupFiles: './src/tests/setup.jsx',
+    setupFiles: './tests/setup.jsx',
   },
 })
