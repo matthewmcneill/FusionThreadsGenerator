@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { BSW_SIZES, BSF_SIZES, WhitworthStandard } from '../utils/calculators/whitworth';
 import { BA_SIZES, BAStandard } from '../utils/calculators/ba';
 import { ME_SIZES, MEStandard } from '../utils/calculators/me';
@@ -18,13 +18,20 @@ const WorkshopManager = ({
     onUpdateConfig,
     currentStandard
 }) => {
-    const [activeTab, setActiveTab] = useState('curation'); // 'curation', 'standards', or 'tools'
+    const [activeTab, setActiveTab] = useState('standards'); // 'curation', 'standards', or 'tools'
     const [editingStandardId, setEditingStandardId] = useState(currentStandard.id);
     const [seriesFilter, setSeriesFilter] = useState('All');
     const [expandedToolSet, setExpandedToolSet] = useState(null); // 'Metric', 'Number', etc.
     const [newDrillName, setNewDrillName] = useState('');
     const [newDrillSize, setNewDrillSize] = useState('');
     const [newDrillUnit, setNewDrillUnit] = useState('mm');
+
+    // Reset to standards tab whenever the modal is opened
+    useEffect(() => {
+        if (isOpen) {
+            setActiveTab('standards');
+        }
+    }, [isOpen]);
 
     if (!isOpen) return null;
 

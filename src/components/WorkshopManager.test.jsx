@@ -32,7 +32,7 @@ describe('WorkshopManager Component', () => {
         expect(container).toBeEmptyDOMElement();
     });
 
-    it('should render the curation tab by default', () => {
+    it('should render the standards tab by default', () => {
         render(
             <WorkshopManager
                 isOpen={true}
@@ -42,8 +42,8 @@ describe('WorkshopManager Component', () => {
                 currentStandard={mockStd}
             />
         );
-        expect(screen.getByRole('button', { name: /Curation/i })).toBeInTheDocument();
-        expect(screen.getByText(/Active Standard to Edit/i)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Standards/i })).toBeInTheDocument();
+        expect(screen.getByText(/Enabled Thread Standards/i)).toBeInTheDocument();
     });
 
     it('should switch to standards tab and show standards', () => {
@@ -139,6 +139,49 @@ describe('WorkshopManager Component', () => {
         expect(mockOnUpdateConfig).toHaveBeenCalledWith('workshop', expect.objectContaining({
             disabledDrills: expect.any(Array)
         }));
+    });
+
+    it('should reset to standards tab when reopened', () => {
+        const { rerender } = render(
+            <WorkshopManager
+                isOpen={true}
+                onClose={mockOnClose}
+                config={mockConfig}
+                onUpdateConfig={mockOnUpdateConfig}
+                currentStandard={mockStd}
+            />
+        );
+
+        // Switch to Curation tab
+        const curationTab = screen.getByRole('button', { name: /Curation/i });
+        fireEvent.click(curationTab);
+        expect(screen.getByText(/Active Standard to Edit/i)).toBeInTheDocument();
+
+        // Close it
+        rerender(
+            <WorkshopManager
+                isOpen={false}
+                onClose={mockOnClose}
+                config={mockConfig}
+                onUpdateConfig={mockOnUpdateConfig}
+                currentStandard={mockStd}
+            />
+        );
+
+        // Open it again
+        rerender(
+            <WorkshopManager
+                isOpen={true}
+                onClose={mockOnClose}
+                config={mockConfig}
+                onUpdateConfig={mockOnUpdateConfig}
+                currentStandard={mockStd}
+            />
+        );
+
+        // Should be back on Standards tab
+        expect(screen.getByText(/Enabled Thread Standards/i)).toBeInTheDocument();
+        expect(screen.queryByText(/Active Standard to Edit/i)).not.toBeInTheDocument();
     });
 
 });
