@@ -101,9 +101,18 @@ const deriveWhitworthGeometry = (p) => {
  * @param {number} tpi - Threads per inch (normally 26).
  * @param {Array<string>} [drillSets] - Drill sets to use for tap recommendations.
  * @param {string} [material='ferrous'] - Substrate material group.
+ * @param {Array<Object>} [customDrills=[]] - User-defined drills.
+ * @param {Array<string>} [disabledDrills=[]] - List of drill names to exclude.
  * @returns {Object} Calculated thread data.
  */
-export const calculateBSB = (diameter, tpi, drillSets, material = 'ferrous') => {
+export const calculateBSB = (
+    diameter,
+    tpi,
+    drillSets,
+    material = 'ferrous',
+    customDrills = [],
+    disabledDrills = []
+) => {
     const p = 1 / tpi;
     const D = diameter;
 
@@ -141,10 +150,12 @@ export const calculateBSB = (diameter, tpi, drillSets, material = 'ferrous') => 
         // Tapping Drill calculation (70-80% engagement targets)
         const pte = material === 'hard' ? 60 : (material === 'soft' ? 80 : 70);
         const doubleDepth = 2 * h; // The full theoretical thread height
-        // Target = Major - (DoubleDepth * PTE / 100)
-        const targetDecimal = basicMajor - (doubleDepth * (pte / 100));
+        // Cut Tap Formula: D_drill = D_major - (K * p * PTE / 100)
+        // For Whitworth, K = 1.280654 (which is 2 * h / p)
+        const K = doubleDepth / p;
+        const targetDecimal = basicMajor - (K * p * pte / 100);
 
-        const shopDrill = getNearestDrill(targetDecimal, 'in', drillSets);
+        const shopDrill = getNearestDrill(targetDecimal, 'in', drillSets, customDrills, disabledDrills);
 
         result.internal = {
             major: fmt(basicMajor),

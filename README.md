@@ -97,26 +97,46 @@ Classic 55-degree flank angle with rounded crests and roots.
 
 ## Developer Guide - Build & Deploy
 
-This project is built using **React** and **Vite**.
+This project is built using **React**, **Vite**, and **Tailwind CSS**.
+
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v18 or higher recommended)
+- `npm` (comes with Node.js)
 
 ### Local Development
 ```bash
-# Install dependencies
+# 1. Install dependencies
 npm install
 
-# Start development server
+# 2. Start development server
 npm run dev
+```
+The application will be available at [http://localhost:5173](http://localhost:5173).
+
+### Testing
+We use **Vitest** and **React Testing Library** for our test suite.
+```bash
+# Run all tests once
+npm test
+
+# Run tests in watch mode
+npx vitest
+
+# Open Vitest UI (interactive dashboard)
+npm run test:ui
 ```
 
 ### Build & Deploy to GitHub Pages
-To build and deploy the application to your GitHub Pages site:
+To build and deploy the application:
 ```bash
+# Build for production and deploy
 npm run deploy
 ```
 
 **How it works:**
-- `npm run deploy` automatically triggers the `predeploy` script, which runs `npm run build` to generate the production bundle in the `dist/` directory.
-- It then uses the `gh-pages` package to push the contents of the `dist/` directory to the `gh-pages` branch of your repository, making the app live.
+- `npm run deploy` triggers `predeploy` which runs `npm run build` (vite build).
+- The production bundle is generated in the `dist/` directory.
+- The `gh-pages` package pushes `dist/` to the `gh-pages` branch.
 
 ---
 

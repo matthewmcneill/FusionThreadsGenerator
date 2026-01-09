@@ -110,9 +110,19 @@ const getTargetPTE = (material) => {
  * @param {Array<string>} [drillSets] - Drill sets to use for tap recommendations.
  * @param {number|null} [lengthOfEngagement] - Length of engagement.
  * @param {string} [material='ferrous'] - Substrate material group.
+ * @param {Array<Object>} [customDrills=[]] - User-defined drills.
+ * @param {Array<string>} [disabledDrills=[]] - List of drill names to exclude.
  * @returns {Object} Calculated thread data.
  */
-export const calculateBSC = (diameter, tpi, drillSets, lengthOfEngagement = null, material = 'ferrous') => {
+export const calculateBSC = (
+    diameter,
+    tpi,
+    drillSets,
+    lengthOfEngagement = null,
+    material = 'ferrous',
+    customDrills = [],
+    disabledDrills = []
+) => {
     const p = 1 / tpi;
     const D = diameter;
     const L = lengthOfEngagement || D;
@@ -170,7 +180,7 @@ export const calculateBSC = (diameter, tpi, drillSets, lengthOfEngagement = null
             const pte = getTargetPTE(material);
             const K = getBSCDoubleDepthFactor();
             const targetDecimal = basicMajor - (K * p * pte / 100);
-            const shopDrill = getNearestDrill(targetDecimal, 'in', drillSets);
+            const shopDrill = getNearestDrill(targetDecimal, 'in', drillSets, customDrills, disabledDrills);
 
             result.internal = {
                 major: fmt(basicMajor),

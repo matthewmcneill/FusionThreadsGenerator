@@ -16,10 +16,12 @@ describe('App Component', () => {
         expect(standardSelect).toHaveValue('WHITWORTH');
     });
 
-    it('renders the initial configuration tab by default', () => {
+    it('renders the project preview tab by default', () => {
         render(<App />);
-        // The Download XML button text changes based on thread count, e.g., "Download XML (32)"
+        // The Download XML button text changes based on thread count
         expect(screen.getByText(/Download XML/i)).toBeInTheDocument();
+        expect(screen.getByText(/Project Preview/i)).toBeInTheDocument();
+        // Stage 2 (Refine Configuration) is visible in preview tab now
         expect(screen.getByText(/Refine Configuration/i)).toBeInTheDocument();
     });
 });

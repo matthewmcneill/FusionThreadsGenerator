@@ -1,6 +1,9 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
+// Mock scrollIntoView (missing in happy-dom)
+global.HTMLElement.prototype.scrollIntoView = vi.fn();
+
 // Mock react-chartjs-2
 vi.mock('react-chartjs-2', () => ({
     Bar: () => <div data-testid="mock-bar-chart" />,

@@ -11,6 +11,7 @@ import ThreadForm from './components/ThreadForm';
 import ThreadList from './components/ThreadList';
 import ThreadPreview from './components/ThreadPreview';
 import WorkshopGuide from './components/WorkshopGuide';
+import WorkshopManager from './components/WorkshopManager';
 import {
   calculateWhitworth,
   calculateBA,
@@ -31,21 +32,55 @@ import {
   BSB_SIZES
 } from './utils/calculators';
 import { generateFusionXML } from './utils/xmlGenerator';
+import { loadConfig, saveConfig } from './utils/persistence';
 
 /**
  * Main application component.
  * Manages the list of threads, the current standard, and the XML generation process.
  */
 function App() {
-  const [standard, setStandard] = useState(WhitworthStandard);
-  const [threads, setThreads] = useState([]);
-  const [selectedClasses, setSelectedClasses] = useState(WhitworthStandard.classes);
-  const [selectedSeries, setSelectedSeries] = useState(WhitworthStandard.series);
-  const [selectedDrillSets, setSelectedDrillSets] = useState(WhitworthStandard.defaultDrillSets);
-  const [material, setMaterial] = useState('ferrous');
-  const [activeTab, setActiveTab] = useState('config');
+  // 1. Core Persistent State
+  const [config, setConfig] = useState(() => loadConfig());
+
+  // 2. Derived/Active UI State
+  const [standard, setStandard] = useState(() => {
+    const id = config.preferences.currentStandardId;
+    if (id === 'BA') return BAStandard;
+    if (id === 'ME') return MEStandard;
+    if (id === 'BSC') return BSCStandard;
+    if (id === 'BSB') return BSBStandard;
+    return WhitworthStandard;
+  });
+
+  // Per-standard preferences are merged with defaults
+  const getStdSetting = (stdId, key, fallback) => {
+    return config.preferences.standardSettings[stdId]?.[key] || fallback;
+  };
+
+  const [selectedClasses, setSelectedClasses] = useState(() =>
+    getStdSetting(standard.id, 'classes', standard.classes)
+  );
+  const [selectedSeries, setSelectedSeries] = useState(() =>
+    getStdSetting(standard.id, 'series', standard.series)
+  );
+  const [selectedDrillSets, setSelectedDrillSets] = useState(() =>
+    getStdSetting(standard.id, 'drillSets', standard.defaultDrillSets)
+  );
+  const [material, setMaterial] = useState(() =>
+    getStdSetting(standard.id, 'material', config.preferences.material)
+  );
+
+  const [activeTab, setActiveTab] = useState('preview'); // Default to preview now
+  const [isWorkshopOpen, setIsWorkshopOpen] = useState(false);
 
   const ALL_DRILL_SETS = ['Metric', 'Number', 'Letter', 'Imperial'];
+  const ALL_STANDARDS = [
+    { id: 'WHITWORTH', name: 'British Standard Whitworth (BSW/BSF)' },
+    { id: 'BA', name: 'British Association (BA)' },
+    { id: 'ME', name: 'British Model Engineer (ME)' },
+    { id: 'BSB', name: 'British Standard Brass (BSB)' },
+    { id: 'BSC', name: 'British Standard Cycle (BSC/CEI)' },
+  ];
 
   /**
    * Helper to calculate a full thread object based on standard and basic input.
@@ -59,17 +94,27 @@ function App() {
     const isWhitworth = std.name.includes('Whitworth');
     const activeDrillSets = drillSets || selectedDrillSets;
 
-    // 1. Run standard-specific geometry calculator
+    // 1. Run standard-specific geometry calculator with workshop data
+    const args = [
+      input.size,
+      input.tpi || 0,
+      activeDrillSets,
+      null,
+      material,
+      config.workshop.customDrills,
+      config.workshop.disabledDrills
+    ];
+
     if (std.id === 'WHITWORTH') {
-      calc = calculateWhitworth(input.size, input.tpi, activeDrillSets, null, material);
+      calc = calculateWhitworth(...args);
     } else if (std.id === 'ME') {
-      calc = calculateME(input.size, input.tpi, activeDrillSets, material);
+      calc = calculateME(input.size, input.tpi, activeDrillSets, material, config.workshop.customDrills, config.workshop.disabledSpecificTools);
     } else if (std.id === 'BSC') {
-      calc = calculateBSC(input.size, input.tpi, activeDrillSets, null, material);
+      calc = calculateBSC(input.size, input.tpi, activeDrillSets, null, material, config.workshop.customDrills, config.workshop.disabledSpecificTools);
     } else if (std.id === 'BSB') {
-      calc = calculateBSB(input.size, input.tpi, activeDrillSets, material);
+      calc = calculateBSB(input.size, input.tpi, activeDrillSets, material, config.workshop.customDrills, config.workshop.disabledSpecificTools);
     } else {
-      calc = calculateBA(input.size, activeDrillSets, material);
+      calc = calculateBA(input.size, activeDrillSets, material, config.workshop.customDrills, config.workshop.disabledSpecificTools);
     }
 
     if (!calc) return null;
@@ -82,53 +127,56 @@ function App() {
   };
 
   /**
-   * Populates the thread list with default sizes for a given standard.
-   * @param {Object} newStd - The standard to load defaults for.
-   * @param {Object} [filters] - Optional filters for designations (Series).
+   * DERIVED STATE: Construct the active threads list from standard presets and workshop config
    */
-  const loadStandardDefaults = (newStd, filters = null) => {
-    // 1. Select the appropriate default size array
-    let defaultSizes = [];
-    const activeSeries = filters || newStd.series;
+  const threads = React.useMemo(() => {
+    const stdId = standard.id;
+    const disabled = config.workshop.disabledDesignations?.[stdId] || [];
+    const custom = config.workshop.customDesignations?.[stdId] || [];
 
-    if (newStd.id === 'WHITWORTH') {
-      if (activeSeries.includes('BSW')) defaultSizes = [...defaultSizes, ...BSW_SIZES];
-      if (activeSeries.includes('BSF')) defaultSizes = [...defaultSizes, ...BSF_SIZES];
-    } else if (newStd.id === 'ME') {
-      defaultSizes = ME_SIZES.filter(s => activeSeries.includes(s.series));
-    } else if (newStd.id === 'BSC') {
-      if (activeSeries.includes('Standard')) defaultSizes = [...defaultSizes, ...STANDARD_BSC_SIZES];
-      if (activeSeries.includes('BSA')) defaultSizes = [...defaultSizes, ...BSA_HEAVY_SIZES];
-    } else if (newStd.id === 'BSB') {
-      defaultSizes = BSB_SIZES;
+    // 1. Get Presets for active series
+    let rawPresets = [];
+    if (stdId === 'WHITWORTH') {
+      if (selectedSeries.includes('BSW')) rawPresets = [...rawPresets, ...BSW_SIZES];
+      if (selectedSeries.includes('BSF')) rawPresets = [...rawPresets, ...BSF_SIZES];
+    } else if (stdId === 'ME') {
+      rawPresets = ME_SIZES.filter(s => selectedSeries.includes(s.series));
+    } else if (stdId === 'BSC') {
+      if (selectedSeries.includes('Standard')) rawPresets = [...rawPresets, ...STANDARD_BSC_SIZES];
+      if (selectedSeries.includes('BSA')) rawPresets = [...rawPresets, ...BSA_HEAVY_SIZES];
+    } else if (stdId === 'BSB') {
+      rawPresets = BSB_SIZES;
     } else {
-      defaultSizes = BA_SIZES;
+      rawPresets = BA_SIZES;
     }
 
-    // 2. Map default sizes through the calculator (preserving custom threads)
-    const populatedDefaults = defaultSizes
-      .map(s => calculateThreadItem(newStd, s, newStd.defaultDrillSets))
+    // 2. Combine and Calculate
+    const allItems = [
+      ...rawPresets
+        .filter(p => !disabled.includes(p.designation))
+        .map(p => ({ ...p, isPreset: true })),
+      ...custom
+        .filter(p => p.enabled !== false)
+        .map(p => ({ ...p, isPreset: false }))
+    ];
+
+    return allItems
+      .map(item => calculateThreadItem(standard, item))
       .filter(Boolean);
+  }, [standard, selectedSeries, material, selectedDrillSets, config.workshop]);
 
-    const customThreads = threads.filter(t => !t.isPreset);
-
-    // 3. Update state
-    setThreads([...populatedDefaults.map(t => ({ ...t, isPreset: true })), ...customThreads]);
-    setSelectedClasses(newStd.classes);
-    setSelectedSeries(activeSeries);
-    setSelectedDrillSets(newStd.defaultDrillSets || ['Number', 'Letter', 'Imperial']);
+  const updateGlobalConfig = (key, updates) => {
+    const newConfig = {
+      ...config,
+      [key]: { ...config[key], ...updates }
+    };
+    setConfig(newConfig);
+    saveConfig(newConfig);
   };
 
   /**
-   * Effect hook to load the initial standard (Whitworth) on mount.
-   */
-  useEffect(() => {
-    loadStandardDefaults(WhitworthStandard);
-  }, []);
-
-  /**
    * Handles user selection of a different thread standard.
-   * @param {string} standardName - Short code for the standard (Whitworth, BA).
+   * @param {string} standardId - Short code for the standard.
    */
   const handleStandardChange = (standardId) => {
     let newStd;
@@ -139,8 +187,17 @@ function App() {
     else newStd = BAStandard;
 
     setStandard(newStd);
-    // Explicitly pass material/tapType to ensure fresh calculation
-    loadStandardDefaults(newStd);
+
+    // Switch to this standard's saved preferences
+    const savedSets = getStdSetting(newStd.id, 'drillSets', newStd.defaultDrillSets);
+    const savedMaterial = getStdSetting(newStd.id, 'material', config.preferences.material);
+    const savedSeries = getStdSetting(newStd.id, 'series', newStd.series);
+    const savedClasses = getStdSetting(newStd.id, 'classes', newStd.classes);
+
+    setSelectedDrillSets(savedSets);
+    setMaterial(savedMaterial);
+    setSelectedSeries(savedSeries);
+    setSelectedClasses(savedClasses);
   };
 
   /**
@@ -155,32 +212,8 @@ function App() {
       newSeries = [...selectedSeries, seriesName];
     }
     setSelectedSeries(newSeries);
-    loadStandardDefaults(standard, newSeries);
   };
 
-  /**
-   * Adds a new custom thread size to the list.
-   * @param {Object} input - User-provided thread dimensions.
-   */
-  const handleAddThread = (input) => {
-    const newThread = calculateThreadItem(standard, input);
-    if (newThread) {
-      setThreads([...threads, newThread]);
-    }
-  };
-
-  /**
-   * Removes a thread from the list by index.
-   * @param {number} index - The index of the thread to remove.
-   */
-  const handleRemoveThread = (index) => {
-    setThreads(threads.filter((_, i) => i !== index));
-  };
-
-  /**
-   * Toggles inclusion of a specific thread class in the final XML.
-   * @param {string} className - The name of the class (e.g., 'Close').
-   */
   const toggleClass = (className) => {
     if (selectedClasses.includes(className)) {
       setSelectedClasses(selectedClasses.filter(c => c !== className));
@@ -205,14 +238,6 @@ function App() {
     // The useEffect below will handle recalculation based on material change
   };
 
-  /**
-   * Recalculates all threads when global process settings change.
-   */
-  useEffect(() => {
-    if (threads.length === 0) return;
-
-    setThreads(prevThreads => prevThreads.map(t => calculateThreadItem(standard, t)).filter(Boolean));
-  }, [material, selectedDrillSets]);
 
   /**
    * Orchestrates the XML generation and triggers browser download.
@@ -281,15 +306,22 @@ function App() {
                         value={standard.id}
                         onChange={(e) => handleStandardChange(e.target.value)}
                       >
-                        <option value="WHITWORTH">{WhitworthStandard.name}</option>
-                        <option value="BA">{BAStandard.name}</option>
-                        <option value="ME">{MEStandard.name}</option>
-                        <option value="BSB">{BSBStandard.name}</option>
-                        <option value="BSC">{BSCStandard.name}</option>
+                        {ALL_STANDARDS
+                          .filter(s => config.workshop.enabledStandards.includes(s.id))
+                          .map(s => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                          ))
+                        }
                       </select>
                     </div>
 
                     <div className="pt-4 border-t border-slate-700/40">
+                      <button
+                        onClick={() => setIsWorkshopOpen(true)}
+                        className="w-full bg-slate-800 hover:bg-slate-700 text-sky-400 font-bold py-2 rounded-lg text-[10px] uppercase tracking-widest transition-all border border-sky-500/10 mb-4"
+                      >
+                        ⚙️ Manage Workshop Inventory
+                      </button>
                       <div className="flex items-center justify-center mb-3">
                         <p className="text-[10.5px] text-slate-400 font-medium uppercase tracking-widest">Resources</p>
                       </div>
@@ -396,17 +428,19 @@ function App() {
                         <a href="https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/DRILL_SPEC.md#3-drill-set-modeling" target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:text-sky-300 text-xs transition-colors leading-none opacity-80 hover:opacity-100">ⓘ</a>
                       </div>
                       <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
-                        {ALL_DRILL_SETS.map(s => (
-                          <label key={s} className="flex items-center gap-1.5 cursor-pointer group">
-                            <input
-                              type="checkbox"
-                              className="w-3 h-3 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500 focus:ring-offset-slate-900"
-                              checked={selectedDrillSets.includes(s)}
-                              onChange={() => toggleDrillSet(s)}
-                            />
-                            <span className="text-[10px] text-slate-500 group-hover:text-slate-300 transition-colors uppercase tracking-tight font-black">{s}</span>
-                          </label>
-                        ))}
+                        {ALL_DRILL_SETS
+                          .filter(s => config.workshop.enabledDrillSets.includes(s))
+                          .map(s => (
+                            <label key={s} className="flex items-center gap-1.5 cursor-pointer group">
+                              <input
+                                type="checkbox"
+                                className="w-3 h-3 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500 focus:ring-offset-slate-900"
+                                checked={selectedDrillSets.includes(s)}
+                                onChange={() => toggleDrillSet(s)}
+                              />
+                              <span className="text-[10px] text-slate-500 group-hover:text-slate-300 transition-colors uppercase tracking-tight font-black">{s}</span>
+                            </label>
+                          ))}
                       </div>
                     </div>
                   </div>
@@ -469,35 +503,14 @@ function App() {
             Workshop Guide
           </button>
           <button
-            className={`px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${activeTab === 'config' ? 'bg-sky-500 text-slate-950 shadow-[0_0_20px_rgba(56,189,248,0.4)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
-            onClick={() => setActiveTab('config')}
-          >
-            Configuration
-          </button>
-          <button
             className={`px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${activeTab === 'preview' ? 'bg-sky-500 text-slate-950 shadow-[0_0_20px_rgba(56,189,248,0.4)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
             onClick={() => setActiveTab('preview')}
           >
-            Data Preview
+            Project Preview
           </button>
         </div>
 
         {/* Dynamic Content Area */}
-        {activeTab === 'config' && (
-          <div className="w-full space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <ThreadList
-              threads={threads}
-              onRemove={handleRemoveThread}
-              unit={standard.unit}
-            />
-            <ThreadForm
-              onAdd={handleAddThread}
-              currentStandard={standard.name}
-              standardId={standard.id}
-            />
-          </div>
-        )}
-
         {activeTab === 'preview' && (
           <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
             <ThreadPreview
@@ -536,6 +549,14 @@ function App() {
           </div>
         </footer>
       </div>
+
+      <WorkshopManager
+        isOpen={isWorkshopOpen}
+        onClose={() => setIsWorkshopOpen(false)}
+        config={config}
+        onUpdateConfig={updateGlobalConfig}
+        currentStandard={standard}
+      />
     </div>
   );
 }

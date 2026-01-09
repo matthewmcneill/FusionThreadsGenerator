@@ -4,7 +4,7 @@
  */
 
 // 1. Number Drills (#80 to #1)
-const NUMBER_DRILLS = [
+export const NUMBER_DRILLS = [
     { name: "#80", size: 0.0135 }, { name: "#79", size: 0.0145 }, { name: "#78", size: 0.0160 },
     { name: "#77", size: 0.0180 }, { name: "#76", size: 0.0200 }, { name: "#75", size: 0.0210 },
     { name: "#74", size: 0.0225 }, { name: "#73", size: 0.0240 }, { name: "#72", size: 0.0250 },
@@ -35,7 +35,7 @@ const NUMBER_DRILLS = [
 ];
 
 // 2. Letter Drills (A to Z)
-const LETTER_DRILLS = [
+export const LETTER_DRILLS = [
     { name: "A", size: 0.234 }, { name: "B", size: 0.238 }, { name: "C", size: 0.242 },
     { name: "D", size: 0.246 }, { name: "E", size: 0.250 }, { name: "F", size: 0.257 },
     { name: "G", size: 0.261 }, { name: "H", size: 0.266 }, { name: "I", size: 0.272 },
@@ -49,7 +49,7 @@ const LETTER_DRILLS = [
 
 // 3. Metric Drills
 // Generated with integer steps to avoid floating point drift (0.1 + 0.05 jitter)
-const METRIC_DRILLS = [];
+export const METRIC_DRILLS = [];
 // 0.10mm to 3.00mm: 0.05mm increments
 for (let i = 10; i <= 300; i += 5) {
     const d = i / 100;
@@ -69,7 +69,7 @@ for (let i = 1350; i <= 2000; i += 50) {
 // 4. Fractional Drills
 // ... (simplifyFraction and addFractionalRange logic remains the same)
 // ...
-const FRACTIONAL_DRILLS = [];
+export const FRACTIONAL_DRILLS = [];
 const simplifyFraction = (num, den) => {
     const gcd = (a, b) => b ? gcd(b, a % b) : a;
     const factor = gcd(num, den);
@@ -99,31 +99,52 @@ addFractionalRange(64 * 2.25 + 4, 64 * 3.0, 4);
 addFractionalRange(64 * 3.0 + 8, 64 * 6.0, 8);
 
 /**
- * Finds the nearest drill from specified standard sets.
+ * Finds the nearest drill from specified standard sets, respecting inventory filters.
  * @param {number} targetDiameter - Target diameter value.
  * @param {string} units - 'in' or 'mm'.
- * @param {Array<string>} allowedSets - List of sets to include.
+ * @param {Array<string>} [allowedSets=['Metric', 'Number', 'Letter', 'Imperial']] - List of sets to include.
+ * @param {Array<Object>} [customDrills=[]] - User-defined drills { name, size, unit }.
+ * @param {Array<string>} [disabledDrills=[]] - List of drill names to exclude.
  * @returns {Object|null} Closest drill bit or null.
  */
-export const getNearestDrill = (targetDiameter, units = 'in', allowedSets = ['Metric', 'Number', 'Letter', 'Imperial']) => {
+export const getNearestDrill = (
+    targetDiameter,
+    units = 'in',
+    allowedSets = ['Metric', 'Number', 'Letter', 'Imperial'],
+    customDrills = [],
+    disabledDrills = []
+) => {
     const targetInches = units === 'mm' ? targetDiameter / 25.4 : targetDiameter;
     const sets = allowedSets.map(s => s.toLowerCase());
 
     const candidates = [];
-    // Order of addition defines priority for tied distances
+
+    // 1. Add standard drills if their set is allowed
     if (sets.includes('imperial') || sets.includes('fractional')) candidates.push(...FRACTIONAL_DRILLS);
     if (sets.includes('letter')) candidates.push(...LETTER_DRILLS);
     if (sets.includes('number')) candidates.push(...NUMBER_DRILLS);
     if (sets.includes('metric')) candidates.push(...METRIC_DRILLS);
 
-    if (candidates.length === 0) return null;
+    // 2. Add custom drills (converting mm to inches if necessary)
+    if (customDrills && customDrills.length > 0) {
+        candidates.push(...customDrills.map(d => ({
+            ...d,
+            size: d.unit === 'mm' ? d.sizeMm / 25.4 : d.size,
+            isCustom: true
+        })));
+    }
 
-    return candidates.reduce((prev, curr) => {
+    // 3. Filter out disabled drills
+    const filteredCandidates = (disabledDrills && disabledDrills.length > 0)
+        ? candidates.filter(d => !disabledDrills.includes(d.name))
+        : candidates;
+
+    if (filteredCandidates.length === 0) return null;
+
+    return filteredCandidates.reduce((prev, curr) => {
         const diffCurr = Math.abs(curr.size - targetInches);
         const diffPrev = Math.abs(prev.size - targetInches);
 
-        // Use a small epsilon to handle floating point jitter
-        // If they are effectively equal, we stick with the earlier one in the list (priority)
         if (Math.abs(diffCurr - diffPrev) < 1e-10) {
             return prev;
         }

@@ -151,9 +151,19 @@ const getTargetPTE = (material) => {
  * @param {Array<string>} [drillSets] - Drill sets to use for tap recommendations.
  * @param {number|null} [lengthOfEngagement] - Length of engagement (defaults to diameter if null).
  * @param {string} [material='ferrous'] - Substrate material group.
+ * @param {Array<Object>} [customDrills=[]] - User-defined drills.
+ * @param {Array<string>} [disabledDrills=[]] - List of drill names to exclude.
  * @returns {Object} Calculated thread data including basic dimensions and classes.
  */
-export const calculateWhitworth = (diameter, tpi, drillSets, lengthOfEngagement = null, material = 'ferrous') => {
+export const calculateWhitworth = (
+    diameter,
+    tpi,
+    drillSets,
+    lengthOfEngagement = null,
+    material = 'ferrous',
+    customDrills = [],
+    disabledDrills = []
+) => {
     // 1. Calculate basic geometry parameters
     const p = 1 / tpi; // Pitch
     const D = diameter;
@@ -215,7 +225,7 @@ export const calculateWhitworth = (diameter, tpi, drillSets, lengthOfEngagement 
             // Cut Tap Formula: D_drill = D_major - (K * p * PTE / 100)
             const targetDecimal = basicMajor - (K * p * pte / 100);
 
-            const shopDrill = getNearestDrill(targetDecimal, 'in', drillSets);
+            const shopDrill = getNearestDrill(targetDecimal, 'in', drillSets, customDrills, disabledDrills);
 
             result.internal = {
                 major: fmt(basicMajor),

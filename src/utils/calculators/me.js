@@ -119,9 +119,18 @@ const getTargetPTE = (material) => {
  * @param {number} tpi - Threads per inch.
  * @param {Array<string>} [drillSets] - Drill sets to use for tap recommendations.
  * @param {string} [material='ferrous'] - Substrate material group.
+ * @param {Array<Object>} [customDrills=[]] - User-defined drills.
+ * @param {Array<string>} [disabledDrills=[]] - List of drill names to exclude.
  * @returns {Object} Calculated thread data.
  */
-export const calculateME = (diameter, tpi, drillSets, material = 'ferrous') => {
+export const calculateME = (
+    diameter,
+    tpi,
+    drillSets,
+    material = 'ferrous',
+    customDrills = [],
+    disabledDrills = []
+) => {
     const p = 1 / tpi;
     const D = diameter;
 
@@ -167,7 +176,7 @@ export const calculateME = (diameter, tpi, drillSets, material = 'ferrous') => {
         // Cut Tap Formula: D_drill = D_major - (K * p * PTE / 100)
         const targetDecimal = basicMajor - (K * p * pte / 100);
 
-        const shopDrill = getNearestDrill(targetDecimal, 'in', drillSets);
+        const shopDrill = getNearestDrill(targetDecimal, 'in', drillSets, customDrills, disabledDrills);
 
         result.internal = {
             major: fmt(basicMajor),

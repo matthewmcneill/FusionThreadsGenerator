@@ -130,5 +130,28 @@ const validation = validateTapDrill(drillSize, major, minor, nutMinorMax, materi
     *   **Calculator Routing**: Update the logic in `calculateThreadItem` to call your new calculation function based on the `id`. The UI automatically handles `ctd` formatting and `series` detection via your standard's `getCTD` and `getSeries` delegates.
 4.  **Verification**: Run the app locally, select your new standard, verify the preview table values, and check the generated XML file in a text editor to ensure it follows the `<ThreadType>` schema.
 
+## Testing & Quality Assurance
+
+The project maintains a comprehensive test suite using **Vitest** and **React Testing Library**.
+
+### 1. Unit Testing (Calculators & Utilities)
+We use exhaustive unit tests to verify the accuracy of thread geometry calculations.
+- **Calculator Tests**: Located in `src/utils/calculators/calculators.exhaustive.test.js`, these verify Major/Minor diameters and tolerances against historical reference tables (BS 84, BS 93, etc.).
+- **Drill Selection**: Verified in `src/utils/drills.complex.test.js`, ensuring the selection algorithm correctly identifies optimal tools and respects inventory constraints.
+
+### 2. Component Testing
+We test UI components in a simulated browser environment (**Happy Dom**).
+- **Workshop Management**: Tests in `src/components/WorkshopManager.test.jsx` verify that inventory changes (adding/removing custom drills) correctly update the application state.
+- **Scenario Flows**: `src/components/WorkshopGuide.test.jsx` verifies the interactive scenarios and technical profiles.
+
+### 3. Regression Testing
+Known historical bugs are formalized into automated tests (e.g., the Whitworth metric selection fix) to prevent re-occurrence.
+
+### 4. Running Tests
+```bash
+npm test          # Run the full suite
+npm run test:ui   # Launch interactive test dashboard
+```
+
 ---
-*Last Updated: 2026-01-01*
+*Last Updated: 2026-01-09*

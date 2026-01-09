@@ -98,9 +98,17 @@ const getTargetPTE = (material) => {
  * @param {string|number} sizeNumber - The BA number (0-16).
  * @param {Array<string>} [drillSets] - Drill sets to use for tap recommendations.
  * @param {string} [material='ferrous'] - Substrate material group.
+ * @param {Array<Object>} [customDrills=[]] - User-defined drills.
+ * @param {Array<string>} [disabledDrills=[]] - List of drill names to exclude.
  * @returns {Object|null} The calculated thread data or null if size not found.
  */
-export const calculateBA = (sizeNumber, drillSets, material = 'ferrous') => {
+export const calculateBA = (
+    sizeNumber,
+    drillSets,
+    material = 'ferrous',
+    customDrills = [],
+    disabledDrills = []
+) => {
     // 1. Retrieve basic data from lookup table
     const size = BA_TABLE[sizeNumber.toString()];
     if (!size) return null;
@@ -139,7 +147,7 @@ export const calculateBA = (sizeNumber, drillSets, material = 'ferrous') => {
             // Cut Tap Formula: D_drill = D_major - (K * p * PTE / 100)
             const targetDecimal = size.D - (K * p * pte / 100);
 
-            const shopDrill = getNearestDrill(targetDecimal, 'mm', drillSets);
+            const shopDrill = getNearestDrill(targetDecimal, 'mm', drillSets, customDrills, disabledDrills);
 
             result.internal = {
                 major: fmt(size.D),
