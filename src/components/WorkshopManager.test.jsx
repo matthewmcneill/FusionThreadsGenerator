@@ -104,6 +104,10 @@ describe('WorkshopManager Component', () => {
             />
         );
 
+        // Switch to Curation tab first
+        const curationTab = screen.getByRole('button', { name: /Curation/i });
+        fireEvent.click(curationTab);
+
         // Standard is WHITWORTH by default in editingStandardId
         // Find a preset checkbox. There are many in the table.
         const checkboxes = screen.getAllByRole('checkbox');
