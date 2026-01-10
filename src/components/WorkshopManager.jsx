@@ -5,6 +5,7 @@ import { ME_SIZES, MEStandard } from '../utils/calculators/me';
 import { STANDARD_BSC_SIZES, BSA_HEAVY_SIZES, BSCStandard } from '../utils/calculators/bsc';
 import { BSB_SIZES, BSBStandard } from '../utils/calculators/bsb';
 import { NUMBER_DRILLS, LETTER_DRILLS, METRIC_DRILLS, FRACTIONAL_DRILLS } from '../utils/drills';
+import { generateToolLibrary, parseToolLibrary } from '../utils/toolLibraryGenerator';
 import ThreadForm from './ThreadForm';
 
 /**
@@ -25,6 +26,8 @@ const WorkshopManager = ({
     const [newDrillName, setNewDrillName] = useState('');
     const [newDrillSize, setNewDrillSize] = useState('');
     const [newDrillUnit, setNewDrillUnit] = useState('mm');
+    const [importStrategy, setImportStrategy] = useState('merge'); // 'merge' or 'overwrite'
+    const [importStatus, setImportStatus] = useState(null);
 
     // Reset to standards tab whenever the modal is opened
     useEffect(() => {
@@ -194,6 +197,61 @@ const WorkshopManager = ({
         });
     };
 
+    const handleExportLibrary = () => {
+        const ALL_PRESETS = {
+            'WHITWORTH': [...BSW_SIZES, ...BSF_SIZES],
+            'BA': BA_SIZES,
+            'ME': ME_SIZES,
+            'BSC': [...STANDARD_BSC_SIZES, ...BSA_HEAVY_SIZES],
+            'BSB': BSB_SIZES
+        };
+        const lib = generateToolLibrary(config.workshop, ALL_PRESETS, {
+            version: __APP_VERSION__,
+            commitHash: __COMMIT_HASH__
+        });
+        const blob = new Blob([JSON.stringify(lib, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `workshop_tools_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    const handleImportLibrary = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const ALL_PRESETS = {
+                    'WHITWORTH': [...BSW_SIZES, ...BSF_SIZES],
+                    'BA': BA_SIZES,
+                    'ME': ME_SIZES,
+                    'BSC': [...STANDARD_BSC_SIZES, ...BSA_HEAVY_SIZES],
+                    'BSB': BSB_SIZES
+                };
+                const { workshop: updatedWorkshop, stats } = parseToolLibrary(event.target.result, importStrategy, config.workshop, ALL_PRESETS);
+                onUpdateConfig('workshop', updatedWorkshop);
+
+                const statsMsg = stats.total === 0
+                    ? "The library is empty."
+                    : `Imported ${stats.drills} drills and ${stats.taps} taps. ${stats.ignored} items were ignored.`;
+
+                setImportStatus({
+                    success: true,
+                    message: `Imported successfully using ${importStrategy} strategy. ${statsMsg}`
+                });
+            } catch (err) {
+                setImportStatus({ success: false, message: `Import failed: ${err.message}` });
+            }
+        };
+        reader.readAsText(file);
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose} />
@@ -228,6 +286,12 @@ const WorkshopManager = ({
                             className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'tools' ? 'bg-sky-500 text-slate-900 shadow-lg shadow-sky-500/20' : 'text-slate-500 hover:text-slate-300'}`}
                         >
                             Drills
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('data')}
+                            className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'data' ? 'bg-sky-500 text-slate-900 shadow-lg shadow-sky-500/20' : 'text-slate-500 hover:text-slate-300'}`}
+                        >
+                            Data
                         </button>
                     </div>
                 </div>
@@ -516,6 +580,63 @@ const WorkshopManager = ({
                                                 })}
                                         </tbody>
                                     </table>
+                                </div>
+                            </section>
+                        </div>
+                    )}
+                    {activeTab === 'data' && (
+                        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                            <section>
+                                <h3 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Export Workshop Configuration</h3>
+                                <p className="text-slate-400 text-xs mb-6">Download your inventory as a Fusion 360 Tool Library (.json). This serves as a backup and allows you to load these tools directly into Fusion 360 CAM.</p>
+                                <button
+                                    onClick={handleExportLibrary}
+                                    className="px-8 py-4 bg-sky-500 hover:bg-sky-400 text-slate-950 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-sky-500/10"
+                                >
+                                    📥 Download Fusion 360 Tool Library
+                                </button>
+                            </section>
+
+                            <section className="pt-8 border-t border-slate-800">
+                                <h3 className="text-[11px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Import Workshop Configuration</h3>
+                                <div className="bg-slate-950/30 p-8 rounded-3xl border border-slate-800">
+                                    <p className="text-slate-400 text-xs mb-8">Upload a Fusion 360 (.json) tool library to restore or update your workshop. Drills and Taps will be matched to their standard definitions.</p>
+
+                                    <div className="flex flex-col md:flex-row items-center gap-8 mb-8">
+                                        <div className="flex bg-slate-900/50 p-1 rounded-2xl border border-slate-800">
+                                            <button
+                                                onClick={() => setImportStrategy('merge')}
+                                                className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${importStrategy === 'merge' ? 'bg-slate-700 text-white shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                                            >
+                                                Merge
+                                            </button>
+                                            <button
+                                                onClick={() => setImportStrategy('overwrite')}
+                                                className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${importStrategy === 'overwrite' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30 shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                                            >
+                                                Overwrite
+                                            </button>
+                                        </div>
+
+                                        <div className="flex-grow">
+                                            <label className="relative flex flex-col items-center justify-center border-2 border-dashed border-slate-700 hover:border-sky-500/50 rounded-2xl p-6 transition-all cursor-pointer group bg-slate-900/40">
+                                                <input
+                                                    type="file"
+                                                    accept=".json,.tools"
+                                                    className="hidden"
+                                                    onChange={handleImportLibrary}
+                                                />
+                                                <span className="text-xs font-bold text-slate-300 group-hover:text-sky-400 mb-1">Click to Upload JSON</span>
+                                                <span className="text-[10px] text-slate-500 italic">Select your exported tool library</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    {importStatus && (
+                                        <div className={`p-4 rounded-xl border text-xs font-bold animate-in zoom-in-95 duration-200 ${importStatus.success ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}>
+                                            {importStatus.message}
+                                        </div>
+                                    )}
                                 </div>
                             </section>
                         </div>
