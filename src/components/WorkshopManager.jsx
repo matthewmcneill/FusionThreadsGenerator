@@ -9,8 +9,17 @@ import { generateToolLibrary, parseToolLibrary } from '../utils/toolLibraryGener
 import ThreadForm from './ThreadForm';
 
 /**
- * @module WorkshopManager
- * @description Modal/Overlay for managing the user's workshop inventory and active sets.
+ * @module components/WorkshopManager
+ * @description Modal/Overlay for managing the user's workshop inventory, curated thread sets, and data I/O.
+ * Supports 3nd-stage workflow controls (Standards -> Curation -> Tools).
+ * 
+ * @exports
+ * - WorkshopManager (default): React component for global configuration.
+ * 
+ * @internal
+ * - toggleStandard: Toggles availability of a standard.
+ * - toggleDrillSet: Toggles availability of a drill set.
+ * - toggleDrillBit: Toggles availability of a specific bit.
  */
 const WorkshopManager = ({
     isOpen,
@@ -51,6 +60,10 @@ const WorkshopManager = ({
 
     const ALL_DRILL_SETS = ['Metric', 'Number', 'Letter', 'Imperial'];
 
+    /**
+     * Toggles a thread standard on or off in the workshop.
+     * @param {string} id - Standard ID.
+     */
     const toggleStandard = (id) => {
         const enabled = config.workshop.enabledStandards.includes(id)
             ? config.workshop.enabledStandards.filter(s => s !== id)
@@ -60,6 +73,10 @@ const WorkshopManager = ({
         onUpdateConfig('workshop', { enabledStandards: enabled });
     };
 
+    /**
+     * Toggles an entire drill set (Metric, Number, etc.) on or off.
+     * @param {string} name - Set name.
+     */
     const toggleDrillSet = (name) => {
         const enabled = config.workshop.enabledDrillSets.includes(name)
             ? config.workshop.enabledDrillSets.filter(s => s !== name)
@@ -68,6 +85,10 @@ const WorkshopManager = ({
         onUpdateConfig('workshop', { enabledDrillSets: enabled });
     };
 
+    /**
+     * Toggles a specific drill bit's availability in the inventory.
+     * @param {string} name - Drill name.
+     */
     const toggleDrillBit = (name) => {
         const disabled = config.workshop.disabledDrills || [];
         const updated = disabled.includes(name)
@@ -77,6 +98,11 @@ const WorkshopManager = ({
         onUpdateConfig('workshop', { disabledDrills: updated });
     };
 
+    /**
+     * Enables or disables all drills within a specific standard set (e.g. Metric #1-50).
+     * @param {string} setName - 'Metric', 'Number', 'Letter', or 'Imperial'.
+     * @param {boolean} disableAll - True to move all names to disabledDrills.
+     */
     const bulkToggleDrills = (setName, disableAll) => {
         let drills = [];
         if (setName === 'Metric') drills = METRIC_DRILLS;
@@ -89,8 +115,10 @@ const WorkshopManager = ({
 
         let updated;
         if (disableAll) {
+            // Merge all names into the disabled list, avoiding duplicates
             updated = Array.from(new Set([...currentDisabled, ...drillNames]));
         } else {
+            // Filter out all names in this set from the disabled list
             updated = currentDisabled.filter(d => !drillNames.includes(d));
         }
 
@@ -172,6 +200,11 @@ const WorkshopManager = ({
         });
     };
 
+    /**
+     * Bulk enables or disables thread presets, optionally filtered by series.
+     * @param {boolean} disableAll - True to move names to disabledDesignations.
+     * @param {string} filter - 'All' or a specific series name (e.g. 'BSW').
+     */
     const bulkSetPresets = (disableAll, filter = 'All') => {
         const allPresets = getPresetsForStd(editingStandardId);
         const affected = filter === 'All'
@@ -182,10 +215,10 @@ const WorkshopManager = ({
 
         let updated;
         if (disableAll) {
-            // Add all affected to disabled list if not already there
+            // Add all affected designations to the disabled list
             updated = Array.from(new Set([...disabledForStd, ...affectedNames]));
         } else {
-            // Remove all affected from disabled list
+            // Remove all affected designations from the disabled list
             updated = disabledForStd.filter(d => !affectedNames.includes(d));
         }
 
@@ -197,6 +230,9 @@ const WorkshopManager = ({
         });
     };
 
+    /**
+     * Exports the current workshop configuration as a Fusion 360 Tool Library (JSON).
+     */
     const handleExportLibrary = () => {
         const ALL_PRESETS = {
             'WHITWORTH': [...BSW_SIZES, ...BSF_SIZES],
@@ -220,6 +256,10 @@ const WorkshopManager = ({
         URL.revokeObjectURL(url);
     };
 
+    /**
+     * Imports a Fusion 360 Tool Library (JSON) and updates the workshop configuration.
+     * @param {Event} e - Input change event containing the file.
+     */
     const handleImportLibrary = (e) => {
         const file = e.target.files[0];
         if (!file) return;

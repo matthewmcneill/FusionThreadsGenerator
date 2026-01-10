@@ -1,16 +1,39 @@
 /**
  * @module whitworth
- * @description Provides calculations and physical data for Whitworth thread standards (BSW/BSF).
+ * @description Provides calculations and physical data for Whitworth thread standards (BSW/BSF) as per BS 84:2007.
  * 
- * Main functions:
- * - calculateWhitworth (exported): Calculates geometry and tolerances for BSW/BSF threads.
- * - BSW_SIZES (exported): List of standard BSW size/TPI combinations.
- * - BSF_SIZES (exported): List of standard BSF size/TPI combinations.
- * - BSWStandard, BSFStandard (exported): Configuration objects for Whitworth standards.
+ * @exports
+ * - calculateWhitworth: Calculates geometry and tolerances for BSW/BSF threads.
+ * - WhitworthStandard: Unified Whitworth Standard configuration object.
+ * - BSW_SIZES: List of standard British Standard Whitworth (BSW) Coarse sizes.
+ * - BSF_SIZES: List of standard British Standard Fine (BSF) Fine sizes.
+ * 
+ * @internal
+ * - parseFraction: Converts fraction strings to decimal values.
+ * - createWhitworthPreset: Helper to generate consistent Whitworth preset objects.
+ * - calculateWhitworthTolFactor: Calculates the BS 84 Tolerance Factor T.
+ * - getWhitworthDoubleDepthFactor: Derives the Whitworth double-depth factor (K) from first principles.
+ * - getTargetPTE: Returns target Percentage of Thread Engagement based on material.
  */
 
 /**
- * Unified Whitworth Standard configuration.
+ * Unified Whitworth Standard configuration object for BSW and BSF.
+ * Defines the 55-degree angle, Whitworth form factors, and BS 84 classes.
+ * @type {Object}
+ * @property {string} id - 'WHITWORTH'
+ * @property {string} name - Display name
+ * @property {string} unit - 'in'
+ * @property {number} angle - 55 degrees
+ * @property {number} sortOrder - UI rendering priority
+ * @property {number} threadForm - Fusion 360 thread form index
+ * @property {string[]} series - Supported series ('BSW', 'BSF')
+ * @property {string[]} classes - Available tolerance classes (Close, Medium, Free, Normal)
+ * @property {Function} getCTD - Selection callback to get designation
+ * @property {Function} getSeries - Returns series name based on designation
+ * @property {string[]} defaultDrillSets - Preferred drill sets
+ * @property {string} docUrl - Link to technical documentation
+ * @property {string} seriesAnchor - Anchor for technical sizing tables
+ * @property {string} classAnchor - Anchor for tolerance class specifications
  */
 export const WhitworthStandard = {
     id: 'WHITWORTH',
@@ -77,8 +100,9 @@ const createWhitworthPreset = (sizeStr, tpi, suffix) => ({
 });
 
 /**
- * Standard British Standard Whitworth (BSW) - Coarse Series sizes (Ref: BS 84:2007 Table 2).
- * @type {Array<Object>}
+ * Standard British Standard Whitworth (BSW) - Coarse Series sizes.
+ * Reference: BS 84:2007 Table 2.
+ * @type {Array<{designation: string, series: string, size: number, nominalFraction: string, tpi: number, ctd: string}>}
  */
 export const BSW_SIZES = [
     ['1/16', 60], ['3/32', 48], ['1/8', 40], ['5/32', 32], ['3/16', 24],
@@ -93,8 +117,9 @@ export const BSW_SIZES = [
 
 
 /**
- * Standard British Standard Fine (BSF) - Fine Series sizes (Ref: BS 84:2007 Table 3).
- * @type {Array<Object>}
+ * Standard British Standard Fine (BSF) - Fine Series sizes.
+ * Reference: BS 84:2007 Table 3.
+ * @type {Array<{designation: string, series: string, size: number, nominalFraction: string, tpi: number, ctd: string}>}
  */
 export const BSF_SIZES = [
     ['1/16', 60], ['3/32', 48], ['1/8', 40], ['5/32', 32], ['3/16', 32],
@@ -115,6 +140,9 @@ import { getNearestDrill, validateTapDrill } from '../drills';
  * Standard BS 84 Tolerance Factor T.
  */
 const calculateWhitworthTolFactor = (D, p, L) => {
+    // Standard BS 84 tolerance formula for effective diameter:
+    // T = 0.002 * cbrt(D) + 0.003 * sqrt(L) + 0.005 * sqrt(p)
+    // where D is nominal dia, L is length of engagement, and p is pitch.
     return 0.002 * Math.cbrt(D) + 0.003 * Math.sqrt(L) + 0.005 * Math.sqrt(p);
 };
 
@@ -125,10 +153,13 @@ const calculateWhitworthTolFactor = (D, p, L) => {
  * @returns {number} The derived double depth factor (approx 1.280654).
  */
 const getWhitworthDoubleDepthFactor = () => {
-    const theta = (55 / 2) * (Math.PI / 180); // 27.5° in radians
-    const heightFactor = 1 / (2 * Math.tan(theta)); // H/p
-    const depthFactor = (2 / 3) * heightFactor; // h/p
-    return 2 * depthFactor; // Double depth factor K
+    // theta = 27.5 degrees (half-angle for 55° Whitworth form)
+    const theta = (55 / 2) * (Math.PI / 180);
+    // distance from crest to root in a sharp V thread (ratio to pitch)
+    const heightFactor = 1 / (2 * Math.tan(theta));
+    // truncated depth h = (2/3)H (ratio to pitch)
+    const depthFactor = (2 / 3) * heightFactor;
+    return 2 * depthFactor; // K factor = 2 * h/p (approx 1.28)
 };
 
 /**
@@ -175,11 +206,12 @@ export const calculateWhitworth = (
     const r = (H / 6) / ((1 / Math.sin(theta)) - 1); // Radius at root and crest
 
     // 2. Derive basic diameters
+    // basic diameters based on nominal diameter D and theoretical depth d
     const basicMajor = D;
     const basicPitch = D - d;
     const basicMinor = D - (2 * d);
 
-    // 3. Formatter
+    // Formatter utility to ensure consistent decimal output
     const fmt = (n) => Number(n.toFixed(6));
 
     /**
@@ -193,9 +225,9 @@ export const calculateWhitworth = (
      */
     const getTolerances = (extMultiplier, intMultiplier, majorOffset, minorOffsetBolt) => {
         const result = {};
-        const T = calculateWhitworthTolFactor(diameter, p, L);
+        const T = calculateWhitworthTolFactor(diameter, p, L); // Baseline tolerance T
 
-        // Shared nut minor tolerance formula
+        // Shared nut minor tolerance formula - increments based on TPI brackets defined in BS 84
         const minorTolTerm = tpi >= 26 ? 0.004 : (tpi >= 22 ? 0.005 : 0.007);
         const nutMinorTol = 0.2 * p + minorTolTerm;
 

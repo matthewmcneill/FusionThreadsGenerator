@@ -1,15 +1,39 @@
 /**
  * @module bsb
- * @description Provides calculations and data for British Standard Brass (BSB) threads.
- * 
+ * @description Provides calculations and physical data for British Standard Brass (BSB) threads.
  * BSB is a constant-pitch series (26 TPI) utilizing the 55° Whitworth form.
- * Fundamental constants are derived from first principles.
+ * 
+ * @exports
+ * - calculateBSB: Calculates BSB thread geometry and tolerances.
+ * - BSBStandard: British Standard Brass (BSB) Standard configuration object.
+ * - BSB_SIZES: List of standard British Standard Brass (BSB) sizes (1/8" to 1 1/2").
+ * 
+ * @internal
+ * - parseFraction: Converts fraction strings to decimal values.
+ * - createBSBPreset: Helper to generate consistent BSB preset objects.
+ * - deriveWhitworthGeometry: Derives fundamental heights and depths from the 55° Whitworth angle.
  */
 
 import { getNearestDrill, validateTapDrill } from '../drills.js';
 
 /**
  * British Standard Brass (BSB) Standard configuration.
+ * Defines the constant 26 TPI pitch and Whitworth 55-degree form.
+ * @type {Object}
+ * @property {string} id - 'BSB'
+ * @property {string} name - Display name
+ * @property {string} unit - 'in'
+ * @property {number} angle - 55 degrees
+ * @property {number} sortOrder - UI rendering priority
+ * @property {number} threadForm - Fusion 360 thread form index
+ * @property {string[]} series - Supported series ('BSB')
+ * @property {string[]} classes - Available tolerance classes (Medium)
+ * @property {Function} getCTD - Selection callback to get designation
+ * @property {Function} getSeries - Returns default series name
+ * @property {string[]} defaultDrillSets - Preferred drill sets
+ * @property {string} docUrl - Link to technical documentation
+ * @property {string} seriesAnchor - Anchor for technical sizing tables
+ * @property {string} classAnchor - Anchor for tolerance class specifications
  */
 export const BSBStandard = {
     id: 'BSB',
@@ -33,7 +57,9 @@ export const BSBStandard = {
 
 /**
  * @internal
- * Converts fraction strings to decimal values.
+ * Converts fraction strings (e.g. "1 1/8" or "1/16") to decimal values.
+ * @param {string|number} f - The fraction string or number to parse.
+ * @returns {number} Decimal value of the fraction.
  */
 const parseFraction = (f) => {
     if (typeof f === 'number') return f;
@@ -50,7 +76,9 @@ const parseFraction = (f) => {
 
 /**
  * @internal
- * Helper to generate consistent BSB preset objects.
+ * Helper to generate consistent BSB preset objects with standardized designations and CTDs.
+ * @param {string} sizeStr - Fraction or whole number string (e.g. "1/4").
+ * @returns {Object} Standardized thread metadata object.
  */
 const createBSBPreset = (sizeStr) => {
     return {
@@ -64,8 +92,10 @@ const createBSBPreset = (sizeStr) => {
 };
 
 /**
- * Standard British Standard Brass (BSB) sizes.
+ * Standard British Standard Brass (BSB) sizes (1/8" to 1 1/2").
+ * All sizes in this series share a constant pitch of 26 TPI.
  * Reference: BS 84 and Machinery's Handbook.
+ * @type {Array<{designation: string, series: string, size: number, nominalFraction: string, tpi: number, ctd: string}>}
  */
 export const BSB_SIZES = [
     '1/8', '1/4', '3/8', '1/2', '5/8', '3/4', '7/8', '1', '1 1/8', '1 1/4', '1 1/2'
@@ -79,16 +109,20 @@ export const BSB_SIZES = [
  * @returns {Object} Primitive geometric constants.
  */
 const deriveWhitworthGeometry = (p) => {
-    const theta = (55 / 2) * (Math.PI / 180); // Half-angle in radians
+    // theta = 27.5 degrees (half of the 55 degree included angle)
+    const theta = (55 / 2) * (Math.PI / 180);
 
-    // H = Fundamental height of sharp V
+    // H = Fundamental height of sharp V-thread.
+    // Derived from trigonometry: tan(theta) = (p/2) / H => H = p / (2*tan(theta))
     const H = p / (2 * Math.tan(theta));
 
-    // h = Actual depth of thread (2/3 H due to 1/6 truncation at top and bottom)
+    // h = Actual depth of the Whitworth thread.
+    // Theoretically h = 0.640327p. Historically h = 2/3 of H because 
+    // the sharp points are truncated by 1/6H at both crest and root.
     const h = (2 / 3) * H;
 
-    // r = Radius of curvature at crest and root
-    // Derived from: r = (H/6) / (csc(theta) - 1)
+    // r = Radius of curvature at crest and root to round off the profile.
+    // Formula: r = (H/6) / (csc(theta) - 1)
     const r = (H / 6) / ((1 / Math.sin(theta)) - 1);
 
     return { H, h, r };
@@ -129,12 +163,21 @@ export const calculateBSB = (
     const T = 0.002 * Math.cbrt(D) + 0.003 * Math.sqrt(D) + 0.005 * Math.sqrt(p);
     const fmt = (n) => Number(n.toFixed(6));
 
+    /**
+     * Internal helper to calculate gender-specific tolerances.
+     * BS 84 defines multipliers for different tolerance classes (Medium = 1.0).
+     * @param {number} multiplier - Tolerance class multiplier.
+     */
     const getTolerances = (multiplier) => {
         const result = {};
-        const tEff = T * multiplier;
+        const tEff = T * multiplier; // Effective (pitch) diameter tolerance
+
+        // Major diameter tolerance: Pitch tolerance + allowance based on pitch
         const tMajor = tEff + 0.01 * Math.sqrt(p);
+        // Minor diameter tolerance (External): Pitch tolerance + slightly more allowance
         const tMinorBolt = tEff + 0.02 * Math.sqrt(p);
-        const nutMinorTol = 0.2 * p + 0.004; // For 26 TPI and finer
+        // Nut Minor diameter tolerance: Based on TPI bracket (BS 84)
+        const nutMinorTol = 0.2 * p + 0.004; // Standard for 26 TPI and finer
 
         result.external = {
             major: fmt(basicMajor),

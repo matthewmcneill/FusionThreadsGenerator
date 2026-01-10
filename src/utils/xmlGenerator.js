@@ -1,13 +1,14 @@
 /**
- * @module xmlGenerator
- * @description Generates Fusion 360 compatible XML files for thread definitions.
+ * @module utils/xmlGenerator
+ * @description Generates Fusion 360 compatible XML files (.xml) for thread definitions.
  * 
- * Main functions:
- * - generateFusionXML (exported): Entry point for creating the XML string from thread data.
+ * @exports
+ * - generateFusionXML: Orchestrates the conversion of thread objects to XML.
  */
 
 /**
  * Generates the full XML string for a thread standard with version metadata.
+ * Processes threads and their associated tolerance classes into Fusion 360's schema.
  * 
  * @param {Object} threadStandard - Metadata about the standard (name, unit, angle, etc.).
  * @param {Array<Object>} threads - Array of calculated thread size objects.
@@ -36,7 +37,7 @@ export const generateFusionXML = (threadStandard, threads, selectedClasses, meta
   // 2. Determine if we use Pitch (Metric) or TPI (Imperial)
   const isMetric = threadStandard.unit === 'mm';
 
-  // 3. Group threads by nominal size
+  // 3. Group threads by nominal size (Fusion 360 groups by <Size>)
   const groupedThreads = threads.reduce((acc, thread) => {
     const size = thread.size.toString();
     if (!acc[size]) acc[size] = [];
@@ -51,9 +52,10 @@ export const generateFusionXML = (threadStandard, threads, selectedClasses, meta
         ? `<Pitch>${t.basic.p}</Pitch>`
         : `<TPI>${t.tpi}</TPI>`;
 
-      // Generate <Thread> blocks for both internal and external genders
+      // Generate <Thread> blocks for both internal and external genders for each class.
+      // Fusion 360 expects separate blocks for each gender+class combination.
       const threadBlocks = selectedClasses
-        .filter(className => t.classes[className])
+        .filter(className => t.classes[className]) // Ensure the class exists for this thread
         .map(className => {
           const c = t.classes[className];
           const blocks = [];
@@ -71,6 +73,8 @@ export const generateFusionXML = (threadStandard, threads, selectedClasses, meta
           }
 
           if (c.internal) {
+            // Internal (Nut) thread geometry.
+            // Note: TapDrill is conditionally added if it passed base validation.
             blocks.push(`
         <Thread>
           <Gender>internal</Gender>

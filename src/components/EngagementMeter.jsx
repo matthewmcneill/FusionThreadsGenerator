@@ -1,14 +1,23 @@
 import React from 'react';
 
 /**
- * @component EngagementMeter
+ * @module components/EngagementMeter
  * @description Sleek, inline graphical visualization of thread engagement.
  * shows actual engagement vs material target on a color-coded scale.
+ * 
+ * @exports
+ * - EngagementMeter (default): React component for visualization.
+ * 
+ * @param {Object} props
+ * @param {number} props.engagement - The calculated percentage of thread engagement.
+ * @param {Object} props.range - The target engagement range { min, max, target }.
+ * @param {string} [props.status=''] - The validation status (e.g., 'optimal', 'warning-loose').
  */
 const EngagementMeter = ({ engagement, range, status = '' }) => {
     if (!range) return null;
 
-    // Normalize percentages for CSS (0-100 range)
+    // 2. Normalize percentages for CSS (0-100 range)
+    // Ensures the markers stay within the visual bar bounds.
     const actualPos = Math.min(100, Math.max(0, engagement));
     const targetPos = range.target;
 

@@ -1,9 +1,15 @@
 /**
  * @module App
- * @description Root component that manages the application state and layout.
+ * @description Root component that orchestrates application state, standard selection, 
+ * and persistent configuration management.
  * 
- * Main functions:
- * - App (default export): Renders the main interface and handles standard selection and download logic.
+ * @exports
+ * - App (default): The main application component.
+ * 
+ * @internal
+ * - calculateThreadItem: Helper to run geometry calculations.
+ * - updateGlobalConfig: Persists changes to LocalStorage.
+ * - handleDownload: Triggers XML generation and download.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -84,17 +90,18 @@ function App() {
 
   /**
    * Helper to calculate a full thread object based on standard and basic input.
-   * @param {Object} std - The active thread standard.
+   * This bridges the raw preset data (nominal size, TPI) with specific geometric math.
+   * @param {Object} std - The active thread standard config (e.g. BAStandard).
    * @param {Object} input - Basic thread dimensions (size, tpi, designation).
-   * @param {Array<string>} [drillSets] - Optional override for drill sets (uses state if omitted).
-   * @returns {Object|null} The calculated thread object.
+   * @param {Array<string>} [drillSets] - Optional override for drill sets.
+   * @returns {Object|null} The calculated thread object with full geometry and classes.
    */
   const calculateThreadItem = (std, input, drillSets = null) => {
     let calc;
-    const isWhitworth = std.name.includes('Whitworth');
     const activeDrillSets = drillSets || selectedDrillSets;
 
-    // 1. Run standard-specific geometry calculator with workshop data
+    // 1. Prepare common arguments for calculator modules.
+    // Each standard (Whitworth, BA, etc.) has a different calculator function.
     const args = [
       input.size,
       input.tpi || 0,
@@ -105,6 +112,7 @@ function App() {
       config.workshop.disabledDrills
     ];
 
+    // 2. Execute standard-specific geometry calculator
     if (std.id === 'WHITWORTH') {
       calc = calculateWhitworth(...args);
     } else if (std.id === 'ME') {
@@ -119,7 +127,8 @@ function App() {
 
     if (!calc) return null;
 
-    // 2. Auto-generate CTD and detect Series if missing (using standard delegates)
+    // 3. Post-calculation enrichment
+    // Inject Custom Thread Designation (CTD) and Series if not explicitly provided in the preset.
     const ctd = input.ctd || (std.getCTD ? std.getCTD(input) : input.designation);
     const series = input.series || (std.getSeries ? std.getSeries(input) : std.series[0]);
 
@@ -127,7 +136,8 @@ function App() {
   };
 
   /**
-   * DERIVED STATE: Construct the active threads list from standard presets and workshop config
+   * DERIVED STATE: Construct the active threads list from standard presets and workshop config.
+   * This is the core engine of the UI, reacting to standard, series, and tool availability changes.
    */
   const threads = React.useMemo(() => {
     const stdId = standard.id;
@@ -165,6 +175,11 @@ function App() {
       .filter(Boolean);
   }, [standard, selectedSeries, material, selectedDrillSets, config.workshop]);
 
+  /**
+   * Updates a slice of the global configuration and persists it to LocalStorage.
+   * @param {string} key - Configuration slice key ('preferences' or 'workshop').
+   * @param {Object} updates - New values for the slice.
+   */
   const updateGlobalConfig = (key, updates) => {
     const newConfig = {
       ...config,
@@ -232,15 +247,18 @@ function App() {
 
   /**
    * Handles material change and recalculates threads.
+   * @param {string} newMaterial - The material ID ('hard', 'ferrous', 'soft').
    */
   const handleMaterialChange = (newMaterial) => {
     setMaterial(newMaterial);
-    // The useEffect below will handle recalculation based on material change
+    // Recalculation is triggered via dependency tracking in the 'threads' memo.
   };
 
 
   /**
-   * Orchestrates the XML generation and triggers browser download.
+   * Orchestrates the XML generation and triggers a browser download.
+   * Uses generateFusionXML to transform the current thread list state into 
+   * a Fusion 360 compatible schema.
    */
   const handleDownload = () => {
     // 1. Generate XML string with build metadata
@@ -249,28 +267,27 @@ function App() {
       commitHash: __COMMIT_HASH__
     });
 
-    // 2. Create Blob and temporary URL
+    // 2. Create Blob and temporary URL for download
     const blob = new Blob([xml], { type: 'text/xml' });
     const url = URL.createObjectURL(blob);
 
-    // 3. Create invisible anchor and trigger click
+    // 3. Create invisible anchor and trigger click to start download
     const a = document.createElement('a');
     a.href = url;
 
-    // Sanitize filename: remove brackets, replace spaces/dots with underscores,
-    // remove non-alphanumeric, collapse underscores
+    // Filename sanitization: Ensures the standard name is filesystem-safe.
+    // Replaces non-alphanumeric characters (except underscore and hyphen) with underscores,
+    // then collapses multiple underscores and trims leading/trailing ones.
     const cleanName = standard.name
-      .replace(/[()]/g, '')
-      .replace(/[\s.]+/g, '_')
-      .replace(/[^a-zA-Z0-9_-]/g, '')
-      .replace(/_{2,}/g, '_')
-      .replace(/^_+|_+$/g, '');
+      .replace(/[^a-zA-Z0-9_-]+/g, '_') // Replace any sequence of non-safe chars with a single underscore
+      .replace(/_{2,}/g, '_')           // Collapse multiple underscores into one
+      .replace(/^_+|_+$/g, '');         // Trim leading/trailing underscores
 
     a.download = `${cleanName}.xml`;
     document.body.appendChild(a);
     a.click();
 
-    // 4. Cleanup
+    // 4. Cleanup temporary resources
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };

@@ -1,9 +1,25 @@
 /**
  * @module utils/drills
- * @description Provides lookup and selection for standard Imperial drill sets (Fractional, Letter, Number).
+ * @description Provides lookup, selection, and validation for standard drill sets (Metric, Fractional, Letter, Number).
+ * 
+ * @exports
+ * - METRIC_DRILLS: List of standard metric drill bits (sorted by size).
+ * - FRACTIONAL_DRILLS: List of standard fractional imperial drill bits.
+ * - LETTER_DRILLS: List of standard lettered imperial drill bits (A-Z).
+ * - NUMBER_DRILLS: List of standard numbered imperial drill bits (#1-80).
+ * - getNearestDrill: Finds the closest physical tool bit for a target diameter.
+ * - validateTapDrill: Validates drill selection against thread geometry and material targets.
+ * 
+ * @internal
+ * - simplifyFraction: Helper to reduce fractions to their simplest form.
+ * - addFractionalRange: Logic to populate the fractional drill array.
  */
 
-// 1. Number Drills (#80 to #1)
+/**
+ * Standard Numbered Drills (#80 to #1).
+ * Sizes defined in decimal inches.
+ * @type {Array<{name: string, size: number}>}
+ */
 export const NUMBER_DRILLS = [
     { name: "#80", size: 0.0135 }, { name: "#79", size: 0.0145 }, { name: "#78", size: 0.0160 },
     { name: "#77", size: 0.0180 }, { name: "#76", size: 0.0200 }, { name: "#75", size: 0.0210 },
@@ -34,7 +50,11 @@ export const NUMBER_DRILLS = [
     { name: "#2", size: 0.2210 }, { name: "#1", size: 0.2280 }
 ];
 
-// 2. Letter Drills (A to Z)
+/**
+ * Standard Lettered Drills (A to Z).
+ * Sizes defined in decimal inches.
+ * @type {Array<{name: string, size: number}>}
+ */
 export const LETTER_DRILLS = [
     { name: "A", size: 0.234 }, { name: "B", size: 0.238 }, { name: "C", size: 0.242 },
     { name: "D", size: 0.246 }, { name: "E", size: 0.250 }, { name: "F", size: 0.257 },
@@ -47,20 +67,23 @@ export const LETTER_DRILLS = [
     { name: "Y", size: 0.404 }, { name: "Z", size: 0.413 }
 ];
 
-// 3. Metric Drills
-// Generated with integer steps to avoid floating point drift (0.1 + 0.05 jitter)
+/**
+ * Standard Metric Drills.
+ * Includes sizes from 0.10mm to 20.00mm.
+ * @type {Array<{name: string, size: number, sizeMm: number}>}
+ */
 export const METRIC_DRILLS = [];
-// 0.10mm to 3.00mm: 0.05mm increments
+// 0.10mm to 3.00mm: 0.05mm increments for high precision in small threads
 for (let i = 10; i <= 300; i += 5) {
     const d = i / 100;
     METRIC_DRILLS.push({ name: `${d.toFixed(2)}mm`, size: d / 25.4, sizeMm: d });
 }
-// 3.10mm to 13.00mm: 0.10mm increments
+// 3.10mm to 13.00mm: 0.10mm increments (standard machine shop range)
 for (let i = 310; i <= 1300; i += 10) {
     const d = i / 100;
     METRIC_DRILLS.push({ name: `${d.toFixed(1)}mm`, size: d / 25.4, sizeMm: d });
 }
-// 13.50mm to 20.00mm: 0.50mm increments
+// 13.50mm to 20.00mm: 0.50mm increments (large holes)
 for (let i = 1350; i <= 2000; i += 50) {
     const d = i / 100;
     METRIC_DRILLS.push({ name: `${d.toFixed(1)}mm`, size: d / 25.4, sizeMm: d });
@@ -69,24 +92,47 @@ for (let i = 1350; i <= 2000; i += 50) {
 // 4. Fractional Drills
 // ... (simplifyFraction and addFractionalRange logic remains the same)
 // ...
+/**
+ * Standard Fractional Drills.
+ * Populated at runtime using addFractionalRange.
+ * @type {Array<{name: string, size: number, type: string}>}
+ */
 export const FRACTIONAL_DRILLS = [];
+/**
+ * @internal
+ * Simplifies a fraction by finding the greatest common divisor.
+ * @param {number} num - Numerator.
+ * @param {number} den - Denominator.
+ * @returns {string} Simplified fraction string (e.g., "1/2").
+ */
 const simplifyFraction = (num, den) => {
     const gcd = (a, b) => b ? gcd(b, a % b) : a;
     const factor = gcd(num, den);
     return `${num / factor}/${den / factor}`;
 };
 
+/**
+ * @internal
+ * Populates the FRACTIONAL_DRILLS array with a range of standard sizes.
+ * @param {number} start64ths - Starting size in 64ths of an inch.
+ * @param {number} end64ths - Ending size in 64ths of an inch.
+ * @param {number} step64ths - Increment step in 64ths.
+ */
 const addFractionalRange = (start64ths, end64ths, step64ths) => {
     for (let i = start64ths; i <= end64ths; i += step64ths) {
         const size = i / 64;
         let name;
+        // Logic to construct pretty fraction strings (e.g. 1 1/8")
         if (i % 64 === 0) {
+            // Whole numbers
             name = `${i / 64}\"`;
         } else if (i > 64) {
+            // Mixed numbers (e.g. 1 1/16)
             const whole = Math.floor(i / 64);
             const rem = i % 64;
             name = `${whole} ${simplifyFraction(rem, 64)}\"`;
         } else {
+            // Simple fractions (e.g. 1/32)
             name = `${simplifyFraction(i, 64)}\"`;
         }
         FRACTIONAL_DRILLS.push({ name, size, type: 'fractional' });
@@ -141,10 +187,12 @@ export const getNearestDrill = (
 
     if (filteredCandidates.length === 0) return null;
 
+    // Use reduce to find the candidate with the absolute minimum difference from target.
     return filteredCandidates.reduce((prev, curr) => {
         const diffCurr = Math.abs(curr.size - targetInches);
         const diffPrev = Math.abs(prev.size - targetInches);
 
+        // If differences are identical (precision limit), stick with the previous match.
         if (Math.abs(diffCurr - diffPrev) < 1e-10) {
             return prev;
         }

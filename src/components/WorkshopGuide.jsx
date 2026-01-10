@@ -1,3 +1,12 @@
+/**
+ * @module components/WorkshopGuide
+ * @description Informational hub and interactive guide for British thread standards.
+ * Provides historical context, usage scenarios, and technical comparisons.
+ * 
+ * @exports
+ * - WorkshopGuide (default): React component for the informational guide.
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import {
     Chart as ChartJS,
@@ -23,6 +32,11 @@ ChartJS.register(
     Legend
 );
 
+/**
+ * Technical data and content for each thread standard displayed in the guide.
+ * Includes descriptions, usage notes, suited applications, and chart data.
+ * @type {Object}
+ */
 const threadData = {
     bsw: {
         id: 'bsw',
@@ -325,6 +339,13 @@ const threadData = {
     }
 };
 
+
+/**
+ * Common workshop scenarios used to help users select the appropriate standard.
+ * Each scenario maps a specific real-world task icon and narrative to a 
+ * recommended calculator implementation in the threadData map.
+ * @type {Array<{icon: string, title: string, desc: string, result: string}>}
+ */
 const matrixScenarios = [
     { icon: '🚜', title: 'Heavy Iron', desc: 'Working on a tractor or lathe bed.', result: 'bsw' },
     { icon: '🏎️', title: 'Vintage Car', desc: 'Restoring an MG or Triumph chassis.', result: 'bsf' },
@@ -348,7 +369,8 @@ const WorkshopGuide = () => {
 
     const selectedData = threadData[currentSelection];
 
-    // Chart configs
+    // Chart.js data object: Relative Thread Density
+    // Compares the selected thread against typical metric and fine pitch baselines.
     const densityData = {
         labels: ['Current Selection', 'Average Metric', 'Average Fine'],
         datasets: [{

@@ -1,17 +1,39 @@
 /**
  * @module me
- * @description Provides calculations and data for Model Engineer (ME) thread standards.
+ * @description Provides calculations and physical data for Model Engineer (ME) thread standards.
  * 
- * Main functions:
- * - calculateME (exported): Calculates geometry and tolerances for ME threads.
- * - ME_SIZES (exported): List of standard ME size/TPI combinations.
- * - MEStandard (exported): Configuration object for the ME standard.
+ * @exports
+ * - calculateME: Calculates geometry and tolerances for ME threads.
+ * - MEStandard: Model Engineer (ME) Standard configuration object.
+ * - ME_SIZES: List of standard ME size/TPI combinations.
+ * 
+ * @internal
+ * - parseFraction: Converts fraction strings to decimal values.
+ * - createMEPreset: Helper to generate consistent ME preset objects.
+ * - getWhitworthDoubleDepthFactor: Derives the Whitworth double-depth factor (K) for 55° forms.
+ * - getTargetPTE: Returns target Percentage of Thread Engagement based on material.
  */
 
 import { getNearestDrill, validateTapDrill } from '../drills.js';
 
 /**
- * Model Engineer (ME) Standard configuration.
+ * Model Engineer (ME) Standard configuration object.
+ * Defines the 55-degree Whitworth form used for small scale steam models.
+ * @type {Object}
+ * @property {string} id - 'ME'
+ * @property {string} name - Display name
+ * @property {string} unit - 'in'
+ * @property {number} angle - 55 degrees
+ * @property {number} sortOrder - UI rendering priority
+ * @property {number} threadForm - Fusion 360 thread form index
+ * @property {string[]} series - Supported series ('Fine (40 TPI)', 'Medium (32 TPI)', 'BSB (26 TPI)')
+ * @property {string[]} classes - Available tolerance classes (Medium)
+ * @property {Function} getCTD - Selection callback to get designation
+ * @property {Function} getSeries - Returns series name based on TPI
+ * @property {string[]} defaultDrillSets - Preferred drill sets
+ * @property {string} docUrl - Link to technical documentation
+ * @property {string} seriesAnchor - Anchor for technical sizing tables
+ * @property {string} classAnchor - Anchor for tolerance class specifications
  */
 export const MEStandard = {
     id: 'ME',
@@ -42,6 +64,8 @@ export const MEStandard = {
 /**
  * @internal
  * Converts fraction strings (e.g. "1 1/8" or "1/16") to decimal values.
+ * @param {string|number} f - The fraction string or number to parse.
+ * @returns {number} Decimal value of the fraction.
  */
 const parseFraction = (f) => {
     if (typeof f === 'number') return f;
@@ -58,7 +82,10 @@ const parseFraction = (f) => {
 
 /**
  * @internal
- * Helper to generate consistent ME preset objects.
+ * Helper to generate consistent ME preset objects with standardized designations and CTDs.
+ * @param {string} sizeStr - Fraction or whole number string (e.g. "1/4").
+ * @param {number} tpi - Threads per inch.
+ * @returns {Object} Standardized thread metadata object.
  */
 const createMEPreset = (sizeStr, tpi) => {
     const isBSB = tpi === 26;
@@ -78,8 +105,8 @@ const createMEPreset = (sizeStr, tpi) => {
 
 /**
  * Standard Model Engineer (ME) sizes.
- * Reference: SMEE Standards and user-provided specifications.
- * @type {Array<Object>}
+ * Derived from SMEE Standards and historical modeling practices.
+ * @type {Array<{designation: string, series: string, size: number, nominalFraction: string, tpi: number, ctd: string}>}
  */
 export const ME_SIZES = [
     ['1/8', 40], ['5/32', 40], ['3/16', 40], ['7/32', 40],
@@ -93,16 +120,23 @@ export const ME_SIZES = [
  * @internal
  * Derives the Whitworth double-depth factor (K) from fundamental geometry.
  * Used for ME threads which share the 55° Whitworth form.
+ * @returns {number} The derived double depth factor.
  */
 const getWhitworthDoubleDepthFactor = () => {
+    // theta = 27.5 degrees (half-angle for 55° Whitworth form)
     const theta = (55 / 2) * (Math.PI / 180);
+    // distance from crest to root in a sharp V thread
     const heightFactor = 1 / (2 * Math.tan(theta));
+    // h = 0.6403p (truncated depth)
     const depthFactor = (2 / 3) * heightFactor;
-    return 2 * depthFactor;
+    return 2 * depthFactor; // K factor (approx 1.28)
 };
 
 /**
+ * @internal
  * Returns the target Percentage of Thread Engagement (PTE) based on material.
+ * @param {string} material - 'hard', 'ferrous', 'soft'.
+ * @returns {number} Target PTE.
  */
 const getTargetPTE = (material) => {
     switch (material) {
@@ -143,18 +177,21 @@ export const calculateME = (
     const basicPitch = D - d;
     const basicMinor = D - (2 * d);
 
-    // For ME threads, we use a simplified "Medium" tolerance based on Whitworth formulas
-    // as there is no formal international standard for ME tolerances.
-    // We use L = D as a default for the tolerance factor T.
+    // For ME threads, we use a simplified "Medium" tolerance based on Whitworth (BS 84) 
+    // formulas, as there is no single formal international standard for ME.
+    // L = D (standard assumption for length of engagement).
     const L = D;
     const T = 0.002 * Math.cbrt(D) + 0.003 * Math.sqrt(L) + 0.005 * Math.sqrt(p);
-    const fmt = (n) => Number(n.toFixed(6));
+    const fmt = (n) => Number(n.toFixed(6)); // Formatting helper
 
     const getTolerances = (multiplier) => {
         const result = {};
-        const tEff = T * multiplier;
+        const tEff = T * multiplier; // Pitch diameter tolerance
         const tMajor = tEff + 0.01 * Math.sqrt(p);
         const tMinorBolt = tEff + 0.02 * Math.sqrt(p);
+
+        // Nut Minor Tolerance: depends on whether the thread is fine (>= 26 TPI) 
+        // or standard/coarse (< 26 TPI) as per BS 84.
         const nutMinorTol = 0.2 * p + (tpi >= 26 ? 0.004 : 0.007);
 
         result.external = {

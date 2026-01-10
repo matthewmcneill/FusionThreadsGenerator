@@ -88,8 +88,9 @@ The `getNearestDrill` utility (defined in `src/utils/drills.js`) handles the mat
 ### 5.1 Selection Logic
 1.  **Unit Conversion**: All target diameters are normalized to inches for comparison.
 2.  **Pool Filtering**: Only drill sets selected by the user in the UI are considered.
-3.  **Absolute Difference**: The algorithm calculates the absolute distance to the **Spec-Median Target**.
-4.  **Priority Tie-Breaking**: If two drills (e.g., Metric and Imperial) are effectively equal, the system prioritizes "Native" sets in the order: **Imperial > Letter > Number > Metric**.
+3.  **Custom Tools**: Any user-defined **Custom Drills** added via the Workshop Manager are automatically included in the search pool with top priority.
+4.  **Absolute Difference**: The algorithm calculates the absolute distance to the **Spec-Median Target**.
+5.  **Priority Tie-Breaking**: If two drills (e.g., Metric and Imperial) are effectively equal, the system prioritizes "Native" sets in the order: **Custom > Imperial > Letter > Number > Metric**.
 
 ### 5.2 Precision
 To ensure absolute accuracy across tools, the generator implements:

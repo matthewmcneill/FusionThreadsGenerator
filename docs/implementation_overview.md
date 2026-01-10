@@ -19,14 +19,19 @@ Each module defines a `Standard` configuration object containing `series` (Desig
 - **[`bsc.js`](../src/utils/calculators/bsc.js)**: Implements British Standard Cycle (BSC/CEI) threads.
 - **index.js**: Unified export point for thread calculators.
 
-### 3. XML Generation Layer (`src/utils/xmlGenerator.js`)
-- Transforms internal thread objects into the Fusion 360 XML schema.
-- Specifically maps **Pitch/TPI**, **Gender-specific dimensions**, and **ThreadToleranceClass** to ensure seamless CAD integration.
+### 3. Management Layer (`src/components/WorkshopManager.jsx`)
+- Orchestrates the global workshop configuration.
+- Handles enabling/disabling of standards, drill sets, and individual tools.
+- Manages persistent custom drills and thread designations.
+
+### 4. Generation Layer (`src/utils/`)
+- **xmlGenerator.js**: Transforms internal thread objects into the Fusion 360 XML thread definition schema.
+- **toolLibraryGenerator.js**: Logic for generating Fusion 360 Tool Library JSON.
 
 ## Component Interactions (Stage-Based Workflow)
-1. **Stage 1 (Select Thread Type)**: User chooses a standard. `App.jsx` initializes default presets and active series/classes from metadata.
-2. **Stage 2 (Refine Designation & Class)**: User toggles series inclusion and adds/removes sizes. The UI dynamically shows toggles only when multiple options exist.
-3. **Stage 3 (Launch Export)**: User launches the download. `xmlGenerator.js` processes the active dataset into the final file buffer.
+1. **Stage 1 (Select Standard)**: User chooses a standard. `App.jsx` initializes default presets and active series/classes. Access to **Workshop Manager** for inventory control.
+2. **Stage 2 (Refine Configuration)**: User toggles series inclusion, selects material (PTE target), and filters drill sets. The UI dynamically recalculates tapping recommendations based on these filters.
+3. **Stage 3 (Launch Export)**: User reviews the results in the **Project Preview** tab and exports either an XML (Thread Definition) or JSON (Tool Library).
 
 ## Key Technical Concepts
 - **CTD Generation**: The app automatically formats "Custom Thread Designations" (e.g., `1/4 - 20 BSW`) to match Fusion 360's internal lookup logic.
@@ -129,6 +134,27 @@ const validation = validateTapDrill(drillSize, major, minor, nutMinorMax, materi
     *   **Default Loading**: Update `loadStandardDefaults` (using ID-based checks) to return your `MY_SIZES` array when your standard is active.
     *   **Calculator Routing**: Update the logic in `calculateThreadItem` to call your new calculation function based on the `id`. The UI automatically handles `ctd` formatting and `series` detection via your standard's `getCTD` and `getSeries` delegates.
 4.  **Verification**: Run the app locally, select your new standard, verify the preview table values, and check the generated XML file in a text editor to ensure it follows the `<ThreadType>` schema.
+
+## Tool Library Generation (`toolLibraryGenerator.js`)
+
+The tool library generator maps the workshop configuration and active thread data into the Fusion 360 Tool Library JSON format.
+
+### 1. Geometry Scaling
+Since thread definition files don't provide physical tool geometry (OAL, LB, LCF), the generator applies intelligent scaling based on the tool diameter:
+- **Drills**: Cutting length (LCF) is scaled to ~3x diameter.
+- **Taps**: Cutting length (LCF) is scaled to ~2.5x diameter.
+- **Safety**: Minimum lengths are enforced to ensure the tools are visible and usable in CAM simulations.
+
+### 2. Cutting Data
+Default "start-values" are injected into each tool:
+- **Drills**: Standard spindle speeds and plunge feeds.
+- **Taps**: Feeds are automatically synchronized with the calculated pitch (Feed = Pitch * RPM) to model rigid tapping correctly.
+
+### 3. Workshop Persistence (Fidelity)
+The JSON schema includes custom fields and naming conventions that allow the application to "round-trip" a configuration. Importing a generated JSON back into the Workshop Manager restores:
+- Enabled/Disabled status for all standard tools.
+- Custom drill bit definitions.
+- Custom thread designations.
 
 ## Testing & Quality Assurance
 

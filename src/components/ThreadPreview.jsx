@@ -4,10 +4,22 @@ import EngagementMeter from './EngagementMeter';
 /**
  * @module components/ThreadPreview
  * @description Renders a comprehensive, manual-style table of thread data.
+ * Supports bidirectional hierarchical highlighting and markdown copy to clipboard.
+ * 
+ * @exports
+ * - ThreadPreview (default): React component for data visualization.
+ * 
+ * @internal
+ * - handleCopy: Formats and copies table data to the clipboard.
+ * 
+ * @param {Object} props
+ * @param {Array<Object>} props.threads - List of thread objects to display.
+ * @param {Array<string>} props.selectedClasses - Tolerance classes to include.
+ * @param {string} props.unit - Base unit ('in' or 'mm').
  */
-
 const ThreadPreview = ({ threads, selectedClasses, unit }) => {
     const [copied, setCopied] = useState(false);
+    // Track hierarchical hover state (Size -> Thread -> Gender -> Class)
     const [hoveredPath, setHoveredPath] = useState({ size: null, designation: null, gender: null, cls: null });
 
     if (!threads || threads.length === 0) {
@@ -54,6 +66,8 @@ const ThreadPreview = ({ threads, selectedClasses, unit }) => {
         // Sort groups by the decimal size of their first thread
         const sortedGroups = Object.entries(groupedBySize).sort((a, b) => a[1][0].size - b[1][0].size);
 
+        // Processes the nested data structure into a flat, tab-separated format 
+        // that retains the hierarchical information in row format.
         sortedGroups.forEach(([sizeKey, sizeThreads]) => {
             const sizeValue = isImperial
                 ? (sizeThreads[0].nominalFraction
@@ -78,6 +92,7 @@ const ThreadPreview = ({ threads, selectedClasses, unit }) => {
                             status: '-'
                         };
 
+                        // Extract tapping drill metadata specifically for internal threads
                         if (gender === 'Internal' && data.tapDrillName) {
                             drillInfo = {
                                 tool: `${data.tapDrillName} (${f(data.tapDrillToolSize)})`,
@@ -151,6 +166,7 @@ const ThreadPreview = ({ threads, selectedClasses, unit }) => {
                         {Object.entries(groupedBySize)
                             .sort((a, b) => a[1][0].size - b[1][0].size)
                             .map(([sizeKey, sizeThreads]) => {
+                                // Calculate total row count for the nominal size block to set rowSpan.
                                 const sizeTotalRows = sizeThreads.reduce((sum, t) => {
                                     const activeClasses = selectedClasses.filter(c => t.classes[c]);
                                     let rowsForThread = 0;

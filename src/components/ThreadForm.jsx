@@ -1,9 +1,14 @@
 /**
  * @module components/ThreadForm
  * @description Provides a form for users to add custom thread sizes to the current list.
+ * Dynamically adjusts fields based on whether the standard is Whitworth, BA, ME, or BSC.
  * 
- * Main functions:
- * - ThreadForm (default export): Renders the input fields and validation logic.
+ * @exports
+ * - ThreadForm (default): React component for custom size entry.
+ * 
+ * @internal
+ * - parseFraction: Converts fraction strings to decimal values.
+ * - handleSubmit: Validates and processes the form submission.
  */
 
 import React, { useState } from 'react';
@@ -53,11 +58,17 @@ const ThreadForm = ({ onAdd, currentStandard, standardId, inline = false, defaul
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        // 1. Validate mandatory fields based on the standard's type
         if (!designation || !size) return;
         if (usesTpi && !tpi) return;
 
+        // 2. Parse input dimensions
+        // For TPI-based standards (Whitworth/ME/BSC), we allow fraction inputs (1/4")
         const nominalSize = usesTpi ? parseFraction(size) : size;
         const nominalFraction = (usesTpi && size.includes('/')) ? size : null;
+
+        // 3. Handle custom series logic
+        // If the user selected "+ New Series...", we use the custom text input instead.
         const finalSeries = series === 'CUSTOM' ? customSeries : (series || defaultSeries);
 
         onAdd({
@@ -68,6 +79,7 @@ const ThreadForm = ({ onAdd, currentStandard, standardId, inline = false, defaul
             series: finalSeries
         });
 
+        // 4. Reset form state for next entry
         setDesignation('');
         setSize('');
         setTpi('');

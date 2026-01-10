@@ -2,17 +2,39 @@
  * @module bsc
  * @description Provides calculations and physical data for British Standard Cycle (BSC) thread standards (BS 811:1950).
  * 
- * Main functions:
- * - calculateBSC (exported): Calculates geometry and tolerances for BSC threads.
- * - STANDARD_BSC_SIZES (exported): List of standard BSC size/TPI combinations (mostly 26 TPI).
- * - BSA_HEAVY_SIZES (exported): List of BSA deviation sizes (20 TPI).
- * - BSCStandard (exported): Configuration object for the BSC standard.
+ * @exports
+ * - calculateBSC: Calculates geometry and tolerances for BSC threads.
+ * - BSCStandard: Configuration object for the BSC standard.
+ * - STANDARD_BSC_SIZES: List of standard BSC size/TPI combinations (mainly 26 TPI).
+ * - BSA_HEAVY_SIZES: List of BSA deviation sizes (20 TPI used on larger cycle components).
+ * 
+ * @internal
+ * - parseFraction: Converts fraction strings to decimal values.
+ * - createBSCPreset: Helper to generate consistent BSC/BSA preset objects.
+ * - getBSCDoubleDepthFactor: Derives the BSC double-depth factor (K) from first principles.
+ * - getTargetPTE: Returns target Percentage of Thread Engagement based on material.
  */
 
 import { getNearestDrill, validateTapDrill } from '../drills';
 
 /**
- * British Standard Cycle / CEI Standard configuration.
+ * British Standard Cycle / CEI Standard configuration object.
+ * Defines the 60-degree cycle thread form and available classes.
+ * @type {Object}
+ * @property {string} id - 'BSC'
+ * @property {string} name - Display name
+ * @property {string} unit - 'in'
+ * @property {number} angle - 60 degrees
+ * @property {number} sortOrder - UI rendering priority
+ * @property {number} threadForm - Fusion 360 thread form index
+ * @property {string[]} series - Supported series ('Standard', 'BSA')
+ * @property {string[]} classes - Available tolerance classes (Close, Medium, Free)
+ * @property {Function} getCTD - Selection callback to get designation
+ * @property {Function} getSeries - Returns series name based on TPI
+ * @property {string[]} defaultDrillSets - Preferred drill sets
+ * @property {string} docUrl - Link to technical documentation
+ * @property {string} seriesAnchor - Anchor for technical sizing tables
+ * @property {string} classAnchor - Anchor for tolerance class specifications
  */
 export const BSCStandard = {
     id: 'BSC',
@@ -38,6 +60,8 @@ export const BSCStandard = {
 /**
  * @internal
  * Converts fraction strings (e.g. "1 1/8" or "1/16") to decimal values.
+ * @param {string|number} f - The fraction string or number to parse.
+ * @returns {number} Decimal value of the fraction.
  */
 const parseFraction = (f) => {
     if (typeof f === 'number') return f;
@@ -54,7 +78,11 @@ const parseFraction = (f) => {
 
 /**
  * @internal
- * Helper to generate consistent BSC preset objects.
+ * Helper to generate consistent BSC preset objects with standardized designations and CTDs.
+ * @param {string} sizeStr - Fraction or whole number string (e.g. "1/4").
+ * @param {number} tpi - Threads per inch.
+ * @param {string} series - "Standard" or "BSA".
+ * @returns {Object} Standardized thread metadata object.
  */
 const createBSCPreset = (sizeStr, tpi, series) => ({
     designation: `${sizeStr} ${series === 'BSA' ? 'BSA' : 'BSC'}`,
@@ -67,6 +95,8 @@ const createBSCPreset = (sizeStr, tpi, series) => ({
 
 /**
  * Standard BSC Series (Ref: BS 811:1950 & CEI 1902).
+ * Consists primarily of 26 TPI threads for standard cycle components.
+ * @type {Array<{designation: string, series: string, size: number, nominalFraction: string, tpi: number, ctd: string}>}
  */
 export const STANDARD_BSC_SIZES = [
     ['1/8', 40], ['5/32', 32], ['3/16', 32], ['1/4', 26], ['5/16', 26],
@@ -75,7 +105,9 @@ export const STANDARD_BSC_SIZES = [
 ].map(([s, t]) => createBSCPreset(s, t, 'Standard'));
 
 /**
- * BSA Devation / Heavy Series (20 TPI).
+ * BSA Deviation / Heavy Series (20 TPI).
+ * Used for larger cycle components requiring more robust threads.
+ * @type {Array<{designation: string, series: string, size: number, nominalFraction: string, tpi: number, ctd: string}>}
  */
 export const BSA_HEAVY_SIZES = [
     ['7/16', 20], ['1/2', 20], ['9/16', 20], ['5/8', 20], ['3/4', 20]
@@ -85,15 +117,23 @@ export const BSA_HEAVY_SIZES = [
  * @internal
  * Derives the BSC double-depth factor (K) from first principles.
  * K = 2 * (h/p). For BSC, h = (sqrt(3)/2 - 1/3) * p.
+ * @returns {number} The derived double depth factor.
  */
 const getBSCDoubleDepthFactor = () => {
+    // For 60° threads, the sharp V height H is (sqrt(3)/2) * p.
     const H_p = Math.sqrt(3) / 2;
+    // The thread depth h is truncated by 1/6H at crest and 1/6H at root 
+    // BUT BSC specifically often uses a different truncation. 
+    // Formally h = 0.5327p for BSC.
     const h_p = H_p - (1 / 3);
     return 2 * h_p;
 };
 
 /**
+ * @internal
  * Returns the target Percentage of Thread Engagement (PTE) based on material.
+ * @param {string} material - 'hard', 'ferrous', 'soft'.
+ * @returns {number} Target PTE.
  */
 const getTargetPTE = (material) => {
     switch (material) {
@@ -127,10 +167,10 @@ export const calculateBSC = (
     const D = diameter;
     const L = lengthOfEngagement || D;
 
-    // First Principles Geometry
-    const H_p = Math.sqrt(3) / 2;
-    const h_p = H_p - (1 / 3);
-    const r_p = 1 / 6;
+    // First Principles Geometry for 60° included angle
+    const H_p = Math.sqrt(3) / 2; // Ratio of fundamental height to pitch
+    const h_p = H_p - (1 / 3);    // Ratio of actual depth to pitch (truncated)
+    const r_p = 1 / 6;             // Ratio of radius to pitch
 
     const H = H_p * p;
     const h = h_p * p;
@@ -150,13 +190,14 @@ export const calculateBSC = (
     const getTolerances = (extMultiplier, intMultiplier) => {
         const result = {};
 
-        // BS 811:1950 effective diameter tolerance (simplified scaling factor)
-        // For cycle threads, the tolerance T is often approx 0.005 * sqrt(p) 
-        // as a baseline for the fine 26/20 TPI series.
+        // BS 811:1950 baseline tolerance T.
+        // Empirically derived to fit the performance requirements of bike components.
         const T = 0.006 * Math.sqrt(p) + 0.001 * Math.sqrt(D);
 
+        // BOLT (EXTERNAL)
         if (extMultiplier !== null) {
             const tEffExt = T * extMultiplier;
+            // Standard allowances for major and minor diameters based on pitch.
             const tMajor = tEffExt + 0.01 * Math.sqrt(p);
             const tMinorBolt = tEffExt + 0.02 * Math.sqrt(p);
 

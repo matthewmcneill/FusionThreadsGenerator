@@ -1,17 +1,37 @@
 /**
  * @module ba
- * @description Provides calculations and data for British Association (BA) thread standards.
+ * @description Provides calculations and physical data for British Association (BA) thread standards (BS 93:1951).
  * 
- * Main functions:
- * - calculateBA (exported): Calculates full thread geometry and tolerances for a given BA size number.
- * - BA_SIZES (exported): List of standard BA designations.
- * - BAStandard (exported): Configuration object for the BA standard.
+ * @exports
+ * - calculateBA: Calculates full thread geometry and tolerances for a given BA size number.
+ * - BAStandard: Metadata configuration object for the BA standard.
+ * - BA_SIZES: List of standard BA designations (0-16 BA).
+ * 
+ * @internal
+ * - getBADoubleDepthFactor: Returns the constant double-depth factor (1.2) for BA threads.
+ * - getTargetPTE: Returns the target Percentage of Thread Engagement based on material.
  */
 
 import { getNearestDrill, validateTapDrill } from '../drills.js';
 
 /**
  * Metadata configuration for the BA Thread Standard.
+ * Defines standard IDs, unit systems (metric for BA), and documentation anchors.
+ * @type {Object}
+ * @property {string} id - 'BA'
+ * @property {string} name - Display name
+ * @property {string} unit - 'mm'
+ * @property {number} angle - 47.5 degrees
+ * @property {number} sortOrder - UI rendering priority
+ * @property {number} threadForm - Fusion 360 thread form index (8 for BA)
+ * @property {string[]} series - Supported series ('BA')
+ * @property {string[]} classes - Available tolerance classes (Close, Normal)
+ * @property {Function} getCTD - Selection callback to get designation
+ * @property {Function} getSeries - Returns default series name
+ * @property {string[]} defaultDrillSets - Preferred drill sets (Metric)
+ * @property {string} docUrl - Link to technical documentation
+ * @property {string} seriesAnchor - Anchor for technical sizing tables
+ * @property {string} classAnchor - Anchor for tolerance class specifications
  */
 export const BAStandard = {
     id: 'BA',
@@ -32,7 +52,7 @@ export const BAStandard = {
 
 /**
  * Standard BA thread designations and size indices (0-16).
- * @type {Array<{designation: string, size: string}>}
+ * @type {Array<{designation: string, series: string, size: string}>}
  */
 export const BA_SIZES = Array.from({ length: 17 }, (_, i) => ({
     designation: `${i} BA`,
@@ -42,13 +62,15 @@ export const BA_SIZES = Array.from({ length: 17 }, (_, i) => ({
 
 /**
  * @internal
- * @description Lookup table for standard BA thread dimensions (metric mm).
- * p: Pitch
- * h: Thread depth
- * D: Major diameter
- * eff: Effective (pitch) diameter
- * min: Minor diameter
- * r: Root/crest radius
+ * @description Lookup table for standard BA thread dimensions (metric mm) as per BS 93.
+ * Columns:
+ * - p: Pitch
+ * - h: Thread depth
+ * - D: Major diameter
+ * - eff: Effective (pitch) diameter
+ * - min: Minor diameter
+ * - r: Root/crest radius
+ * @type {Object.<string, {p: number, h: number, D: number, eff: number, min: number, r: number}>}
  */
 const BA_TABLE = {
     '0': { p: 1.0000, h: 0.600, D: 6.00, eff: 5.400, min: 4.80, r: 0.1808 },
@@ -115,15 +137,28 @@ export const calculateBA = (
 
     const p = size.p;
     const sizeNum = parseInt(sizeNumber);
-    const fmt = (n) => Number(n.toFixed(6));
+    const fmt = (n) => Number(n.toFixed(6)); // Utility for formatting to 6 decimal places
 
+    /**
+     * Internal helper to calculate gender-specific tolerances.
+     * BS 93 defines specific coefficients based on pitch 'p'.
+     * @param {boolean} isCloseClass - Whether to calculate Close class tolerances.
+     * @param {boolean} includeInternal - Whether to calculate Nut (Internal) tolerances.
+     */
     const getTolerances = (isCloseClass, includeInternal) => {
         const result = {};
-        const A = (!isCloseClass && sizeNum <= 10) ? 0.025 : 0; // Allowance for Normal bolts 0-10 BA
+
+        // BS 93:1951 Table 4 Clause 18: Normal bolts 0-10 BA have a 0.025mm allowance (A)
+        // to ensure they always fit even in worn nuts. Close bolts have 0 allowance.
+        const A = (!isCloseClass && sizeNum <= 10) ? 0.025 : 0;
 
         // 2. Bolt (External) Tolerances
+        // Coefficients derived from BS 93 formulas:
+        // Major: 0.15p (Close), 0.20p (Normal 0-10), 0.25p (Normal 11-16)
         let majorTol = isCloseClass ? (0.15 * p) : (sizeNum <= 10 ? 0.20 * p : 0.25 * p);
+        // Pitch: 0.08p + 0.02 (Close), 0.10p + 0.025 (Normal)
         let effTol = isCloseClass ? (0.08 * p + 0.02) : (0.10 * p + 0.025);
+        // Minor: 0.16p + 0.04 (Close), 0.20p + 0.05 (Normal)
         let minorBoltTol = isCloseClass ? (0.16 * p + 0.04) : (0.20 * p + 0.05);
 
         result.external = {
@@ -137,24 +172,26 @@ export const calculateBA = (
 
         // 3. Nut (Internal) Tolerances - BS 93 provides one class for nuts
         if (includeInternal) {
+            // Nut tolerances are generally larger than bolt tolerances.
             const nutEffTol = 0.12 * p + 0.03;
             const nutMinorTol = 0.375 * p;
 
             // Algorithmic Determination of Tapping Drill Size
-            const pte = getTargetPTE(material);
-            const K = getBADoubleDepthFactor();
+            const pte = getTargetPTE(material); // Target Percentage of Thread Engagement
+            const K = getBADoubleDepthFactor(); // Constant for BA form (2 * 0.6)
 
             // Cut Tap Formula: D_drill = D_major - (K * p * PTE / 100)
             const targetDecimal = size.D - (K * p * pte / 100);
 
+            // Fetch recommendation from the shop inventory (Metric defaults)
             const shopDrill = getNearestDrill(targetDecimal, 'mm', drillSets, customDrills, disabledDrills);
 
             result.internal = {
                 major: fmt(size.D),
                 pitch: fmt(size.eff),
                 minor: fmt(size.min),
-                minorMax: fmt(size.min + nutMinorTol),
-                pitchMax: fmt(size.eff + nutEffTol),
+                minorMax: fmt(size.min + nutMinorTol), // BS 93 Nut Minor Max
+                pitchMax: fmt(size.eff + nutEffTol), // BS 93 Nut Pitch Max
                 ...(shopDrill ? {
                     tapDrillTarget: fmt(targetDecimal),
                     tapDrillToolSize: fmt(shopDrill.size),
@@ -184,9 +221,9 @@ export const calculateBA = (
             p: fmt(p)
         },
         classes: {
-            // Close: Bolt Close class only (0-10 BA)
+            // Close: Bolt Close class only (available for 0-10 BA only as per BS 93)
             ...(sizeNum <= 10 ? { 'Close': getTolerances(true, false) } : {}),
-            // Normal: Bolt Normal class + standard Nut (All Classes)
+            // Normal: Bolt Normal class + standard Nut (Applicable to all sizes)
             'Normal': getTolerances(false, true)
         }
     };

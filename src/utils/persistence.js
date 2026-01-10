@@ -1,10 +1,25 @@
 /**
  * @module utils/persistence
- * @description Handles saving and loading application state to LocalStorage.
+ * @description Manages application state persistence using LocalStorage.
+ * Handles schema migration and deep merging with defaults.
+ * 
+ * @exports
+ * - loadConfig: Retrieves and sanitizes the stored configuration.
+ * - saveConfig: Persists the configuration object to LocalStorage.
+ * - updateConfigSlice: Helper for granular state updates.
  */
 
+/**
+ * LocalStorage key used for all application data.
+ * @type {string}
+ */
 const STORAGE_KEY = 'fusion_threads_config';
 
+/**
+ * Default application configuration used for initialization and missing keys.
+ * Defines the initial enabled standards, drill sets, and user preferences.
+ * @type {Object}
+ */
 const DEFAULTS = {
     workshop: {
         enabledStandards: ['WHITWORTH', 'BA', 'ME', 'BSB', 'BSC'],
@@ -32,7 +47,8 @@ export const loadConfig = () => {
 
         const parsed = JSON.parse(stored);
 
-        // Migrate legacy customThreads if present
+        // SCHEMA MIGRATION: 
+        // Handles the transition from a flat customThreads array to one keyed by Standard ID.
         if (parsed.workshop?.customThreads && !parsed.workshop.customDesignations) {
             const currentStd = parsed.preferences?.currentStandardId || 'WHITWORTH';
             parsed.workshop.customDesignations = {
@@ -41,7 +57,9 @@ export const loadConfig = () => {
             delete parsed.workshop.customThreads;
         }
 
-        // Deep merge defaults with stored config to handle schema updates
+        // DEEP MERGE: 
+        // Ensures that even if the user has an old config, new default top-level keys 
+        // added in later versions are still available.
         return {
             workshop: { ...DEFAULTS.workshop, ...parsed.workshop },
             preferences: { ...DEFAULTS.preferences, ...parsed.preferences }

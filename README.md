@@ -12,14 +12,44 @@ This web application allows users to generate custom XML definitions for Fusion 
 
 ## How to Use the App
 
-1. **Select a Thread Standard**: Use the dropdown at the top to select the desired standard: **Whitworth**, **British Association (BA)**, **Model Engineer (ME)**, **British Standard Brass (BSB)**, or **Cycle (BSC/CEI)**.
-2. **Refine Configuration**:
-    - For **Whitworth**, use the checkboxes to toggle between **Standard (BSW)** and **Fine (BSF)** series.
-    - Select the desired **Thread Classes** (e.g., Close, Medium, Free) to include in the export.
-    - Choose your **Workpiece Material** to optimize target thread engagement.
-    - Select the **Drill Bit Sets** available in your workshop.
-3. **Review & Customize Sizes**: The app loads standard sizes by default. You can remove existing entries from the table or add custom sizes using the form at the bottom.
-4. **Download XML**: Click the **Download XML** button to generate and save the `.xml` file.
+The application follows a streamlined **3-Stage Workflow** designed to guide you from standard selection to a production-ready export.
+
+### Stage 1: Select Standard
+- **Choose a Thread Standard**: Use the dropdown at the top to select the desired standard: **Whitworth**, **BA**, **ME**, **BSB**, or **Cycle (BSC/CEI)**.
+- **⚙️ Workshop Inventory**: Click the **Manage Workshop Inventory** button to customize which standards and drill sets are visible in the app, or to add your own custom drill bits and thread designations.
+
+### Stage 2: Refine Configuration
+- **Designation (Series)**: Toggle between specific series (e.g., BSW vs BSF, or BSC vs BSA Motorcycle).
+- **Class (Tolerance)**: Select the desired thread classes (e.g., Close, Medium, Free) to include in the export.
+- **Tap Drill Selection**: Choose your **Workpiece Material** (Hard, Ferrous, Soft) to optimize the target Percentage of Thread Engagement (PTE).
+- **Drill Bit Sets**: Select the drill sets (Metric, Number, Letter, Imperial) available in your workshop to filter the recommended tapping drills.
+
+### Stage 3: Launch Export
+- **Review & Customize**: The **Project Preview** tab shows a live list of the resulting threads and tool selections.
+- **Download XML**: Generate a standard Fusion 360 thread definition file.
+- **Save Workshop Config (JSON)**: Export your entire workshop configuration (including custom tools) as a Fusion 360 Tool Library.
+
+---
+
+## Workshop Configuration Tool
+
+The **Workshop Manager** allows you to tailor the application to your specific tooling and requirements:
+
+- **Inventory Management**: Enable or disable entire thread standards and drill sets to keep the interface clean.
+- **Granular Tool Control**: Toggle individual drill bits or thread designations on/off if you don't have them in stock.
+- **Custom Drills**: Add non-standard drill sizes (e.g., 5.15mm) to the library, and the app will automatically consider them for tapping recommendations.
+- **Custom Threads**: Define your own "wildcard" thread designations for specific projects.
+
+---
+
+## Tool Library Export (JSON)
+
+Beyond standard thread definitions, the app can generate a **Fusion 360 Tool Library (.json)**.
+
+- **Synchronized Data**: The library includes both the recommended drill bits and the corresponding taps, with synchronized cutting data and descriptions.
+- **Workshop Portability**: This file is primarily designed to **save and restore your workshop configuration** within the app.
+- > [!WARNING]
+  > **Tool Library Fidelity**: While the exported JSON can be loaded into Fusion 360's Manufacture workspace, it uses "intelligent defaults" for geometry and cutting data. Always verify these values against your actual tooling before running a machine.
 
 ---
 
@@ -55,9 +85,9 @@ The generator supports a range of historical British thread standards, focusing 
 | **BSW/BSF** | 55° | General engineering, motorcycles (pre-Unified). | ✅ Implemented |
 | **BA** | 47.5° | Electrical fittings, instruments, modeling. | ✅ Implemented |
 | **ME** | 55° | Small scale steam models and carburetors. | ✅ Implemented |
-| **BSC / CEI** | 60° | Bicycles and motorcycles (BSA, Norton, Triumph). | ✅ Implemented |
-| **BSP** | 55° | Plumbing and hydraulic systems. | 📋 Under consideration, but Fusion already has BSP threads. |
 | **BSB** | 55° | Brass lamps, gas fittings, thin-walled tubing. | ✅ Implemented |
+| **BSC / CEI** | 60° | Bicycles and motorcycles (BSA, Norton, Triumph). | ✅ Implemented |
+| **BSP** | 55° | Plumbing and hydraulic systems. | 📋 Under consideration |
 
 ### 1. Whitworth-Form Threads (55° Angle)
 Classic 55-degree flank angle with rounded crests and roots.

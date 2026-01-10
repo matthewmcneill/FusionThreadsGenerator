@@ -2,7 +2,12 @@ import React from 'react';
 import EngagementMeter from './EngagementMeter';
 
 /**
- * Data table component for viewing and managing thread sizes.
+ * @module components/ThreadList
+ * @description Data table component for viewing and managing thread sizes.
+ * Displays calculated geometry, tap drill selection, and validation status for each thread.
+ * 
+ * @exports
+ * - ThreadList (default): React component for size list management.
  * 
  * @param {Object} props
  * @param {Array<Object>} props.threads - List of thread objects with calculated geometry.
@@ -40,6 +45,8 @@ const ThreadList = ({ threads, onRemove, unit }) => {
                     </thead>
                     <tbody>
                         {threads.map((t, idx) => {
+                            // Determine the primary tolerance class for display on this summary list.
+                            // We prioritize Medium/Normal as they are the most common industrial standards.
                             const primaryClass = t.classes['Medium'] || t.classes['Normal'] || Object.values(t.classes)[0];
                             const internalData = primaryClass?.internal;
 

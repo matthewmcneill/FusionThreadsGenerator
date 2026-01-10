@@ -1,6 +1,18 @@
 /**
  * @module utils/toolLibraryGenerator
- * @description Generates and parses Fusion 360 compatible JSON tool libraries.
+ * @description Generates and parses Fusion 360 compatible JSON tool libraries (.json).
+ * Maps internal workshop state to Fusion's CAM tool schema.
+ * 
+ * @exports
+ * - generateToolLibrary: Creates the full JSON structure from workshop config.
+ * - parseToolLibrary: Parses a JSON file into a workshop configuration object.
+ * 
+ * @internal
+ * - generateGuid: utility to create Fusion-friendly IDs.
+ * - createDrillTool: Maps internal drill data to Fusion geometry schema.
+ * - createTapTool: Maps internal thread data to Fusion tap schema.
+ * - importDrill: Logic for matching external JSON tools to internal assets.
+ * - importTap: Logic for matching external JSON taps to internal presets.
  */
 
 import { NUMBER_DRILLS, LETTER_DRILLS, METRIC_DRILLS, FRACTIONAL_DRILLS } from './drills';
@@ -67,7 +79,8 @@ export const generateToolLibrary = (workshop, allCalculatedThreads = {}, metadat
 };
 
 /**
- * Creates a unique GUID for a tool.
+ * Creates a unique GUID for a tool using the standard RFC4122 v4 template.
+ * Fusion 360 requires unique GUIDs to avoid tool collisions.
  * @returns {string}
  */
 const generateGuid = () => {
@@ -77,13 +90,20 @@ const generateGuid = () => {
     });
 };
 
+/**
+ * @internal
+ * Creates a Fusion 360 Drill tool object with scaled geometry.
+ * @param {Object} drill - Internal drill representation.
+ * @returns {Object} Fusion 360 tool object.
+ */
 const createDrillTool = (drill) => {
     const diameterMm = drill.sizeMm || (drill.size * 25.4);
 
-    // Scale geometry based on diameter
-    const lcf = Math.max(25, diameterMm * 3); // Cutting length ~3x diameter
-    const lb = lcf + Math.max(5, diameterMm * 0.5); // Length below holder
-    const oal = lb + 25; // Overall length
+    // Fusion 360 requires valid physical geometry to import a tool.
+    // We scale everything based on the drill diameter to ensure a "sane" looking tool.
+    const lcf = Math.max(25, diameterMm * 3); // Cutting flute length ~3x diameter
+    const lb = lcf + Math.max(5, diameterMm * 0.5); // Length below holder (slightly longer than flutes)
+    const oal = lb + 25; // Overall length (includes shank)
 
     return {
         "guid": generateGuid(),
@@ -115,13 +135,20 @@ const createDrillTool = (drill) => {
     };
 };
 
+/**
+ * @internal
+ * Creates a Fusion 360 Tap tool object with scaled geometry and synchronized feed data.
+ * @param {Object} thread - Internal thread representation.
+ * @param {string} stdId - Standard identifier (e.g., 'WHITWORTH').
+ * @returns {Object} Fusion 360 tool object.
+ */
 const createTapTool = (thread, stdId) => {
     // FIX: Use thread.basic.major if available, otherwise fallback to size calculation
     const basicMajor = thread.basic?.major;
     const diameterMm = basicMajor !== undefined ? basicMajor : (thread.sizeMm || (thread.size * 25.4));
     const pitchMm = thread.pitch || (25.4 / thread.tpi);
 
-    // Scale geometry based on diameter
+    // Scaling tap geometry for Fusion 360 compatibility.
     const lcf = Math.max(20, diameterMm * 2.5);
     const lb = lcf + Math.max(10, diameterMm * 1);
     const oal = lb + 30;
@@ -184,18 +211,17 @@ export const parseToolLibrary = (jsonStr, strategy, currentWorkshop, allPresets 
             }
             : JSON.parse(JSON.stringify(currentWorkshop));
 
-        // In overwrite mode, we want 100% fidelity. 
-        // We'll pre-fill disabled lists with EVERYTHING we know about,
-        // and then remove them as we find them in the file.
+        // Overwrite strategy ensures that after import, the workshop configuration 
+        // EXCEPT the metadata matches the file exactly.
+        // We pre-fill disabled lists with EVERYTHING we know about in all sets/standards,
+        // then we'll remove them from the disabled list if they are present in the file.
         if (strategy === 'overwrite') {
-            // For each standard we have presets for, assume it's disabled unless found
             Object.keys(allPresets).forEach(stdId => {
                 newWorkshop.disabledDesignations[stdId] = allPresets[stdId].map(p => p.designation);
                 newWorkshop.customDesignations[stdId] = [];
             });
 
-            // For drills, we'll enable sets as we find them. 
-            // We'll pre-fill disabledDrills with all standard bits across all sets.
+            // For drills, we start with all standard bits disabled.
             const allSets = {
                 'Metric': METRIC_DRILLS,
                 'Number': NUMBER_DRILLS,
@@ -238,6 +264,13 @@ export const parseToolLibrary = (jsonStr, strategy, currentWorkshop, allPresets 
     }
 };
 
+/**
+ * @internal
+ * Imports a drill tool into the workshop, matching against standard sets or adding as custom.
+ * @param {Object} tool - Fusion 360 tool object.
+ * @param {Object} workshop - Target workshop configuration.
+ * @returns {boolean} True if processed.
+ */
 const importDrill = (tool, workshop) => {
     const diameterMm = tool.geometry?.DC;
     if (diameterMm === undefined) return false;
@@ -283,6 +316,14 @@ const importDrill = (tool, workshop) => {
     return true;
 };
 
+/**
+ * @internal
+ * Imports a tap tool into the workshop, matching against presets or adding as custom.
+ * @param {Object} tool - Fusion 360 tool object.
+ * @param {Object} workshop - Target workshop configuration.
+ * @param {Object} allPresets - Map of all standard presets.
+ * @returns {boolean} True if processed.
+ */
 const importTap = (tool, workshop, allPresets) => {
     const description = tool.description || "";
     // Format: "Designation (StandardId) [Custom]"
