@@ -16,6 +16,7 @@ import React, { useState, useEffect } from 'react';
 import ThreadForm from './components/ThreadForm';
 import ThreadList from './components/ThreadList';
 import ThreadPreview from './components/ThreadPreview';
+import ThreadChart from './components/ThreadChart';
 import WorkshopGuide from './components/WorkshopGuide';
 import WorkshopManager from './components/WorkshopManager';
 import {
@@ -303,7 +304,7 @@ function App() {
         </p>
 
         {/* Persistent Configuration Panel (Visible for all tabs) */}
-        {(activeTab === 'config' || activeTab === 'preview' || activeTab === 'guide') && (
+        {(activeTab === 'config' || activeTab === 'preview' || activeTab === 'guide' || activeTab === 'chart') && (
           <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="bg-slate-800/40 backdrop-blur-xl rounded-3xl border border-slate-700/50 shadow-2xl overflow-hidden mb-8">
               <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-slate-700/50">
@@ -517,13 +518,19 @@ function App() {
             className={`px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${activeTab === 'guide' ? 'bg-amber-500 text-slate-950 shadow-[0_0_20px_rgba(245,158,11,0.4)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
             onClick={() => setActiveTab('guide')}
           >
-            Workshop Guide
+            Specification Guide
           </button>
           <button
             className={`px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${activeTab === 'preview' ? 'bg-sky-500 text-slate-950 shadow-[0_0_20px_rgba(56,189,248,0.4)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
             onClick={() => setActiveTab('preview')}
           >
             Project Preview
+          </button>
+          <button
+            className={`px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${activeTab === 'chart' ? 'bg-indigo-500 text-slate-950 shadow-[0_0_20px_rgba(99,102,241,0.4)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
+            onClick={() => setActiveTab('chart')}
+          >
+            Workshop Chart
           </button>
         </div>
 
@@ -534,6 +541,20 @@ function App() {
               threads={threads}
               selectedClasses={selectedClasses}
               unit={standard.unit}
+              standardName={standard.name}
+              material={material}
+            />
+          </div>
+        )}
+
+        {activeTab === 'chart' && (
+          <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <ThreadChart
+              threads={threads}
+              selectedClasses={selectedClasses}
+              unit={standard.unit}
+              standardName={standard.name}
+              material={material}
             />
           </div>
         )}

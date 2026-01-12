@@ -17,7 +17,7 @@ import EngagementMeter from './EngagementMeter';
  * @param {Array<string>} props.selectedClasses - Tolerance classes to include.
  * @param {string} props.unit - Base unit ('in' or 'mm').
  */
-const ThreadPreview = ({ threads, selectedClasses, unit }) => {
+const ThreadPreview = ({ threads, selectedClasses, unit, standardName, material }) => {
     const [copied, setCopied] = useState(false);
     // Track hierarchical hover state (Size -> Thread -> Gender -> Class)
     const [hoveredPath, setHoveredPath] = useState({ size: null, designation: null, gender: null, cls: null });
