@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { generatePrintableHtml, triggerPrint } from '../utils/printHelpers';
+import ThreadChartTable from './ThreadChartTable';
 
 /**
  * @module components/ThreadChart
@@ -8,9 +9,6 @@ import { generatePrintableHtml, triggerPrint } from '../utils/printHelpers';
 const ThreadChart = ({ threads, selectedClasses, unit, standardName, material }) => {
     const [includeInternal, setIncludeInternal] = useState(true);
     const [includeExternal, setIncludeExternal] = useState(false);
-
-    const isImperial = unit === 'in';
-    const f = (val) => (typeof val === 'number' ? val.toFixed(4) : '-');
 
     const handlePrint = () => {
         const html = generatePrintableHtml({
@@ -88,102 +86,14 @@ const ThreadChart = ({ threads, selectedClasses, unit, standardName, material })
                 </div>
 
                 <div className="p-4 overflow-x-auto">
-                    <table className="w-full text-left border-collapse table-fixed">
-                        <thead>
-                            <tr className="border-b-2 border-slate-900">
-                                <th className="w-[15%] px-2 py-2 text-[10px] font-semibold text-slate-900 uppercase tracking-wider">Size / Designation</th>
-                                <th className="w-[8%] px-2 py-2 text-[10px] font-semibold text-slate-900 uppercase tracking-wider text-center">{isImperial ? 'TPI' : 'Pitch'}</th>
-                                <th className="w-[8%] px-2 py-2 text-[10px] font-semibold text-slate-900 uppercase tracking-wider text-center">Gender</th>
-                                <th className="w-[10%] px-2 py-2 text-[10px] font-semibold text-slate-900 uppercase tracking-wider text-right">Major Dia</th>
-                                <th className="w-[24%] px-2 py-2 text-[10px] font-semibold text-slate-900 uppercase tracking-wider pl-4">Tap Drill (Tool)</th>
-                                <th className="w-[35%] px-2 py-2 text-[10px] font-semibold text-slate-900 uppercase tracking-wider pl-4">Workshop Advisory</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {Object.entries(threads.reduce((acc, t) => {
-                                const series = t.series || 'Other';
-                                if (!acc[series]) acc[series] = [];
-                                acc[series].push(t);
-                                return acc;
-                            }, {})).map(([seriesName, seriesThreads]) => (
-                                <React.Fragment key={seriesName}>
-                                    {/* Series Header Row */}
-                                    <tr className="bg-slate-900 text-white">
-                                        <td colSpan="6" className="px-2 py-1 text-[8px] font-black uppercase tracking-[0.2em]">
-                                            {seriesName} Series
-                                        </td>
-                                    </tr>
-
-                                    {seriesThreads.map((thread) => {
-                                        const activeClasses = selectedClasses.filter(c => thread.classes[c]);
-
-                                        return ['External', 'Internal'].map((gender) => {
-                                            if (gender === 'Internal' && !includeInternal) return null;
-                                            if (gender === 'External' && !includeExternal) return null;
-
-                                            const genderClasses = activeClasses.filter(cls => thread.classes[cls][gender.toLowerCase()]);
-                                            if (genderClasses.length === 0) return null;
-
-                                            const cls = genderClasses[0];
-                                            const c = thread.classes[cls];
-                                            const data = gender === 'External' ? c.external : c.internal;
-
-                                            // Advisory Logic (keep consistent with printHelpers)
-                                            let advisoryText = '';
-                                            let isDanger = false;
-                                            if (gender === 'Internal' && data.tapDrillName) {
-                                                const engagement = Math.round(data.tapDrillValidation?.engagement || 0);
-                                                const status = (data.tapDrillValidation?.status || '').toLowerCase();
-                                                isDanger = status.includes('danger');
-                                                if (status === 'warning-loose') advisoryText = `Caution: Loose Fit (${engagement}% PTE)`;
-                                                else if (status === 'warning-tight') advisoryText = `Caution: tight fit (${engagement}% PTE)`;
-                                                else if (status.includes('danger-loose') || status.includes('danger-very-loose')) advisoryText = `Danger: loose, risk of stripping (${engagement}% PTE)`;
-                                                else if (status.includes('danger-tight')) advisoryText = `Danger: tight, risk of tap breaking (${engagement}% PTE)`;
-                                            }
-
-                                            return (
-                                                <tr key={`${thread.designation}-${gender}`} className="group hover:bg-slate-50 transition-colors">
-                                                    <td className="px-2 py-1.5 whitespace-nowrap">
-                                                        <div className="flex flex-col">
-                                                            <span className="text-slate-900 font-medium text-xs">{thread.designation}</span>
-                                                            <span className="text-[10px] font-medium text-slate-400 uppercase leading-none">{thread.nominalFraction || thread.size}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-2 py-1.5 font-mono text-slate-400 font-medium text-xs text-center">
-                                                        {isImperial ? thread.tpi : f(thread.basic.p)}
-                                                    </td>
-                                                    <td className="px-2 py-1.5 text-center">
-                                                        <span className={`text-[8px] font-semibold uppercase px-1.5 py-0.5 rounded ${gender === 'External' ? 'text-slate-400' : 'text-slate-600'}`}>
-                                                            {gender}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-2 py-1.5 text-right font-mono text-slate-900 font-medium text-xs">
-                                                        {f(data.major)}
-                                                    </td>
-                                                    <td className="px-2 py-1.5 pl-4">
-                                                        {gender === 'Internal' && data.tapDrillName ? (
-                                                            <span className="text-slate-900 font-semibold text-xs whitespace-nowrap">
-                                                                {data.tapDrillName} <span className="font-normal text-slate-400">{data.tapDrillToolSize ? `(${f(data.tapDrillToolSize)})` : ''}</span>
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-slate-200 px-4 text-xs">—</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-2 py-1.5 pl-4">
-                                                        {advisoryText && (
-                                                            <span className={`text-[10px] uppercase tracking-tight ${isDanger ? 'font-semibold text-rose-600' : 'font-normal text-slate-400'}`}>
-                                                                {advisoryText}
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        });
-                                    })}
-                                </React.Fragment>
-                            ))}
-                        </tbody>
-                    </table>
+                    <ThreadChartTable
+                        threads={threads}
+                        selectedClasses={selectedClasses}
+                        unit={unit}
+                        includeInternal={includeInternal}
+                        includeExternal={includeExternal}
+                        isPrint={false}
+                    />
                 </div>
 
                 {!includeInternal && !includeExternal && (
