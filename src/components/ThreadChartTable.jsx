@@ -35,7 +35,7 @@ const ThreadChartTable = ({
                         {/* Series Header Row */}
                         <tr className={isPrint ? 'series-header-row' : 'bg-slate-900 text-white'}>
                             <td colSpan="6" className={isPrint ? 'series-header-td' : 'px-2 py-1 text-[8px] font-black uppercase tracking-[0.2em]'}>
-                                {seriesName} Series
+                                {seriesName} Series {seriesThreads[0]?.angle ? `(${seriesThreads[0].angle}°)` : ''}
                             </td>
                         </tr>
 

@@ -133,7 +133,7 @@ function App() {
     const ctd = input.ctd || (std.getCTD ? std.getCTD(input) : input.designation);
     const series = input.series || (std.getSeries ? std.getSeries(input) : std.series[0]);
 
-    return { ...input, ...calc, ctd, series };
+    return { ...input, ...calc, ctd, series, angle: std.angle };
   };
 
   /**
