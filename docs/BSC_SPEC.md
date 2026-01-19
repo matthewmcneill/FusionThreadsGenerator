@@ -80,3 +80,9 @@ Based on standard British metrology for cycle threads:
 ## 5. References
 1. **BS 811:1950**: British Standard for Cycle Threads.
 2. **Cycle Engineers’ Institute (CEI)**: Original 1902 Specification.
+
+---
+
+## 6. Manual Lathe Threading
+
+For technical details on single-point threading on a manual lathe, including compound slide angles and infeed calculations specific to the 60° cycle thread form, refer to the [Manual Lathe Threading Guide](THREAD_CUTTING_GUIDE.md).

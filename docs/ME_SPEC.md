@@ -104,3 +104,9 @@ The ME thread remains the "gold standard" in the hobby of live steam model engin
 
 ---
 *Sources: SMEE Standards, BSI BS 84 (General Whitworth), various model engineering reference tables.*
+
+---
+
+## 6. Manual Lathe Threading
+
+For technical details on single-point threading on a manual lathe, including compound slide angles and infeed calculations specific to the 55° Whitworth form used in model engineering, refer to the [Manual Lathe Threading Guide](THREAD_CUTTING_GUIDE.md).

@@ -49,6 +49,7 @@ export const BSBStandard = {
         return `${sizeStr} - 26 BSB`;
     },
     getSeries: () => 'BSB',
+    defaultMaterial: 'soft',
     defaultDrillSets: ['Number', 'Letter', 'Imperial'],
     docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/BSB_SPEC.md',
     seriesAnchor: '#4-derived-reference-values-26-tpi',

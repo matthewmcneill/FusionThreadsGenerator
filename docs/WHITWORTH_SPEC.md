@@ -186,6 +186,10 @@ The table displays both the recommended **Shop Drill Name** (e.g., `13/64"`, `#7
 | **7/16** | U (0.3680) | 25/64 (0.3906) |
 | **1/2** | 27/64 (0.4219) | 29/64 (0.4531) |
 
+## 6. External Threading (Turning)
+
+For technical details on single-point threading on a manual lathe, including compound slide angles and infeed calculations specific to the 55° Whitworth form, refer to the [Manual Lathe Threading Guide](THREAD_CUTTING_GUIDE.md).
+
 ### 6.1 Standard Tolerance Classes (BS 84)
 The generator provides the standard tolerance grades defined in BS 84:2007. Note that the naming conventions differ between internal (nut) and external (bolt) threads:
 

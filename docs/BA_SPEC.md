@@ -90,3 +90,7 @@ For detailed formulas and the composition of our modeled drill sets (Metric and 
 | **8 BA** | 0.43 | 1.845 | 1.85 mm (#49) |
 | **10 BA** | 0.35 | 1.411 | 1.4 mm (#54) |
 | **12 BA** | 0.28 | 1.069 | 1.05 mm (#58) |
+
+## 5. Manual Lathe Threading
+
+For technical details on single-point threading on a manual lathe, including compound slide angles and infeed calculations specific to the 47.5° BA form, refer to the [Manual Lathe Threading Guide](THREAD_CUTTING_GUIDE.md).

@@ -74,7 +74,7 @@ function App() {
     getStdSetting(standard.id, 'drillSets', standard.defaultDrillSets)
   );
   const [material, setMaterial] = useState(() =>
-    getStdSetting(standard.id, 'material', config.preferences.material)
+    getStdSetting(standard.id, 'material', standard.defaultMaterial || config.preferences.material)
   );
 
   const [activeTab, setActiveTab] = useState('preview'); // Default to preview now
@@ -99,7 +99,9 @@ function App() {
    */
   const calculateThreadItem = (std, input, drillSets = null) => {
     let calc;
-    const activeDrillSets = drillSets || selectedDrillSets;
+    const activeDrillSets = (drillSets || selectedDrillSets).filter(s =>
+      config.workshop.enabledDrillSets.includes(s)
+    );
 
     // 1. Prepare common arguments for calculator modules.
     // Each standard (Whitworth, BA, etc.) has a different calculator function.
@@ -117,13 +119,13 @@ function App() {
     if (std.id === 'WHITWORTH') {
       calc = calculateWhitworth(...args);
     } else if (std.id === 'ME') {
-      calc = calculateME(input.size, input.tpi, activeDrillSets, material, config.workshop.customDrills, config.workshop.disabledSpecificTools);
+      calc = calculateME(input.size, input.tpi, activeDrillSets, material, config.workshop.customDrills, config.workshop.disabledDrills);
     } else if (std.id === 'BSC') {
-      calc = calculateBSC(input.size, input.tpi, activeDrillSets, null, material, config.workshop.customDrills, config.workshop.disabledSpecificTools);
+      calc = calculateBSC(input.size, input.tpi, activeDrillSets, null, material, config.workshop.customDrills, config.workshop.disabledDrills);
     } else if (std.id === 'BSB') {
-      calc = calculateBSB(input.size, input.tpi, activeDrillSets, material, config.workshop.customDrills, config.workshop.disabledSpecificTools);
+      calc = calculateBSB(input.size, input.tpi, activeDrillSets, material, config.workshop.customDrills, config.workshop.disabledDrills);
     } else {
-      calc = calculateBA(input.size, activeDrillSets, material, config.workshop.customDrills, config.workshop.disabledSpecificTools);
+      calc = calculateBA(input.size, activeDrillSets, material, config.workshop.customDrills, config.workshop.disabledDrills);
     }
 
     if (!calc) return null;
@@ -191,6 +193,26 @@ function App() {
   };
 
   /**
+   * Sync active preferences to per-standard settings in global config.
+   * This ensures that when we switch back to a standard, its preferences are restored.
+   */
+  useEffect(() => {
+    const stdId = standard.id;
+    updateGlobalConfig('preferences', {
+      currentStandardId: stdId,
+      standardSettings: {
+        ...config.preferences.standardSettings,
+        [stdId]: {
+          drillSets: selectedDrillSets,
+          material: material,
+          series: selectedSeries,
+          classes: selectedClasses
+        }
+      }
+    });
+  }, [standard.id, selectedDrillSets, material, selectedSeries, selectedClasses]);
+
+  /**
    * Handles user selection of a different thread standard.
    * @param {string} standardId - Short code for the standard.
    */
@@ -206,7 +228,7 @@ function App() {
 
     // Switch to this standard's saved preferences
     const savedSets = getStdSetting(newStd.id, 'drillSets', newStd.defaultDrillSets);
-    const savedMaterial = getStdSetting(newStd.id, 'material', config.preferences.material);
+    const savedMaterial = getStdSetting(newStd.id, 'material', newStd.defaultMaterial || config.preferences.material);
     const savedSeries = getStdSetting(newStd.id, 'series', newStd.series);
     const savedClasses = getStdSetting(newStd.id, 'classes', newStd.classes);
 
@@ -524,7 +546,7 @@ function App() {
             className={`px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${activeTab === 'preview' ? 'bg-sky-500 text-slate-950 shadow-[0_0_20px_rgba(56,189,248,0.4)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}
             onClick={() => setActiveTab('preview')}
           >
-            Project Preview
+            Thread Preview
           </button>
           <button
             className={`px-8 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${activeTab === 'chart' ? 'bg-indigo-500 text-slate-950 shadow-[0_0_20px_rgba(99,102,241,0.4)]' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}

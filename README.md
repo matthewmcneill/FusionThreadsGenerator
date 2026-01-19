@@ -121,6 +121,7 @@ Classic 55-degree flank angle with rounded crests and roots.
 
 ## Technical Documentation & Resources
 - [BRITISH_THREADING_OVERVIEW.md](docs/BRITISH_THREADING_OVERVIEW.md) - A historical and technical exploration of historical British threading standards, with a focus on their usage for the workshop engineer.
+- [THREAD_CUTTING_GUIDE.md](docs/THREAD_CUTTING_GUIDE.md) - Technical guide for manual lathe threading, including infeed strategies (plunge vs. compound), BSW-specific trigonometry, and calculations.
 - [IMPLEMENTATION_OVERVIEW.md](docs/IMPLEMENTATION_OVERVIEW.md) - Software architecture and developer guide.
 
 ---

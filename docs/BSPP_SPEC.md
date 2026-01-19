@@ -110,3 +110,9 @@ Where:
 | G 1 1/4 | 11 | 41.910 | 40.431 | 38.952 |
 | G 1 1/2 | 11 | 47.803 | 46.324 | 44.845 |
 | G 2 | 11 | 59.614 | 58.135 | 56.656 |
+
+---
+
+## 7. Manual Lathe Threading
+
+For technical details on single-point threading on a manual lathe, including compound slide angles and infeed calculations specific to the 55° Whitworth form used in the BSPP standard, refer to the [Manual Lathe Threading Guide](THREAD_CUTTING_GUIDE.md).

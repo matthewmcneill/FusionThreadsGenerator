@@ -263,6 +263,9 @@ Finally, in 1965, the British government officially adopted the **ISO Metric** s
 
 ## **9\. Practical Workshop Mastery**
 
+> [!TIP]
+> **Lathe Threading**: For technical details on manual lathe setup, compound slide angles, and infeed calculations, refer to the [Manual Lathe Threading Guide](THREAD_CUTTING_GUIDE.md).
+
 For the modern restorer, home machinist, or vintage car enthusiast, the presence of these incompatible standards is a primary challenge. Incorrect identification leads to stripped threads, rounded nuts, and compromised safety.
 
 ### **9.1 Identification Techniques**

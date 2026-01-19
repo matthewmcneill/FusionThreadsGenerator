@@ -3,12 +3,21 @@ import { generatePrintableHtml, triggerPrint } from '../utils/printHelpers';
 import ThreadChartTable from './ThreadChartTable';
 
 /**
- * @module components/ThreadChart
- * @description Provides an interactive preview and configuration for printable workshop charts.
+ * @component ThreadChart
+ * @description Provides an interactive preview and configuration panel for printable workshop charts.
+ * Allows users to toggle between internal/external threading data and triggers the 
+ * print engine to generate high-fidelity physical charts.
+ * 
+ * @param {Object} props - Component properties.
+ * @param {Array<Object>} props.threads - Collection of thread objects to display.
+ * @param {Array<string>} props.selectedClasses - Active tolerance classes.
+ * @param {('in'|'mm')} props.unit - Measurement system.
+ * @param {string} props.standardName - Friendly name of the thread standard (e.g. "BSW Series").
+ * @param {string} props.material - Substrate material name for context.
  */
 const ThreadChart = ({ threads, selectedClasses, unit, standardName, material }) => {
     const [includeInternal, setIncludeInternal] = useState(true);
-    const [includeExternal, setIncludeExternal] = useState(false);
+    const [includeExternal, setIncludeExternal] = useState(true);
 
     const handlePrint = () => {
         const html = generatePrintableHtml({

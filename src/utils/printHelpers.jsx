@@ -8,8 +8,24 @@ import ThreadChartTable from '../components/ThreadChartTable';
  */
 
 /**
- * Generates the HTML content for a printable workshop thread chart.
- * Focused on high information density, clean typography, and professional clarity.
+ * Generates the full HTML/CSS document for a printable workshop thread chart.
+ * This function uses `ReactDOMServer.renderToString` to inject the `ThreadChartTable` 
+ * into a specialized print layout.
+ * 
+ * Features:
+ * - High density typography optimized for shop floor use.
+ * - Dynamic standard name and material headers.
+ * - Embedded CSS with @page rules for consistent printing.
+ * 
+ * @param {Object} options - Generation options.
+ * @param {Array<Object>} options.threads - Collection of threads to include.
+ * @param {Array<string>} options.selectedClasses - Active tolerance classes.
+ * @param {string} options.unit - Measurement unit ('in' or 'mm').
+ * @param {string} options.standardName - Title of the thread standard (e.g., 'BSW').
+ * @param {string} options.material - Selected substrate material for context.
+ * @param {boolean} [options.includeInternal=true] - Include the internal threading section.
+ * @param {boolean} [options.includeExternal=false] - Include the external threading section.
+ * @returns {string} Fully formed HTML document string.
  */
 export const generatePrintableHtml = ({
     threads,
@@ -63,44 +79,56 @@ export const generatePrintableHtml = ({
         
         table { width: 100%; border-collapse: collapse; }
         th {
-            text-align: left;
-            padding: 2mm 1mm;
+            text-align: center;
+            padding: 1.5mm 1mm;
             font-size: 7.5pt;
             text-transform: uppercase;
-            font-weight: 600;
-            border-bottom: 2pt solid #000;
+            font-weight: 700;
+            border-bottom: 1pt solid #000;
             color: #000;
+            border-left: 0.5pt solid #ddd;
         }
+        .macro-header-th {
+            border-bottom: 2pt solid #000 !important;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            font-size: 8pt;
+        }
+        .size-col, .pitch-col { text-align: left; border-left: none; }
+        
+        /* Section Dividers */
+        .section-start { border-left: 2pt solid #000 !important; }
+        .section-end { border-right: 2pt solid #000 !important; }
+        
         td {
-            padding: 1.5mm 1mm;
-            border-bottom: 1pt solid #eee;
+            padding: 1.2mm 1mm;
+            border-bottom: 0.5pt solid #eee;
             vertical-align: middle;
+            border-left: 0.5pt solid #f5f5f5;
         }
+        td:first-child { border-left: none; }
         
         .series-header-row { background: #000 !important; color: #fff !important; }
-        .series-header-td { padding: 1mm 1.5mm; font-weight: 900; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 2px; }
+        .series-header-td { padding: 1mm 1.5mm; font-weight: 900; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 2px; border: none; }
 
-        .size-stack { display: flex; flex-direction: column; line-height: 1; }
-        .size-designation { font-weight: 600; font-size: 9pt; }
-        .size-nominal { font-size: 7.5pt; color: #666; text-transform: uppercase; font-weight: 500; }
+        .size-stack { display: flex; flex-direction: column; line-height: 1; text-align: left; }
+        .size-designation { font-weight: 700; font-size: 9pt; }
+        .size-nominal { font-size: 7pt; color: #444; text-transform: uppercase; font-weight: 500; }
         
-        .pitch-col { text-align: center; font-family: ui-monospace, monospace; color: #666; font-weight: 500; }
-        .gender-col { font-size: 7pt; text-transform: uppercase; font-weight: 700; text-align: center; color: #666; }
-        .data-col { text-align: right; font-family: ui-monospace, monospace; font-size: 8.5pt; font-weight: 500; }
-        .drill-col { padding-left: 4mm; }
-        .drill-name { font-weight: 700; }
-        .drill-decimal { color: #888; font-size: 7.5pt; font-weight: 400; }
-        .advisory-col { padding-left: 4mm; font-size: 7.5pt; text-transform: uppercase; }
+        .pitch-col { text-align: center; font-family: ui-monospace, monospace; color: #444; font-weight: 700; border-left: none; }
+        .data-col { text-align: center; font-family: ui-monospace, monospace; font-size: 8.5pt; font-weight: 500; }
+        .drill-col { text-align: center; }
+        .drill-name { font-weight: 700; font-size: 8.5pt; display: block; }
+        .drill-decimal { color: #666; font-size: 7pt; font-weight: 400; display: block; }
+        .advisory-col { text-align: center; font-size: 6.5pt; text-transform: uppercase; font-weight: 700; line-height: 1; }
         
-        .status-danger { color: #e11d48; font-weight: 700; }
-        .status-caution { color: #64748b; }
+        .status-danger { color: #000; border: 1pt solid #000; padding: 0.2mm 0.5mm; }
         
-        footer { margin-top: 8mm; font-size: 7pt; color: #94a3b8; text-align: center; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        footer { margin-top: 8mm; font-size: 7pt; color: #666; text-align: center; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
 
         @media print {
             body { -webkit-print-color-adjust: exact; }
             .series-header-row { background-color: #000 !important; color: #fff !important; }
-            .status-danger { color: #e11d48 !important; }
         }
     </style>
 </head>
@@ -124,6 +152,13 @@ export const generatePrintableHtml = ({
 `;
 };
 
+/**
+ * Opens a new browser window, writes the provided HTML, and triggers the print dialog.
+ * Includes a safety fallback via `window.alert` if popups are blocked.
+ * 
+ * @param {string} html - The fully formed HTML content to print.
+ * @returns {void}
+ */
 export const triggerPrint = (html) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) {

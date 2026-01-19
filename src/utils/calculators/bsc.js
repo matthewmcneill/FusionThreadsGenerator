@@ -51,6 +51,7 @@ export const BSCStandard = {
         return `${sizeStr} - ${item.tpi} ${suffix}`;
     },
     getSeries: (item) => item.tpi === 20 ? 'BSA' : 'Standard',
+    defaultMaterial: 'ferrous',
     defaultDrillSets: ['Number', 'Letter', 'Imperial'],
     docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/BSC_SPEC.md',
     seriesAnchor: '#3-thread-designations-series',

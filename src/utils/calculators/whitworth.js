@@ -50,6 +50,7 @@ export const WhitworthStandard = {
         return `${base} - ${item.tpi} ${suffix}`;
     },
     getSeries: (item) => item.designation.includes('BSW') ? 'BSW' : 'BSF',
+    defaultMaterial: 'ferrous',
     defaultDrillSets: ['Number', 'Letter', 'Imperial'],
     docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/WHITWORTH_SPEC.md',
     seriesAnchor: '#5-standard-size-reference-tables',

@@ -44,6 +44,7 @@ export const BAStandard = {
     classes: ['Close', 'Normal'],
     getCTD: (item) => item.designation,
     getSeries: () => 'BA',
+    defaultMaterial: 'ferrous',
     defaultDrillSets: ['Metric'],
     docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/BA_SPEC.md',
     seriesAnchor: '#2-basic-dimensions-bs-931951',

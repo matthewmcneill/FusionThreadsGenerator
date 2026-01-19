@@ -55,6 +55,7 @@ export const MEStandard = {
         if (item.tpi === 26) return 'BSB (26 TPI)';
         return 'Medium (32 TPI)';
     },
+    defaultMaterial: 'ferrous',
     defaultDrillSets: ['Number', 'Letter', 'Imperial'],
     docUrl: 'https://github.com/matthewmcneill/FusionThreadsGenerator/blob/main/docs/ME_SPEC.md',
     seriesAnchor: '#4-common-mebsb-thread-sizes-and-tap-drill-data',

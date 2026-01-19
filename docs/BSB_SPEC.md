@@ -107,3 +107,9 @@ It is critical to distinguish BSB from other 26 TPI standards to avoid structura
 1. **BS 84:1956/2007**: Parallel Screw Threads of Whitworth Form.
 2. **Machinery's Handbook**: Technical Reference for British Thread Systems.
 3. *A Comprehensive Treatise on the British Standard Brass (BSB) Thread Specification: Geometry, Derivation, and Metrology*.
+
+---
+
+## 8. Manual Lathe Threading
+
+For technical details on single-point threading on a manual lathe, including compound slide angles and infeed calculations specific to the 55° Whitworth form used in the BSB standard, refer to the [Manual Lathe Threading Guide](THREAD_CUTTING_GUIDE.md).
