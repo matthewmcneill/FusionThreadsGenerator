@@ -7,6 +7,10 @@ This document outlines the planned future features and improvements for the Fusi
 - **Workshop Configuration Tool**: Persistent state management for inventories and custom tools.
 - **Tool Library Export (JSON)**: Fusion 360 compatible JSON export with synchronized cutting data.
 - **New Standards**: British Standard Brass (BSB) and British Standard Cycle (BSC/CEI).
+- **Unified Thread Charts**: Synchronized browser preview and high-fidelity print output.
+- **Metal & Material Persistence**: Persistent material selection and default settings per thread standard.
+- **Well-Formed Data Export**: Columnar export format for seamless spreadsheet integration.
+- **External Thread Integration**: Comprehensive integration of external thread parameters (Blank Diameter, Compound Angle/Depth) into the core library.
 
 ## Future Implementation Ideas
 
@@ -24,7 +28,7 @@ This document outlines the planned future features and improvements for the Fusi
 - [ ] **HSM Edit Integration**: Direct HSMEdit integration for tool library verification.
 
 ### 4. Documentation & Reference
-- [ ] **Thread Charts**: Export nicely formatted, printable PDF thread charts.
+- [x] **Thread Charts**: Export nicely formatted, printable thread charts.
 - [ ] **Visual Reference**: High-quality workshop wall layouts.
 
 ---
@@ -40,7 +44,6 @@ Planned additions include:
 
 ## TODO: Improvements & Fixes
 
-### Data Export Cleanup
-- [ ] **Nominal Size Column**: Add a simple numerical column for nominal size to the export format.
-- [ ] **Field Splitting**: Split fields with ranges (e.g., Min/Max) into separate columns.
-- [ ] **Copy Button Formatting**: Clean up tab-separated format for better spreadsheet compatibility.
+### UI/UX
+- [ ] **Search Refinement**: Add fuzzy search to thread and drill selectors.
+- [ ] **Dark Mode Sync**: Ensure all print outputs respect system dark/light mode preferences (currently optimized for light/print).
