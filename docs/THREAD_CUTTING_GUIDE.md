@@ -84,7 +84,7 @@ A hybrid solution used when changing the compound angle is difficult. The compou
 
 ## 7. Recommended Compound Angles (Summary)
 
-To account for precision limits, this tool uses a **Clearance-Floor Algorithm** to snap to 0.5° increments.
+To account for precision limits, this tool uses a **Clearance-Floor Algorithm** to snap to 0.5° increments. This is implemented in [externalThreadGeometry.js](../src/utils/externalThreadGeometry.js).
 
 **The Algorithm**:
 $$\theta_{compound} = \frac{\lfloor(\frac{\theta_{included}}{2} - 0.5) \times 2\rfloor}{2}$$
@@ -97,7 +97,7 @@ $$\theta_{compound} = \frac{\lfloor(\frac{\theta_{included}}{2} - 0.5) \times 2\
 
 ## 8. Infeed Calculations
 
-When using the angular infeed method, the dial on the compound slide does not represent the direct radial depth (the reduction in radius). Instead, it represents the distance moved along the hypotenuse.
+When using the angular infeed method, the dial on the compound slide does not represent the direct radial depth (the reduction in radius). Instead, it represents the distance moved along the hypotenuse. The application automates these calculations during thread data generation.
 
 ### Formulas
 - **Radial Depth ($d$)**: The total depth from crest to root, measured perpendicular to the axis.

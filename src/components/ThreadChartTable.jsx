@@ -1,5 +1,5 @@
 import React from 'react';
-import { f, getWorkshopAdvisory, groupThreadsBySeries, getThreadingData } from '../utils/chartLogic';
+import { f, getWorkshopAdvisory, groupThreadsBySeries } from '../utils/chartLogic';
 
 /**
  * @component ThreadChartTable
@@ -31,12 +31,12 @@ const ThreadChartTable = ({
     const groupedBySeries = groupThreadsBySeries(threads);
 
     return (
-        <table className={`w-full text-left border-collapse ${isPrint ? 'print-table' : 'preview-table'}`}>
+        <table className={`w-full text-left border-collapse tabular-nums ${isPrint ? 'print-table' : 'preview-table'}`}>
             <thead className={isPrint ? '' : 'bg-slate-50'}>
                 {/* Row 1: Macro Headers */}
                 <tr className={isPrint ? 'print-header-row' : 'border-b border-slate-200'}>
-                    <th rowSpan="2" className={isPrint ? 'print-th size-col' : 'w-[12%] px-2 py-3 text-[10px] font-bold text-slate-800 uppercase tracking-wider'}>Size / Designation</th>
-                    <th rowSpan="2" className={isPrint ? 'print-th pitch-col' : 'w-[6%] px-2 py-3 text-[10px] font-bold text-slate-800 uppercase tracking-wider text-center'}>{isImperial ? 'TPI' : 'Pitch'}</th>
+                    <th rowSpan="2" className={isPrint ? 'print-th size-col' : 'w-[12%] px-2 py-3 text-[10px] font-bold text-slate-800 uppercase tracking-tight'}>Size / Designation</th>
+                    <th rowSpan="2" className={isPrint ? 'print-th pitch-col' : 'w-[6%] px-2 py-3 text-[10px] font-bold text-slate-800 uppercase tracking-tight text-center'}>{isImperial ? 'TPI' : 'Pitch'}</th>
 
                     {includeInternal && (
                         <th colSpan="3" className={isPrint ? 'macro-header-th section-start section-end' : 'px-2 py-3 text-[10px] font-black text-slate-900 border-x border-slate-200 uppercase tracking-[0.1em] text-center bg-slate-100/50'}>
@@ -96,9 +96,9 @@ const ThreadChartTable = ({
                                 const extData = extClass ? thread.classes[extClass].external : null;
 
                                 // 2. Derived Technical Data:
-                                // Calculate manual lathe parameters (Turn Dia, Comp Angle, etc.)
-                                // h (radial depth) is the primary driver for compound travel.
-                                const turning = getThreadingData(angle, thread.basic.p, thread.basic.h || thread.basic.d, thread.basic.major);
+                                // Manual lathe parameters (Turn Dia, Comp Angle, etc.) are pre-calculated 
+                                // during the geometry generation phase and stored in basic.turning.
+                                const turning = thread.basic.turning;
 
                                 // 3. Safety Advisories:
                                 // Generate cautionary text if the tapping drill has sub-optimal engagement.
@@ -113,7 +113,7 @@ const ThreadChartTable = ({
                                                 <span className={isPrint ? 'size-nominal' : 'text-[9px] font-medium text-slate-400 uppercase leading-none'}>({thread.nominalFraction || thread.size})</span>
                                             </div>
                                         </td>
-                                        <td className={isPrint ? 'pitch-col' : 'px-1 py-2 font-mono text-slate-500 font-bold text-[10px] text-center'}>
+                                        <td className={isPrint ? 'pitch-col' : 'px-1 py-2 font-mono text-slate-500 font-medium text-[10px] text-center'}>
                                             {isImperial ? thread.tpi : f(thread.basic.p)}
                                         </td>
 
@@ -150,10 +150,10 @@ const ThreadChartTable = ({
                                                 <td className={isPrint ? 'depth-col' : 'px-1 py-2 text-center font-mono text-slate-600 font-medium text-[10px] border-x border-slate-100'}>
                                                     {f(turning.radialDepth)}
                                                 </td>
-                                                <td className={isPrint ? 'angle-col' : 'px-1 py-2 text-center font-mono text-blue-700 font-black text-[10px]'}>
+                                                <td className={isPrint ? 'angle-col' : 'px-1 py-2 text-center font-mono text-blue-700 font-medium text-[10px]'}>
                                                     {turning.compoundAngle}°
                                                 </td>
-                                                <td className={isPrint ? 'comp-depth-col section-end' : 'px-1 py-2 text-center font-mono text-slate-900 font-bold text-[10px] border-l border-slate-100'}>
+                                                <td className={isPrint ? 'comp-depth-col section-end' : 'px-1 py-2 text-center font-mono text-slate-900 font-medium text-[10px] border-l border-slate-100'}>
                                                     {f(turning.compoundDepth)}
                                                 </td>
                                             </>

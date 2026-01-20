@@ -31,7 +31,7 @@ const ThreadPreview = ({ threads, selectedClasses, unit, standardName, material 
     }
 
     // Helper to format decimals to 4 places
-    const f = (val) => (typeof val === 'number' ? val.toFixed(4) : '-');
+    const f = (val) => (typeof val === 'number' ? val.toFixed(4) : '');
 
     // Group threads by Nominal Size
     const groupedBySize = threads.reduce((acc, t) => {
@@ -44,7 +44,8 @@ const ThreadPreview = ({ threads, selectedClasses, unit, standardName, material 
     const isImperial = unit === 'in';
 
     /**
-     * Copies the table data to clipboard in a clean Markdown format.
+     * Copies the table data to clipboard in a clean, columnar TSV format.
+     * Optimized for pasting into spreadsheet applications like Excel.
      */
     const handleCopy = () => {
         const headers = [
@@ -53,13 +54,24 @@ const ThreadPreview = ({ threads, selectedClasses, unit, standardName, material 
             isImperial ? 'TPI' : 'Pitch (mm)',
             'Gender',
             'Class',
-            'Major Dia',
-            'Pitch Dia',
-            'Minor Dia',
+            'Major Nominal',
+            'Major Min',
+            'Major Max',
+            'Pitch Nominal',
+            'Pitch Min',
+            'Pitch Max',
+            'Minor Nominal',
+            'Minor Min',
+            'Minor Max',
             'Tap Drill Tool',
+            'Tap Drill Size',
             'Tap Drill Target',
             'Engagement %',
-            'Fit Status'
+            'Fit Status',
+            'Turn Blank Diameter',
+            'Turn Plunge (Radial)',
+            'Turn Compound Angle',
+            'Turn Compound Travel'
         ];
         let rows = [headers.join('\t')];
 
@@ -86,19 +98,38 @@ const ThreadPreview = ({ threads, selectedClasses, unit, standardName, material 
                         if (!data) return;
 
                         let drillInfo = {
-                            tool: '-',
-                            target: '-',
-                            engagement: '-',
-                            status: '-'
+                            toolName: '',
+                            toolSize: '',
+                            target: '',
+                            engagement: '',
+                            status: ''
                         };
 
                         // Extract tapping drill metadata specifically for internal threads
                         if (gender === 'Internal' && data.tapDrillName) {
                             drillInfo = {
-                                tool: `${data.tapDrillName} (${f(data.tapDrillToolSize)})`,
+                                toolName: data.tapDrillName,
+                                toolSize: f(data.tapDrillToolSize),
                                 target: f(data.tapDrillTarget),
                                 engagement: `${Math.round(data.tapDrillValidation?.engagement)}%`,
-                                status: data.tapDrillValidation?.label || '-'
+                                status: data.tapDrillValidation?.label || ''
+                            };
+                        }
+
+                        let turnInfo = {
+                            blank: '',
+                            plunge: '',
+                            angle: '',
+                            depth: ''
+                        };
+
+                        // Extract turning metadata specifically for external threads
+                        if (gender === 'External' && thread.basic.turning) {
+                            turnInfo = {
+                                blank: f(thread.basic.turning.turnDia),
+                                plunge: f(thread.basic.turning.radialDepth),
+                                angle: `${thread.basic.turning.compoundAngle}°`,
+                                depth: f(thread.basic.turning.compoundDepth)
                             };
                         }
 
@@ -108,13 +139,29 @@ const ThreadPreview = ({ threads, selectedClasses, unit, standardName, material 
                             pitchValue,
                             gender,
                             cls,
-                            gender === 'External' ? `${f(data.majorMin)}-${f(data.major)}` : `${f(data.major)}-${f(data.major + 0.01)}`,
-                            gender === 'External' ? `${f(data.pitchMin)}-${f(data.pitch)}` : `${f(data.pitch)}-${f(data.pitchMax)}`,
-                            gender === 'External' ? `${f(data.minorMin)}-${f(data.minor)}` : `${f(data.minor)}-${f(data.minorMax)}`,
-                            drillInfo.tool,
+                            // Major Dia (Nominal, Min, Max)
+                            f(data.major),
+                            gender === 'External' ? f(data.majorMin) : f(data.major),
+                            gender === 'External' ? f(data.major) : f(data.major + 0.01),
+                            // Pitch Dia (Nominal, Min, Max)
+                            f(data.pitch),
+                            gender === 'External' ? f(data.pitchMin) : f(data.pitch),
+                            gender === 'External' ? f(data.pitch) : f(data.pitchMax),
+                            // Minor Dia (Nominal, Min, Max)
+                            f(data.minor),
+                            gender === 'External' ? f(data.minorMin) : f(data.minor),
+                            gender === 'External' ? f(data.minor) : f(data.minorMax),
+                            // Internal Workshop Data
+                            drillInfo.toolName,
+                            drillInfo.toolSize,
                             drillInfo.target,
                             drillInfo.engagement,
-                            drillInfo.status
+                            drillInfo.status,
+                            // External Workshop Data
+                            turnInfo.blank,
+                            turnInfo.plunge,
+                            turnInfo.angle,
+                            turnInfo.depth
                         ].join('\t'));
                     });
                 });
@@ -141,7 +188,7 @@ const ThreadPreview = ({ threads, selectedClasses, unit, standardName, material 
                         : 'bg-slate-800/80 text-sky-400 border-sky-400/30 hover:bg-sky-500 hover:text-slate-950'
                         }`}
                 >
-                    {copied ? 'Copied' : 'Copy'}
+                    {copied ? 'Copied' : 'Copy for Spreadsheet'}
                 </button>
             </div>
             <div className="overflow-x-auto max-h-[75vh]">
@@ -156,7 +203,7 @@ const ThreadPreview = ({ threads, selectedClasses, unit, standardName, material 
                             <th className="px-4 py-4 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] border-b border-slate-700 text-right">Major Dia</th>
                             <th className="px-4 py-4 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] border-b border-slate-700 text-right">Pitch Dia</th>
                             <th className="px-4 py-4 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] border-b border-slate-700 text-right">Minor Dia</th>
-                            <th className="px-4 py-4 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] border-b border-slate-700">Tap Drill</th>
+                            <th className="px-4 py-4 text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] border-b border-slate-700">Workshop Data</th>
                         </tr>
                     </thead>
                     <tbody
@@ -310,17 +357,41 @@ const ThreadPreview = ({ threads, selectedClasses, unit, standardName, material 
                                                         </div>
                                                     </td>
 
-                                                    {/* Tap Drill */}
-                                                    <td className="px-4 py-2 border-b border-slate-100/20 min-w-[180px]">
+                                                    {/* Workshop Data */}
+                                                    <td className="px-4 py-2 border-b border-slate-100/20 min-w-[210px] align-top">
                                                         {gender === 'External' ? (
-                                                            <span className="text-slate-800">—</span>
+                                                            <div className="flex flex-col gap-1.5 py-1">
+                                                                {thread.basic.turning ? (
+                                                                    <>
+                                                                        <div className="flex justify-between items-center border-b border-slate-800/50 pb-1">
+                                                                            <span className="text-[9px] text-slate-500 font-black uppercase tracking-tight">Blank Diameter</span>
+                                                                            <span className="text-[11px] text-emerald-400 font-mono font-black">{f(thread.basic.turning.turnDia)}</span>
+                                                                        </div>
+                                                                        <div className="flex justify-between items-center border-b border-slate-800/50 pb-1">
+                                                                            <span className="text-[9px] text-slate-500 font-black uppercase tracking-tight">Plunge (Radial)</span>
+                                                                            <span className="text-[11px] text-sky-400 font-mono font-black">{f(thread.basic.turning.radialDepth)}</span>
+                                                                        </div>
+                                                                        <div className="flex justify-between items-center">
+                                                                            <span className="text-[9px] text-slate-500 font-black uppercase tracking-tight">Compound Slide</span>
+                                                                            <span className="text-[11px] text-amber-400 font-mono font-black">
+                                                                                {thread.basic.turning.compoundAngle}° @ {f(thread.basic.turning.compoundDepth)}
+                                                                            </span>
+                                                                        </div>
+                                                                    </>
+                                                                ) : (
+                                                                    <div className="text-[9px] text-slate-600 italic">Turning data unavailable</div>
+                                                                )}
+                                                            </div>
                                                         ) : (
-                                                            <div className="flex flex-col gap-1">
+                                                            <div className="flex flex-col gap-1.5 py-1">
                                                                 {data.tapDrillName && !data.tapDrillValidation?.status?.startsWith('catastrophic') ? (
                                                                     <>
-                                                                        <div className="flex justify-between items-baseline mb-1 leading-none">
-                                                                            <span className="text-[10px] text-slate-500 font-black uppercase">Tool: <span className="text-sky-400">{data.tapDrillName}</span></span>
-                                                                            <span className="text-[10px] text-slate-600 font-black uppercase">({f(data.tapDrillToolSize)})</span>
+                                                                        <div className="flex justify-between items-center border-b border-slate-800/50 pb-1 mb-0.5">
+                                                                            <span className="text-[9px] text-slate-500 font-black uppercase tracking-tight">Tapping Tool</span>
+                                                                            <div className="flex gap-2 items-center">
+                                                                                <span className="text-[11px] text-sky-400 font-mono font-black">{data.tapDrillName}</span>
+                                                                                <span className="text-[10px] text-slate-600 font-mono">({f(data.tapDrillToolSize)})</span>
+                                                                            </div>
                                                                         </div>
                                                                         <EngagementMeter
                                                                             engagement={data.tapDrillValidation.engagement}

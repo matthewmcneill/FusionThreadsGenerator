@@ -16,6 +16,7 @@
  */
 
 import { getNearestDrill, validateTapDrill } from '../drills';
+import { calculateTurningData } from '../externalThreadGeometry';
 
 /**
  * British Standard Cycle / CEI Standard configuration object.
@@ -255,7 +256,8 @@ export const calculateBSC = (
             minor: fmt(basicMinor),
             h: fmt(h),
             r: fmt(r),
-            p: fmt(p)
+            p: fmt(p),
+            turning: calculateTurningData(BSCStandard.angle, p, h, basicMajor)
         },
         classes: {
             'Close': getTolerances(0.75, 1.0),

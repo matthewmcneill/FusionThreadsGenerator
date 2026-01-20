@@ -135,6 +135,7 @@ export const BSF_SIZES = [
 
 
 import { getNearestDrill, validateTapDrill } from '../drills';
+import { calculateTurningData } from '../externalThreadGeometry';
 
 /**
  * @internal
@@ -292,7 +293,8 @@ export const calculateWhitworth = (
             minor: fmt(basicMinor),
             d: fmt(d),
             r: fmt(r),
-            p: fmt(p)
+            p: fmt(p),
+            turning: calculateTurningData(WhitworthStandard.angle, p, d, basicMajor)
         },
         classes: {
             // Close: Bolt Close (2/3) only

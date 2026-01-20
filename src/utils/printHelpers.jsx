@@ -65,6 +65,7 @@ export const generatePrintableHtml = ({
             padding: 0;
             line-height: 1.2;
             font-size: 8pt;
+            font-variant-numeric: tabular-nums;
         }
         header {
             display: flex;
@@ -87,6 +88,7 @@ export const generatePrintableHtml = ({
             border-bottom: 1pt solid #000;
             color: #000;
             border-left: 0.5pt solid #ddd;
+            width: 10%;
         }
         .macro-header-th {
             border-bottom: 2pt solid #000 !important;
@@ -94,14 +96,19 @@ export const generatePrintableHtml = ({
             letter-spacing: 0.5px;
             font-size: 8pt;
         }
-        .size-col, .pitch-col { text-align: left; border-left: none; }
+        .size-col { text-align: left; border-left: none; width: 15%; }
+        .pitch-col { text-align: center; border-left: none; width: 8%; }
+        .data-col { width: 10%; }
+        .drill-col { width: 12%; }
+        .depth-col, .angle-col, .comp-depth-col { width: 10%; }
+        .advisory-col { width: 15%; }
         
         /* Section Dividers */
         .section-start { border-left: 2pt solid #000 !important; }
         .section-end { border-right: 2pt solid #000 !important; }
         
         td {
-            padding: 1.2mm 1mm;
+            padding: 1.0mm 1mm;
             border-bottom: 0.5pt solid #eee;
             vertical-align: middle;
             border-left: 0.5pt solid #f5f5f5;
@@ -115,8 +122,8 @@ export const generatePrintableHtml = ({
         .size-designation { font-weight: 700; font-size: 9pt; }
         .size-nominal { font-size: 7pt; color: #444; text-transform: uppercase; font-weight: 500; }
         
-        .pitch-col { text-align: center; font-family: ui-monospace, monospace; color: #444; font-weight: 700; border-left: none; }
-        .data-col { text-align: center; font-family: ui-monospace, monospace; font-size: 8.5pt; font-weight: 500; }
+        .pitch-col { font-family: ui-monospace, monospace; color: #444; font-weight: 600; }
+        .data-col { text-align: center; font-family: ui-monospace, monospace; font-size: 8pt; font-weight: 600; }
         .drill-col { text-align: center; }
         .drill-name { font-weight: 700; font-size: 8.5pt; display: block; }
         .drill-decimal { color: #666; font-size: 7pt; font-weight: 400; display: block; }

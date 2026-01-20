@@ -15,6 +15,7 @@
  */
 
 import { getNearestDrill, validateTapDrill } from '../drills.js';
+import { calculateTurningData } from '../externalThreadGeometry.js';
 
 /**
  * Model Engineer (ME) Standard configuration object.
@@ -246,7 +247,8 @@ export const calculateME = (
             minor: fmt(basicMinor),
             d: fmt(d),
             r: fmt(r),
-            p: fmt(p)
+            p: fmt(p),
+            turning: calculateTurningData(MEStandard.angle, p, d, basicMajor)
         },
         classes: {
             'Medium': getTolerances(1)

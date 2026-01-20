@@ -15,6 +15,7 @@
  */
 
 import { getNearestDrill, validateTapDrill } from '../drills.js';
+import { calculateTurningData } from '../externalThreadGeometry.js';
 
 /**
  * British Standard Brass (BSB) Standard configuration.
@@ -231,7 +232,8 @@ export const calculateBSB = (
             minor: fmt(basicMinor),
             d: fmt(h),
             r: fmt(r),
-            p: fmt(p)
+            p: fmt(p),
+            turning: calculateTurningData(BSBStandard.angle, p, h, basicMajor)
         },
         classes: {
             'Medium': getTolerances(1)

@@ -13,6 +13,7 @@
  */
 
 import { getNearestDrill, validateTapDrill } from '../drills.js';
+import { calculateTurningData } from '../externalThreadGeometry.js';
 
 /**
  * Metadata configuration for the BA Thread Standard.
@@ -219,7 +220,8 @@ export const calculateBA = (
             minor: fmt(size.min),
             h: fmt(size.h),
             r: fmt(size.r),
-            p: fmt(p)
+            p: fmt(p),
+            turning: calculateTurningData(BAStandard.angle, p, size.h, size.D)
         },
         classes: {
             // Close: Bolt Close class only (available for 0-10 BA only as per BS 93)

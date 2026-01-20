@@ -27,6 +27,7 @@ Each module defines a `Standard` configuration object containing `series` (Desig
 ### 4. Generation Layer (`src/utils/`)
 - **xmlGenerator.js**: Transforms internal thread objects into the Fusion 360 XML thread definition schema.
 - **toolLibraryGenerator.js**: Logic for generating Fusion 360 Tool Library JSON.
+- **externalThreadGeometry.js**: Shared manual lathe threading algorithms (e.g., "Clearance-Floor Algorithm").
 
 ## Component Interactions (Stage-Based Workflow)
 1. **Stage 1 (Select Standard)**: User chooses a standard. `App.jsx` initializes default presets and active series/classes. Access to **Workshop Manager** for inventory control.
@@ -86,7 +87,10 @@ To ensure compatibility with the XML generator, your calculation function must r
 
 ```javascript
 {
-  basic: { p, h, D, eff, min }, // p=pitch, D=Maj, eff=Pitch Dia, min=Minor
+  basic: { 
+    p, h, D, eff, min,
+    turning: { turnDia, radialDepth, compoundAngle, compoundDepth }
+  }, 
   classes: {
     'Medium': { // Must match a name in your Standard.classes array
       external: { major: 0.25, pitch: 0.21, minor: 0.18 },
@@ -126,7 +130,7 @@ const validation = validateTapDrill(drillSize, major, minor, nutMinorMax, materi
 
 ### 4. Step-by-Step Integration Guide
 
-1.  **Create Calculator**: Create `src/utils/calculators/my_standard.js` following the architecture above. Use `whitworth.js` or `ba.js` as a template for tolerance and engagement formulas.
+1.  **Create Calculator**: Create `src/utils/calculators/my_standard.js` following the architecture above. Use `whitworth.js` or `ba.js` as a template for tolerance and engagement formulas. Ensure you import `calculateTurningData` to populate the `basic.turning` block.
 2.  **Export Module**: Add `export * from './my_standard';` to `src/utils/calculators/index.js`.
 3.  **App.jsx Integration**:
     *   **Dropdown**: Add an `<option>` for your standard in the `handleStandardChange` dropdown (Stage 1), using your ID as the `value`.
@@ -180,4 +184,4 @@ npm run test:ui   # Launch interactive test dashboard
 ```
 
 ---
-*Last Updated: 2026-01-09*
+*Last Updated: 2026-01-20*
