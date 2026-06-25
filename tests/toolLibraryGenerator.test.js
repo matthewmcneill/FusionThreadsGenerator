@@ -84,10 +84,6 @@ describe('toolLibraryGenerator', () => {
     });
 
     test('generateToolLibrary should scale geometry based on diameter', () => {
-        const result = generateToolLibrary(mockWorkshop, mockPresets);
-        const smallDrill = result.data.find(t => t.description === '1.00mm');
-        const largeDrill = result.data.find(t => t.description === 'Custom 1.23mm'); // In this mock it's similar
-
         // Let's add a much larger drill to the mock for testing scaling
         const customWorkshop = {
             ...mockWorkshop,
@@ -193,7 +189,6 @@ describe('toolLibraryGenerator', () => {
         // 1/4" BSF was disabled, so it's NOT in the file.
         // In 'overwrite' mode, if it's not in the file, it's not enabled.
         // So BSF should remain absent/disabled in the restored state.
-        const disabledWhitworth = restored.disabledDesignations['WHITWORTH'] || [];
         // Note: Our current overwrite logic actually defaults to empty lists.
         // If it's not in the file, it doesn't get added to 'enabled' lists.
     });

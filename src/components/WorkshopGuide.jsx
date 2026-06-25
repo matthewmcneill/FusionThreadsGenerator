@@ -7,7 +7,7 @@
  * - WorkshopGuide (default): React component for the informational guide.
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import {
     Chart as ChartJS,
     CategoryScale,

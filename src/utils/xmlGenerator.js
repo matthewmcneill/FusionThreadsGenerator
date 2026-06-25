@@ -7,9 +7,24 @@
  */
 
 /**
+ * Escapes special XML characters in a string value so it is safe to embed in XML text nodes.
+ * The `&` replacement must occur first to avoid double-escaping subsequent entities.
+ *
+ * @param {*} value - The value to escape (will be coerced to string).
+ * @returns {string} The XML-safe escaped string.
+ */
+const escapeXml = (value) =>
+  String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+
+/**
  * Generates the full XML string for a thread standard with version metadata.
  * Processes threads and their associated tolerance classes into Fusion 360's schema.
- * 
+ *
  * @param {Object} threadStandard - Metadata about the standard (name, unit, angle, etc.).
  * @param {Array<Object>} threads - Array of calculated thread size objects.
  * @param {Array<string>} selectedClasses - List of class names to include in the output.
@@ -27,8 +42,8 @@ export const generateFusionXML = (threadStandard, threads, selectedClasses, meta
   Version: ${version} (${commitHash})
 -->
 <ThreadType>
-  <Name>${threadStandard.name}</Name>
-  <CustomName>${threadStandard.name}</CustomName>
+  <Name>${escapeXml(threadStandard.name)}</Name>
+  <CustomName>${escapeXml(threadStandard.name)}</CustomName>
   <Unit>${threadStandard.unit}</Unit>
   <Angle>${threadStandard.angle}</Angle>
   <SortOrder>${threadStandard.sortOrder}</SortOrder>
@@ -64,8 +79,8 @@ export const generateFusionXML = (threadStandard, threads, selectedClasses, meta
             blocks.push(`
         <Thread>
           <Gender>external</Gender>
-          <Class>${className}</Class>
-          <ThreadToleranceClass>${className}</ThreadToleranceClass>
+          <Class>${escapeXml(className)}</Class>
+          <ThreadToleranceClass>${escapeXml(className)}</ThreadToleranceClass>
           <MajorDia>${c.external.major}</MajorDia>
           <PitchDia>${c.external.pitch}</PitchDia>
           <MinorDia>${c.external.minor}</MinorDia>
@@ -78,8 +93,8 @@ export const generateFusionXML = (threadStandard, threads, selectedClasses, meta
             blocks.push(`
         <Thread>
           <Gender>internal</Gender>
-          <Class>${className}</Class>
-          <ThreadToleranceClass>${className}</ThreadToleranceClass>
+          <Class>${escapeXml(className)}</Class>
+          <ThreadToleranceClass>${escapeXml(className)}</ThreadToleranceClass>
           <MajorDia>${c.internal.major}</MajorDia>
           <PitchDia>${c.internal.pitch}</PitchDia>
           <MinorDia>${c.internal.minor}</MinorDia>${(c.internal.tapDrillToolSize && !c.internal.tapDrillValidation?.status?.startsWith('catastrophic')) ? `
@@ -92,8 +107,8 @@ export const generateFusionXML = (threadStandard, threads, selectedClasses, meta
 
       return `
       <Designation>
-        <ThreadDesignation>${t.designation}</ThreadDesignation>
-        <CTD>${t.ctd || t.designation}</CTD>
+        <ThreadDesignation>${escapeXml(t.designation)}</ThreadDesignation>
+        <CTD>${escapeXml(t.ctd || t.designation)}</CTD>
         ${pitchElement}
         ${threadBlocks}
       </Designation>`;

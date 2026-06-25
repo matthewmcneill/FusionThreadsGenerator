@@ -56,4 +56,34 @@ describe('XML Generation Validation', () => {
         expect(xml).toContain('<ThreadDesignation>1/4 BSF</ThreadDesignation>');
     });
 
+    it('should escape XML special characters in user-controlled text fields', () => {
+        const threads = [
+            {
+                designation: '1/4 & 5/16 <Special>',
+                series: 'BSW',
+                size: 0.25,
+                ctd: 'CTD & <test>',
+                tpi: 20,
+                basic: { major: 0.25, p: 0.05 },
+                classes: { Medium: { external: { major: 0.25, pitch: 0.24, minor: 0.23 }, internal: { major: 0.25, pitch: 0.24, minor: 0.23 } } }
+            }
+        ];
+
+        const xml = generateFusionXML(WhitworthStandard, threads, ['Medium']);
+
+        // Escaped entities must be present
+        expect(xml).toContain('&amp;');
+        expect(xml).toContain('&lt;');
+
+        // The ThreadDesignation text node must be fully escaped
+        expect(xml).toContain('<ThreadDesignation>1/4 &amp; 5/16 &lt;Special&gt;</ThreadDesignation>');
+
+        // The CTD text node must be fully escaped
+        expect(xml).toContain('<CTD>CTD &amp; &lt;test&gt;</CTD>');
+
+        // Raw unescaped characters must not appear inside these text nodes
+        expect(xml).not.toContain('<ThreadDesignation>1/4 & 5/16 <Special>');
+        expect(xml).not.toContain('<CTD>CTD & <test>');
+    });
+
 });

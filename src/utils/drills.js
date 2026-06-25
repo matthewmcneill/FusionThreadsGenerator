@@ -125,15 +125,15 @@ const addFractionalRange = (start64ths, end64ths, step64ths) => {
         // Logic to construct pretty fraction strings (e.g. 1 1/8")
         if (i % 64 === 0) {
             // Whole numbers
-            name = `${i / 64}\"`;
+            name = `${i / 64}"`;
         } else if (i > 64) {
             // Mixed numbers (e.g. 1 1/16)
             const whole = Math.floor(i / 64);
             const rem = i % 64;
-            name = `${whole} ${simplifyFraction(rem, 64)}\"`;
+            name = `${whole} ${simplifyFraction(rem, 64)}"`;
         } else {
             // Simple fractions (e.g. 1/32)
-            name = `${simplifyFraction(i, 64)}\"`;
+            name = `${simplifyFraction(i, 64)}"`;
         }
         FRACTIONAL_DRILLS.push({ name, size, type: 'fractional' });
     }

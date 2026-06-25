@@ -93,7 +93,6 @@ const ThreadChartTable = ({
                                 if (!intClass && !extClass) return null;
 
                                 const intData = intClass ? thread.classes[intClass].internal : null;
-                                const extData = extClass ? thread.classes[extClass].external : null;
 
                                 // 2. Derived Technical Data:
                                 // Manual lathe parameters (Turn Dia, Comp Angle, etc.) are pre-calculated 

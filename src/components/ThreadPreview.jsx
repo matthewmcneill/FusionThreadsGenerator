@@ -17,7 +17,7 @@ import EngagementMeter from './EngagementMeter';
  * @param {Array<string>} props.selectedClasses - Tolerance classes to include.
  * @param {string} props.unit - Base unit ('in' or 'mm').
  */
-const ThreadPreview = ({ threads, selectedClasses, unit, standardName, material }) => {
+const ThreadPreview = ({ threads, selectedClasses, unit }) => {
     const [copied, setCopied] = useState(false);
     // Track hierarchical hover state (Size -> Thread -> Gender -> Class)
     const [hoveredPath, setHoveredPath] = useState({ size: null, designation: null, gender: null, cls: null });
@@ -246,7 +246,7 @@ const ThreadPreview = ({ threads, selectedClasses, unit, standardName, material 
 
                                         if (genderTotalRows === 0) return null;
 
-                                        return genderClasses.map((cls, clsIdx) => {
+                                        return genderClasses.map((cls) => {
                                             const c = thread.classes[cls];
                                             const data = gender === 'External' ? c.external : c.internal;
 
@@ -259,7 +259,6 @@ const ThreadPreview = ({ threads, selectedClasses, unit, standardName, material 
                                             genderRowUsed = true;
 
                                             // Determine current highlight scope
-                                            const isHovering = !!hoveredPath.size;
                                             const isSizeMatch = hoveredPath.size === sizeKey;
                                             const isThreadMatch = isSizeMatch && (hoveredPath.designation === null || hoveredPath.designation === thread.designation);
                                             const isGenderMatch = isThreadMatch && (hoveredPath.gender === null || hoveredPath.gender === gender);

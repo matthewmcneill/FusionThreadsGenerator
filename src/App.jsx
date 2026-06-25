@@ -12,11 +12,10 @@
  * - handleDownload: Triggers XML generation and download.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, Suspense } from 'react';
 import ThreadForm from './components/ThreadForm';
 import ThreadList from './components/ThreadList';
 import ThreadPreview from './components/ThreadPreview';
-import ThreadChart from './components/ThreadChart';
 import WorkshopGuide from './components/WorkshopGuide';
 import WorkshopManager from './components/WorkshopManager';
 import {
@@ -40,6 +39,8 @@ import {
 } from './utils/calculators';
 import { generateFusionXML } from './utils/xmlGenerator';
 import { loadConfig, saveConfig } from './utils/persistence';
+
+const ThreadChart = React.lazy(() => import('./components/ThreadChart'));
 
 /**
  * Main application component.
@@ -97,7 +98,7 @@ function App() {
    * @param {Array<string>} [drillSets] - Optional override for drill sets.
    * @returns {Object|null} The calculated thread object with full geometry and classes.
    */
-  const calculateThreadItem = (std, input, drillSets = null) => {
+  const calculateThreadItem = useCallback((std, input, drillSets = null) => {
     let calc;
     const activeDrillSets = (drillSets || selectedDrillSets).filter(s =>
       config.workshop.enabledDrillSets.includes(s)
@@ -136,7 +137,7 @@ function App() {
     const series = input.series || (std.getSeries ? std.getSeries(input) : std.series[0]);
 
     return { ...input, ...calc, ctd, series, angle: std.angle };
-  };
+  }, [selectedDrillSets, material, config.workshop]);
 
   /**
    * DERIVED STATE: Construct the active threads list from standard presets and workshop config.
@@ -176,7 +177,7 @@ function App() {
     return allItems
       .map(item => calculateThreadItem(standard, item))
       .filter(Boolean);
-  }, [standard, selectedSeries, material, selectedDrillSets, config.workshop]);
+  }, [standard, selectedSeries, config.workshop, calculateThreadItem]);
 
   /**
    * Updates a slice of the global configuration and persists it to LocalStorage.
@@ -193,24 +194,25 @@ function App() {
   };
 
   /**
-   * Sync active preferences to per-standard settings in global config.
-   * This ensures that when we switch back to a standard, its preferences are restored.
+   * Persists a standard's active preferences (drill sets, material, series, classes)
+   * into the global config and LocalStorage, and records it as the current standard.
+   *
+   * Called directly from the change handlers rather than via a state-mirroring effect,
+   * which keeps the persisted config in lock-step with the UI in a single render and
+   * avoids the cascading re-render an effect would cause.
+   *
+   * @param {string} stdId - The standard the settings belong to.
+   * @param {Object} settings - { drillSets, material, series, classes }.
    */
-  useEffect(() => {
-    const stdId = standard.id;
+  const persistStandardSettings = (stdId, settings) => {
     updateGlobalConfig('preferences', {
       currentStandardId: stdId,
       standardSettings: {
         ...config.preferences.standardSettings,
-        [stdId]: {
-          drillSets: selectedDrillSets,
-          material: material,
-          series: selectedSeries,
-          classes: selectedClasses
-        }
+        [stdId]: settings
       }
     });
-  }, [standard.id, selectedDrillSets, material, selectedSeries, selectedClasses]);
+  };
 
   /**
    * Handles user selection of a different thread standard.
@@ -236,6 +238,13 @@ function App() {
     setMaterial(savedMaterial);
     setSelectedSeries(savedSeries);
     setSelectedClasses(savedClasses);
+
+    persistStandardSettings(newStd.id, {
+      drillSets: savedSets,
+      material: savedMaterial,
+      series: savedSeries,
+      classes: savedClasses
+    });
   };
 
   /**
@@ -243,40 +252,45 @@ function App() {
    * @param {string} seriesName - The name of the series (e.g., 'BSW').
    */
   const toggleSeries = (seriesName) => {
-    let newSeries;
-    if (selectedSeries.includes(seriesName)) {
-      newSeries = selectedSeries.filter(s => s !== seriesName);
-    } else {
-      newSeries = [...selectedSeries, seriesName];
-    }
+    const newSeries = selectedSeries.includes(seriesName)
+      ? selectedSeries.filter(s => s !== seriesName)
+      : [...selectedSeries, seriesName];
     setSelectedSeries(newSeries);
+    persistStandardSettings(standard.id, {
+      drillSets: selectedDrillSets, material, series: newSeries, classes: selectedClasses
+    });
   };
 
   const toggleClass = (className) => {
-    if (selectedClasses.includes(className)) {
-      setSelectedClasses(selectedClasses.filter(c => c !== className));
-    } else {
-      setSelectedClasses([...selectedClasses, className]);
-    }
+    const newClasses = selectedClasses.includes(className)
+      ? selectedClasses.filter(c => c !== className)
+      : [...selectedClasses, className];
+    setSelectedClasses(newClasses);
+    persistStandardSettings(standard.id, {
+      drillSets: selectedDrillSets, material, series: selectedSeries, classes: newClasses
+    });
   };
 
   const toggleDrillSet = (setName) => {
     const newSets = selectedDrillSets.includes(setName)
       ? selectedDrillSets.filter(s => s !== setName)
       : [...selectedDrillSets, setName];
-
     setSelectedDrillSets(newSets);
+    persistStandardSettings(standard.id, {
+      drillSets: newSets, material, series: selectedSeries, classes: selectedClasses
+    });
   };
 
   /**
-   * Handles material change and recalculates threads.
+   * Handles material selection and persists it for the active standard.
    * @param {string} newMaterial - The material ID ('hard', 'ferrous', 'soft').
    */
   const handleMaterialChange = (newMaterial) => {
     setMaterial(newMaterial);
-    // Recalculation is triggered via dependency tracking in the 'threads' memo.
+    persistStandardSettings(standard.id, {
+      drillSets: selectedDrillSets, material: newMaterial, series: selectedSeries, classes: selectedClasses
+    });
   };
-
 
   /**
    * Orchestrates the XML generation and triggers a browser download.
@@ -452,7 +466,7 @@ function App() {
                           aria-label="Tap Drill Selection"
                           className="w-full bg-slate-950/50 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:ring-1 focus:ring-sky-500 outline-none transition-all cursor-pointer font-bold"
                           value={material}
-                          onChange={(e) => setMaterial(e.target.value)}
+                          onChange={(e) => handleMaterialChange(e.target.value)}
                         >
                           <option value="hard">Hard Alloys (60% PTE)</option>
                           <option value="ferrous">General Ferrous (70% PTE)</option>
@@ -571,13 +585,15 @@ function App() {
 
         {activeTab === 'chart' && (
           <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <ThreadChart
-              threads={threads}
-              selectedClasses={selectedClasses}
-              unit={standard.unit}
-              standardName={standard.name}
-              material={material}
-            />
+            <Suspense fallback={<div className="text-slate-400 text-sm py-12">Loading chart…</div>}>
+              <ThreadChart
+                threads={threads}
+                selectedClasses={selectedClasses}
+                unit={standard.unit}
+                standardName={standard.name}
+                material={material}
+              />
+            </Suspense>
           </div>
         )}
 

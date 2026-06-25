@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BSW_SIZES, BSF_SIZES, WhitworthStandard } from '../utils/calculators/whitworth';
 import { BA_SIZES, BAStandard } from '../utils/calculators/ba';
 import { ME_SIZES, MEStandard } from '../utils/calculators/me';
@@ -41,6 +41,7 @@ const WorkshopManager = ({
     // Reset to standards tab whenever the modal is opened
     useEffect(() => {
         if (isOpen) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: reset tab when modal opens
             setActiveTab('standards');
         }
     }, [isOpen]);

@@ -205,7 +205,6 @@ export const calculateME = (
             minorMin: fmt(basicMinor - tMinorBolt)
         };
 
-        const minorMin = basicMinor;
         const minorMax = basicMinor + nutMinorTol;
 
         // Algorithmic Determination of Tapping Drill Size

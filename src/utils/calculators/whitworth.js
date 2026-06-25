@@ -249,7 +249,6 @@ export const calculateWhitworth = (
 
         if (intMultiplier !== null) {
             const tEffInt = T * intMultiplier;
-            const minorMin = basicMinor;
             const minorMax = basicMinor + (nutMinorTol * (intMultiplier / 1.125));
 
             // Algorithmic Determination of Tapping Drill Size
